@@ -1,0 +1,4 @@
+[submodule "pash"]
+	path = pash
+	url = https://github.com/binpash/pash.git
+	branch = dspash-future
