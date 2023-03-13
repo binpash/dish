@@ -6,4 +6,4 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/local/lib/"
 # point to the local downloaded folders
 export PYTHONPATH=${PASH_TOP}/python_pkgs/
 
-"$PASH_TOP/pa.sh" "$@"
+"$PASH_TOP/pa.sh" "$@ --distributed_exec"
