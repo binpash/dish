@@ -9,23 +9,35 @@ Quick Jump: [Installation](#installation) | [Running DiSh](#running-dish) | [Rep
 
 ## Installation
 
-The easiest way to install dish and play with it is using docker.
+The easiest way to play with DiSh is using docker.
 
-See https://docs.docker.com/engine/install/ for the docker installation steps if you don't have it already.
+See https://docs.docker.com/engine/install/ to install docker if you don't have it already.
 
-The following steps commands will create a virtual cluster on one machine allow you to play with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and run the `./setup-swarm.sh` command instead of `./setup-client.sh`
+The following steps commands will create a virtual cluster on one machine allow you to play with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and use the swarm instruction in [docker-hadoop](./docker-hadoop).
 
 ```sh
 cd docker-hadoop
 ./setup-compose.sh # Creates the virtual cluster on the host machine
-./start-client.sh # Creates a client
-docker exec -it docker-hadoop_client_1 bash # ssh into the client
+docker exec -it nodemanager1 bash # We will use this node as a client
 ```
 
 ## Running DiSh
 
-__TODO:__ Describe how to run a hello world script. See PaSh's README for inspiration.
+__TODO:__ Needs improvement
 
+From docker, we need to add some files to hdfs:
+
+```sh
+cd $DISH_TOP
+hdfs dfs -put README.md /README.md # Copies the readme to hdfs
+```
+
+Now, you can create your own script or use `sample.sh`. Run both DiSh and Bash and compare the results!
+
+```
+./di.sh sample.sh
+bash sample.sh
+```
 ## Repo Structure
 
 This repo hosts most of the components of the `dish` development. Some of them are incorporated in [PaSh](https://github.com/binpash/pash) The structure is as follows:
