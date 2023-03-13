@@ -9,10 +9,18 @@ Quick Jump: [Installation](#installation) | [Running DiSh](#running-dish) | [Rep
 
 ## Installation
 
-On Ubuntu, Fedora, and Debian run `./scripts/setup-dish.sh` to build DiSh and its dependencies.
+The easiest way to install dish and play with it is using docker.
 
-__TODO:__ Is that enough? If there is anything else we should add it.
+See https://docs.docker.com/engine/install/ for the docker installation steps if you don't have it already.
 
+The following steps commands will create a virtual cluster on one machine allow you to play with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and run the `./setup-swarm.sh` command instead of `./setup-client.sh`
+
+```sh
+cd docker-hadoop
+./setup-compose.sh # Creates the virtual cluster on the host machine
+./start-client.sh # Creates a client
+docker exec -it docker-hadoop_client_1 bash # ssh into the client
+```
 
 ## Running DiSh
 
