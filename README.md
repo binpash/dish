@@ -16,6 +16,7 @@ See https://docs.docker.com/engine/install/ to install docker if you don't have 
 The following steps commands will create a virtual cluster on one machine allow you to play with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and use the swarm instruction in [docker-hadoop](./docker-hadoop).
 
 ```sh
+## TODO: Add git clone and git submodule commands
 cd docker-hadoop
 ./setup-compose.sh # Creates the virtual cluster on the host machine
 docker exec -it nodemanager1 bash # We will use this node as a client
