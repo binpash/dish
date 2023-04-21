@@ -1,7 +1,7 @@
 # DiSh: Dynamic Shell-Script Distribution 
 
 > _A system for scaling out POSIX shell scripts on distributed file systems._
-> _Part of the PaSh project, which is hosted by the [Linux Foundation](https://linuxfoundation.org/press-release/linux-foundation-to-host-the-pash-project-accelerating-shell-scripting-with-automated-parallelization-for-industrial-use-cases/)._
+> _DiSh is part of the PaSh project, which is hosted by the [Linux Foundation](https://linuxfoundation.org/press-release/linux-foundation-to-host-the-pash-project-accelerating-shell-scripting-with-automated-parallelization-for-industrial-use-cases/)._
 
 DiSh builds heavily on and extends [PaSh](https://github.com/binpash/pash) (command annotations, compiler infrastructure, and JIT orchestration).
 
@@ -19,12 +19,11 @@ git clone --recurse-submodules https://github.com/binpash/dish.git
 
 ## Install docker using our script (tested on Ubuntu)
 ## Alternatively see https://docs.docker.com/engine/install/ to install docker.
-cd dish
-./scripts/setup-docker.sh
+(cd dish; ./scripts/setup-docker.sh)
 
-cd docker-hadoop
+
 ## Create the virtual cluster on the host machine
-./setup-compose.sh # currently takes several minutes due to rebuilding the images
+(cd docker-hadoop; ./setup-compose.sh) # currently takes several minutes due to rebuilding the images
 ## The cluster can be torn down using `docker compose down`
 
 ## Create a shell on the client
@@ -42,9 +41,9 @@ hdfs dfs -put README.md /README.md # Copies the readme to hdfs
 
 Now, you can run [this sample script](./scripts/sample.sh) (or create a script of your own). Run both DiSh and Bash and compare the results!
 
-```
-./di.sh sample.sh
-bash sample.sh
+```sh
+./di.sh ./scripts/sample.sh
+bash ./scripts/sample.sh
 ```
 
 <!-- We first want to download some input data and populate hdfs.
