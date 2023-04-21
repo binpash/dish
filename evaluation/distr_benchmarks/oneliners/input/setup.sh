@@ -15,14 +15,13 @@ if [[ "$1" == "-c" ]]; then
     exit
 fi
 
-hdfs dfs -mkdir /oneliners
+hdfs dfs -mkdir -p /oneliners
 
 if [ ! -f ./1M.txt ]; then
     curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/1M.txt' > 1M.txt
     if [ $? -ne 0 ]; then
         curl -f 'https://zenodo.org/record/7650885/files/1M.txt' > 1M.txt
         [ $? -ne 0 ] && eexit 'cannot find 1M.txt'
-        fi
     fi
     append_nl_if_not ./1M.txt
 fi
@@ -42,7 +41,7 @@ if [ ! -f ./100M.txt ]; then
 fi
 
 if [ ! -f ./1G.txt ]; then
-    curl -sf 'http://ndr.md/data/dummy/1G.txt' > 1G.txt
+    curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/1G.txt' > 1G.txt
     if [ $? -ne 0 ]; then
         touch 1G.txt
         for (( i = 0; i < 10; i++ )); do

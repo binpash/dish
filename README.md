@@ -19,31 +19,42 @@ git clone --recurse-submodules https://github.com/binpash/dish.git
 
 ## Install docker using our script (tested on Ubuntu)
 ## Alternatively see https://docs.docker.com/engine/install/ to install docker.
+cd dish
 ./scripts/setup-docker.sh
 
 cd docker-hadoop
-./setup-compose.sh # Creates the virtual cluster on the host machine
-## The cluster can be torn down using `docker-compose down`
-docker exec -it nodemanager1 bash # We will use this node as a client
+## Create the virtual cluster on the host machine
+./setup-compose.sh # currently takes several minutes due to rebuilding the images
+## The cluster can be torn down using `docker compose down`
+
+## Create a shell on the client
+docker exec -it nodemanager1 bash
 ```
 
-## Running DiSh
+## Running DiSh Hello World
 
-__TODO__
-
-From docker, we need to add some files to hdfs:
+Let's run a very simple example using DiSh:
 
 ```sh
 cd $DISH_TOP
 hdfs dfs -put README.md /README.md # Copies the readme to hdfs
 ```
 
-Now, you can create your own script or use `sample.sh`. Run both DiSh and Bash and compare the results!
+Now, you can run [this sample script](./scripts/sample.sh) (or create a script of your own). Run both DiSh and Bash and compare the results!
 
 ```
 ./di.sh sample.sh
 bash sample.sh
 ```
+
+<!-- We first want to download some input data and populate hdfs.
+
+```sh
+cd $DISH_TOP
+./setup.sh # Takes several minutes
+``` -->
+
+
 ## Repo Structure
 
 This repo hosts most of the components of the `dish` development. Some of them are incorporated in [PaSh](https://github.com/binpash/pash) The structure is as follows:
