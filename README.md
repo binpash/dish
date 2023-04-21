@@ -23,12 +23,13 @@ git clone --recurse-submodules https://github.com/binpash/dish.git
 
 cd docker-hadoop
 ./setup-compose.sh # Creates the virtual cluster on the host machine
+## The cluster can be torn down using `docker-compose down`
 docker exec -it nodemanager1 bash # We will use this node as a client
 ```
 
 ## Running DiSh
 
-__TODO:__ Needs improvement
+__TODO__
 
 From docker, we need to add some files to hdfs:
 
