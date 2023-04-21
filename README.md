@@ -1,7 +1,7 @@
 # DiSh: Dynamic Shell-Script Distribution 
 
 > _A system for scaling out POSIX shell scripts on distributed file systems._
-> _Hosted by the [Linux Foundation](https://linuxfoundation.org/press-release/linux-foundation-to-host-the-pash-project-accelerating-shell-scripting-with-automated-parallelization-for-industrial-use-cases/)._
+> _Part of the PaSh project, which is hosted by the [Linux Foundation](https://linuxfoundation.org/press-release/linux-foundation-to-host-the-pash-project-accelerating-shell-scripting-with-automated-parallelization-for-industrial-use-cases/)._
 
 DiSh builds heavily on and extends [PaSh](https://github.com/binpash/pash) (command annotations, compiler infrastructure, and JIT orchestration).
 
@@ -11,12 +11,16 @@ Quick Jump: [Installation](#installation) | [Running DiSh](#running-dish) | [Rep
 
 The easiest way to play with DiSh is using docker.
 
-See https://docs.docker.com/engine/install/ to install docker if you don't have it already.
-
-The following steps commands will create a virtual cluster on one machine allow you to play with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and use the swarm instruction in [docker-hadoop](./docker-hadoop).
+The following steps commands will create a virtual cluster on one machine allow you to experiment with DiSh. If you have multiple machines, you can setup [docker-swarm](https://docs.docker.com/engine/swarm/swarm-tutorial/) and use the swarm instruction in [docker-hadoop](./docker-hadoop).
 
 ```sh
-## TODO: Add git clone and git submodule commands
+## Clone the repo
+git clone --recurse-submodules https://github.com/binpash/dish.git
+
+## Install docker using our script (tested on Ubuntu)
+## Alternatively see https://docs.docker.com/engine/install/ to install docker.
+./scripts/setup-docker.sh
+
 cd docker-hadoop
 ./setup-compose.sh # Creates the virtual cluster on the host machine
 docker exec -it nodemanager1 bash # We will use this node as a client
@@ -48,32 +52,29 @@ This repo hosts most of the components of the `dish` development. Some of them a
 * [runtime](./runtime): Runtime component — e.g., remote fifo channels.
 * [scripts](./scripts): Scripts related to installation, deployment, and continuous integration.
 
-## Evaluation
+<!-- ## Evaluation -->
 
-__TODO:__ Describe how to run DiSh's evaluation (also setting up a cluster etc).
+<!-- __TODO:__ Describe how to run DiSh's evaluation (also setting up a cluster etc). -->
 
 ## Community & More
 
 Chat:
 * [Discord Server](ttps://discord.com/channels/947328962739187753/) ([Invite](http://join.binpa.sh/))
 
-Mailing Lists:
-* [pash-devs](https://groups.google.com/g/pash-devs): Join this mailing list for discussing all things `pash`
-* [pash-commits](https://groups.google.com/g/pash-commits): Join this mailing list for commit notifications
-
-Development/contributions:
-* Contribution guide: [docs/contributing](docs/contributing/contrib.md)
-* Continuous Integration Server: [ci.binpa.sh](http://ci.binpa.sh)
-
 ## Citing
-
-__TODO__
 
 If you used DiSh, consider citing the following paper:
 ```
 @inproceedings{dish2023nsdi,
 author = {Mustafa, Tammam and Kallas, Konstantinos and Das, Pratyush and Vasilakis, Nikos},
-title = {DiSh: Dynamic Shell-Script Distribution},
+title = {{DiSh}: Dynamic {Shell-Script} Distribution},
+booktitle = {20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23)},
 year = {2023},
+isbn = {978-1-939133-33-5},
+address = {Boston, MA},
+pages = {341--356},
+url = {https://www.usenix.org/conference/nsdi23/presentation/mustafa},
+publisher = {USENIX Association},
+month = apr,
 }
 ```
