@@ -31,7 +31,7 @@ cd docker-hadoop
 docker exec -it nodemanager1 bash
 ```
 
-## Running DiSh Hello World
+## Running DiSh
 
 Let's run a very simple example using DiSh:
 
