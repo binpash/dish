@@ -4,7 +4,7 @@ Each command in docker is cached. For example if you have `RUN sudo apt update &
 
 Another example is `RUN git clone some-repo`. Your repository will be cloned the first time you build and even if you push something later on, you will see the older commit in your docker due to the cache.
 
-One way to prevent this is to build with `--no-cache` flag. But this means you need to add this flag everywhere you build an image. Another option is to clear the cache when needed. However both of these suffer from the fact that without the cache, our builds takes too long.
+One way to prevent this is to build with `--no-cache` flag. But this means you need to add this flag everywhere you build an image. Another option is to clear the cache when needed `docker builder prune`. However both of these suffer from the fact that without the cache, our builds takes too long.
 
 To overcome this, we can use `ADD` or `COPY`. Both of these invalides the cache if the source has any change. For example using `COPY some-repo /opt/some-repo` will invalidate the cache and rebuild the layer if any file inside `some-repo` changes. Furthermore this won't require to push your changes just to build the image.
 
@@ -26,6 +26,10 @@ This suggets that we should move copying after installing dependenices. However 
 
 One solution we can come up with to separate dependencies from the other files. This would make sense if our dependencies were to be a list in a file. But instead they are couple of shell scripts that depend on multiple other shell scripts and the directory hierarchy.
 
-So what I did is to keep `RUN git clone some-repo` at the beginning and later on I override this with `COPY some-repo /opt/some-repo`. This way we initially get a cached layer to download the dependencies, then use cached dependencies and then lastly copy the updated repository. This way I was able to reduce local build time from 4 minute to 3 second for subsequent builds.
+So what I did is to keep `RUN git clone some-repo` at the beginning and later on I override this with `COPY some-repo /opt/some-repo`. This way we initially get a cached layer to download the dependencies, then use cached dependencies and then lastly copy the updated repository. This way I was able to reduce local image build time from 4 minute to 3 second for subsequent builds.
 
 This means if you were to update the dependencies, you must clear the cache before rebuilding.
+
+### Note about -v flag for docker compose down
+
+When you add something to hdfs, those files are stored in the real disks mapped into the docker (volumes). So when you shut down the system etither via `docker compose down` or `docker-hadoop/stop-compose.sh`, you will keep hdfs state next time you start your system. This could be something useful but if not, you could clear these volumes by passing `-v` flag to either command like `docker compose down -v` or `docker-hadoop/stop-compose.sh -v`.
