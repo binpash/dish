@@ -1,0 +1,16 @@
+{
+  "workers": {
+    "node1": {
+      "host": "datanode1",
+      "port": 65432
+    },
+    "node2": {
+      "host": "datanode2",
+      "port": 65432
+    },
+    "node3": {
+      "host": "datanode3",
+      "port": 65432
+    }
+  }
+}

@@ -1,0 +1,123 @@
+version: '3.5'
+
+services:
+  namenode:
+    image: localhost:5000/hadoop-namenode:$RELEASE
+    networks:
+      - hbase
+    volumes:
+      - namenode:/hadoop/dfs/name
+      - ${PWD}/dspash-config.json:${DISH_TOP}/pash/cluster.json
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+    deploy:
+      mode: replicated
+      endpoint_mode: dnsrr
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        traefik.docker.network: hbase
+        traefik.port: 9870
+
+  datanode:
+    image: localhost:5000/hadoop-datanode:$RELEASE
+    hostname: "{{.Node.Hostname}}-datanode"
+    networks:
+      - hbase
+    volumes:
+      - datanode:/hadoop/dfs/data
+    env_file:
+      - ./hadoop.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    deploy:
+      mode: global
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.role != manager
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: hbase
+        traefik.port: 9864
+
+  resourcemanager:
+    image: localhost:5000/hadoop-resourcemanager:$RELEASE
+    networks:
+      - hbase
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      mode: replicated
+      endpoint_mode: dnsrr
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        traefik.docker.network: hbase
+        traefik.port: 8088
+    healthcheck:
+      disable: true
+
+  nodemanager:
+    image: localhost:5000/hadoop-nodemanager:$RELEASE
+    networks:
+      - hbase
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      mode: global
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.role != manager
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.docker.network: hbase
+        traefik.port: 8042
+
+  historyserver:
+    image: localhost:5000/hadoop-historyserver:$RELEASE
+    networks:
+      - hbase
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        traefik.docker.network: hbase
+        traefik.port: 8188
+
+volumes:
+  datanode:
+  namenode:
+  hadoop_historyserver:
+
+
+networks:
+  hbase:
+    name: hbase
+    external: true
