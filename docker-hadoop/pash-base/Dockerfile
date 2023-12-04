@@ -10,8 +10,8 @@ ENV DISH_TOP="/opt/dish"
 ENV PASH_TOP="${DISH_TOP}/pash"
 
 # Clone dish and checkout to the specified branch
-RUN git clone https://github.com/binpash/dish.git /opt/dish --recursive
-RUN cd /opt/dish && git checkout ft
+# RUN git clone https://github.com/binpash/dish.git /opt/dish --recursive
+RUN git clone -b ft https://github.com/binpash/dish.git /opt/dish
 
 # Use copy instead of cloning to avoid pushing
 # COPY . /opt/dish
