@@ -8,13 +8,11 @@ RUN apt-get install -y git vim iputils-ping sudo
 ENV PASH_HOST="docker"
 ENV DISH_TOP="/opt/dish"
 ENV PASH_TOP="${DISH_TOP}/pash"
-
-# Clone dish and checkout to the specified branch
+# download PaSh
 # RUN git clone https://github.com/binpash/dish.git /opt/dish --recursive
-RUN git clone -b ft https://github.com/binpash/dish.git /opt/dish
 
-# Use copy instead of cloning to avoid pushing
-# COPY . /opt/dish
+# Clone and checkout to the specified dish branch
+RUN git clone -b ft https://github.com/binpash/dish.git /opt/dish
 
 # install PaSh and setup shell paths
 RUN bash ${PASH_TOP}/scripts/distro-deps.sh

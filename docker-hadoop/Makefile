@@ -9,7 +9,7 @@ endif
 build:
 #   https://stackoverflow.com/a/34392052/15104821
 	docker build -t pash-base:$(RELEASE) -f ./pash-base/Dockerfile --build-arg RELEASE=$(RELEASE) ..
-	docker build -t hadoop-pash-base:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./base
+	docker build -t hadoop-pash-base:$(RELEASE) -f ./base/Dockerfile --build-arg RELEASE=$(RELEASE) ..
 
 	docker build -t hadoop-namenode:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./namenode
 	docker build -t hadoop-datanode:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./datanode

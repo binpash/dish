@@ -4,14 +4,14 @@ ARG RELEASE=latest
 FROM $BASE:$RELEASE
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      openjdk-8-jdk \
-      net-tools \
-      curl \
-      netcat \
-      gnupg \
-      libsnappy-dev \
+    openjdk-8-jdk \
+    net-tools \
+    curl \
+    netcat \
+    gnupg \
+    libsnappy-dev \
     && rm -rf /var/lib/apt/lists/*
-      
+
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN curl -O https://dist.apache.org/repos/dist/release/hadoop/common/KEYS
@@ -41,8 +41,13 @@ ENV MULTIHOMED_NETWORK=1
 ENV USER=root
 ENV PATH $HADOOP_HOME/bin/:$PATH
 
-ADD entrypoint.sh /entrypoint.sh
+ADD ./docker-hadoop/base/entrypoint.sh /entrypoint.sh
 
 RUN chmod a+x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
+
+# This is required because RUN caches commands
+# We could do this at the beginning but then we would have to rebuild all the heavy work above
+# This requires source code to be cloned already
+COPY . /opt/dish
