@@ -1,3 +1,0 @@
-[submodule "docker-hadoop"]
-	path = docker-hadoop
-	url = https://github.com/binpash/docker-hadoop
