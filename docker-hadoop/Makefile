@@ -7,15 +7,16 @@ RELEASE := latest
 endif
 
 build:
-	docker build -t pash-base:$(RELEASE) ./pash-base --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-pash-base:$(RELEASE) ./base --build-arg RELEASE=$(RELEASE)
+#   https://stackoverflow.com/a/34392052/15104821
+	docker build -t pash-base:$(RELEASE) -f ./pash-base/Dockerfile --build-arg RELEASE=$(RELEASE) ..
+	docker build -t hadoop-pash-base:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./base
 
-	docker build -t hadoop-namenode:$(RELEASE) ./namenode --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-datanode:$(RELEASE) ./datanode --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-resourcemanager:$(RELEASE) ./resourcemanager --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-nodemanager:$(RELEASE) ./nodemanager --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-historyserver:$(RELEASE) ./historyserver --build-arg RELEASE=$(RELEASE)
-	docker build -t hadoop-submit:$(RELEASE) ./submit --build-arg RELEASE=$(RELEASE)
+	docker build -t hadoop-namenode:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./namenode
+	docker build -t hadoop-datanode:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./datanode
+	docker build -t hadoop-resourcemanager:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./resourcemanager
+	docker build -t hadoop-nodemanager:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./nodemanager
+	docker build -t hadoop-historyserver:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./historyserver
+	docker build -t hadoop-submit:$(RELEASE) --build-arg RELEASE=$(RELEASE) ./submit
 
 wordcount:
 	docker build -t hadoop-wordcount ./submit
