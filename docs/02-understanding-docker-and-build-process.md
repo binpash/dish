@@ -18,7 +18,7 @@ When we run `docker-hadoop/setup-compose.sh`. This script builds all the images 
 
 Once all of the images are build, we run those images with the help of the docker compose. This means you can shut them down with `docker compose down` and indeed thats what `docker-hadoop/stop-compose.sh` does.
 
-### How can we shoren build time (4m -> 3s)?
+### How can we shorten build time (4m -> 3s)?
 
 Now that we know how cache work and how we build, let's take a look what takes long if we were to use `COPY some-repo /opt/some-repo`. Once we investiage what takes a long time, we can see that downloading dependencies takes most of the time.
 
