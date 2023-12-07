@@ -4,10 +4,11 @@ import time
 import queue
 import pickle
 import json
+import collections
 
 from dspash.socket_utils import SocketManager, encode_request, decode_request, send_msg, recv_msg
 from util import log
-from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file
+from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, update_remote_nodes, update_remote_neighbors
 from dspash.utils import read_file
 import config 
 import copy
@@ -127,6 +128,7 @@ class WorkersManager():
             raise Exception("no workers online where the date is stored")
 
         return best_worker
+    
 
     def add_worker(self, name, host, port):
         self.workers.append(WorkerConnection(name, host, port))
@@ -161,37 +163,47 @@ class WorkersManager():
             elif request.startswith("Exec-Graph"):
                 args = request.split(':', 1)[1].strip()
                 filename, declared_functions_file = args.split()
-                numExecutedSubgraphs = 0
-                numTotalSubgraphs = None
+
                 crashed_worker = workers_manager.args.worker_timeout_choice if workers_manager.args.worker_timeout_choice != '' else "worker1" # default to be worker1
                 try:
-                    while not numTotalSubgraphs or numExecutedSubgraphs < numTotalSubgraphs:
-                        # In the naive fault tolerance, we want all workers to receive its subgraph(s) without crashing
-                        # if a crash happens, we'll re-split the IR and do it again until scheduling is done without any crash.
-                        numExecutedSubgraphs = 0
-                        worker_subgraph_pairs, shell_vars, main_graph = prepare_graph_for_remote_exec(filename, workers_manager.get_worker)
-                        if numTotalSubgraphs == None:
-                            numTotalSubgraphs = len(worker_subgraph_pairs)
-                        script_fname = to_shell_file(main_graph, workers_manager.args)
-                        log("Master node graph stored in ", script_fname)
+                    # In the naive fault tolerance, we want all workers to receive its subgraph(s) without crashing
+                    # if a crash happens, we'll re-split the IR and do it again until scheduling is done without any crash.
+                    worker_subgraph_pairs, shell_vars, main_graph, file_id_gen, input_fifo_map = prepare_graph_for_remote_exec(filename, workers_manager.get_worker)
+                    
+                    # Read functions
+                    log("Functions stored in ", declared_functions_file)
+                    declared_functions = read_file(declared_functions_file)
 
-                        # Read functions
-                        log("Functions stored in ", declared_functions_file)
-                        declared_functions = read_file(declared_functions_file)
+                    # Execute subgraphs on workers
+                    worker_subgraph_pairs = collections.deque(worker_subgraph_pairs)
+                    while worker_subgraph_pairs:
+                        worker, subgraph = worker_subgraph_pairs.popleft()
+                        worker_timeout = workers_manager.args.worker_timeout if worker.name == crashed_worker and workers_manager.args.worker_timeout else 0
+                        try:
+                            worker.send_graph_exec_request(subgraph, shell_vars, declared_functions, workers_manager.args.debug, worker_timeout)
+                        except Exception as e:
+                            # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
+                            replacement_worker = get_best_worker_for_subgraph(subgraph, workers_manager.get_worker)
+                           
+                            # Update subgraph
+                            update_remote_nodes(subgraph, replacement_worker)
 
-                        # Execute subgraphs on workers
-                        for worker, subgraph in worker_subgraph_pairs:
-                            worker_timeout = workers_manager.args.worker_timeout if worker.name == crashed_worker and workers_manager.args.worker_timeout else 0
-                            
-                            try:
-                                worker.send_graph_exec_request(subgraph, shell_vars, declared_functions, workers_manager.args.debug, worker_timeout)
-                                numExecutedSubgraphs += 1
-                            except Exception as e:
-                                # worker timeout
-                                worker.close()
-                                log(f"{worker} closed")
+                            # TODO: Update other dependent subgraphs' remote read/write nodes (minimal subset of neighbors)
+                            # currently only doing it for main_graph
+                            update_remote_neighbors(main_graph, worker, replacement_worker)
+
+                            # Push new worker graph pair back to container
+                            worker_graph_pair = (replacement_worker, subgraph)
+                            worker_subgraph_pairs.append(worker_graph_pair)
+
+                            # Shuts down crashed worker gracefully
+                            worker.close()
+                            log(f"{worker} closed")
+
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph
+                    script_fname = to_shell_file(main_graph, workers_manager.args)
+                    log("Master node graph storeid in ", script_fname)
                     response_msg = f"OK {script_fname}"
                     dspash_socket.respond(response_msg, conn)
                 except Exception as e:

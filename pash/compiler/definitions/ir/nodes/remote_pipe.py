@@ -18,6 +18,21 @@ class RemotePipe(DFGNode):
         read_com = config.config['runtime']['remote_read_binary']
         return read_com in com_name
 
+    def set_addr(self, host_ip, port):
+        for idx, option in enumerate(self.com_options):
+            if "--addr" in option[1].opt_serialize():
+                # Replace with new addr_option
+                self.com_options[idx] = (idx, Arg(string_to_argument(f"--addr {host_ip}:{port}")))
+                break 
+
+    def set_addr_conditional(self, host_ip, port, original_host_ip, original_port):
+        # replace original_host_ip, original_port with new host_ip, port
+        for idx, option in enumerate(self.com_options):
+            if "--addr" in option[1].opt_serialize():
+                addr = option[1].opt_serialize().split(' ')[1]
+                if original_host_ip == addr.split(':')[0] and str(original_port) == addr.split(':')[1]:
+                    self.com_options[idx] = (idx, Arg(string_to_argument(f"--addr {host_ip}:{port}")))
+
 
 def make_remote_pipe(inputs, outputs, host_ip, port, is_remote_read, id):
     com_category = "pure"

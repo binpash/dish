@@ -388,4 +388,71 @@ def prepare_graph_for_remote_exec(filename:str, get_worker:Callable):
     file_id_gen = ir.get_file_id_gen()
     subgraphs, mapping = split_ir(ir)
     main_graph, worker_graph_pairs = assign_workers_to_subgraphs(subgraphs, file_id_gen, mapping, get_worker)
-    return worker_graph_pairs, shell_vars, main_graph
+    return worker_graph_pairs, shell_vars, main_graph, file_id_gen, mapping
+
+def get_best_worker_for_subgraph(subgraph:IR, get_worker:Callable):
+    """Get the best worker for a subgraph
+    
+    subgraph: the ir we want to match with the best worker
+    get_worker: a callback for getting a worker from worker manager
+    Return: the best worker
+    """    
+    subgraph_critical_fids = list(filter(lambda fid: fid.has_remote_file_resource(), subgraph.all_fids()))
+    worker = get_worker(subgraph_critical_fids)
+    worker._running_processes += 1
+    return worker
+
+def update_remote_nodes(subgraph:IR, worker):
+    """Update remote nodes (remote writer/reader)'s host and port fields
+       with the new worker's host
+
+    Assumption: the subgraph has already gone through the initial processing in prepare_graph_for_remote_exec()
+                therefore, all sink_nodes are remote_writer_nodes
+                and all source_nodes are remote_reader_nodes
+
+    subgraph: the ir to be updated
+    worker: the "replacement worker" (type: WorkerConnection) whose host should be used to update the nodes
+    Return: None
+    """
+        
+    # At this point all sink_nodes are remote_writer_nodes
+    sink_nodes = subgraph.sink_nodes()
+    for sink_node in sink_nodes:
+        # Sanity checks
+        assert(isinstance(subgraph.get_node(sink_node), remote_pipe.RemotePipe))
+        assert(len(subgraph.get_node_output_fids(sink_node)) == 1)
+        out_edge = subgraph.get_node_output_fids(sink_node)[0]
+        out_edge_id = out_edge.get_ident() 
+        to_node = subgraph.get_edge_to(out_edge_id)
+        assert(to_node == None)
+        assert(len(subgraph.get_previous_nodes(sink_node)) == 1)
+
+        # Update node's addr
+        subgraph.get_node(sink_node).set_addr(host_ip=worker.host(), port=DISCOVERY_PORT)
+
+    # TODO: symmetrically also update all source_nodes (source_nodes are remote_reader_nodes)
+
+def update_remote_neighbors(subgraph:IR, neighbor, new_neighbor):
+    """Update remote nodes (remote writer/reader)'s host and port fields
+       with the new neighbor's host
+
+    Assumption: the subgraph has already gone through the initial processing in prepare_graph_for_remote_exec()
+                therefore, all sink_nodes are remote_writer_nodes
+                and all source_nodes are remote_reader_nodes
+
+    subgraph: the ir to be updated
+    neighbor: the original worker who communicated to a node in subgraph through remote pipe
+    new_neighbor: the new "replacement worker" who now communicates to a node in subgraph through remote pipe
+    Return: None
+    """
+
+    # Updating remote_reader_nodes
+    for source_node in subgraph.source_nodes():
+        # Sanity check
+        assert(isinstance(subgraph.get_node(source_node), remote_pipe.RemotePipe))
+        assert(len(subgraph.get_node_input_fids(source_node)) == 0)
+        # Update host
+        subgraph.get_node(source_node).set_addr_conditional(host_ip=new_neighbor.host(), port=DISCOVERY_PORT, 
+                                                            original_host_ip=neighbor.host(), original_port=DISCOVERY_PORT)
+        
+    # TODO: symmetrically also update all sink_nodes (sink_nodes are remote_writer_nodes)
