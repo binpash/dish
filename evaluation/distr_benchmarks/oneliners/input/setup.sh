@@ -18,7 +18,7 @@ fi
 hdfs dfs -mkdir -p /oneliners
 
 if [ ! -f ./1M.txt ]; then
-    curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/1M.txt' > 1M.txt
+    curl -sf --connect-timeout 10 'atlas-group.cs.brown.edu/data/dummy/1M.txt' > 1M.txt
     if [ $? -ne 0 ]; then
         curl -f 'https://zenodo.org/record/7650885/files/1M.txt' > 1M.txt
         [ $? -ne 0 ] && eexit 'cannot find 1M.txt'
@@ -41,7 +41,7 @@ if [ ! -f ./100M.txt ]; then
 fi
 
 if [ ! -f ./1G.txt ]; then
-    curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/1G.txt' > 1G.txt
+    curl -sf --connect-timeout 10 'atlas-group.cs.brown.edu/data/dummy/1G.txt' > 1G.txt
     if [ $? -ne 0 ]; then
         touch 1G.txt
         for (( i = 0; i < 10; i++ )); do
@@ -68,14 +68,14 @@ fi
 
 # download wamerican-insane dictionary and sort according to machine
 if [ ! -f ./dict.txt ]; then
-    curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/dict.txt' | sort > dict.txt
+    curl -sf --connect-timeout 10 'atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > dict.txt
     if [ $? -ne 0 ]; then
         sort words > sorted_words
     fi
 fi
 
 if [ ! -f ./all_cmds.txt ]; then
-    curl -sf --connect-timeout 10 'http://ndr.md/data/dummy/all_cmds.txt' > all_cmds.txt
+    curl -sf --connect-timeout 10 'atlas-group.cs.brown.edu/data/dummy/all_cmds.txt' > all_cmds.txt
     if [ $? -ne 0 ]; then
         # This should be OK for tests, no need for abort
         ls /usr/bin/* > all_cmds.txt

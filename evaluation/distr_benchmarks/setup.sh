@@ -3,6 +3,9 @@
 cd $PASH_TOP/evaluation/distr_benchmarks/oneliners/input
 bash setup.sh
 
+cd $PASH_TOP/evaluation/distr_benchmarks/intro/input
+bash setup.sh
+
 cd $PASH_TOP/evaluation/distr_benchmarks/unix50/input
 bash setup.sh
 
