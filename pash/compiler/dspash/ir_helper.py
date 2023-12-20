@@ -25,6 +25,7 @@ import definitions.ir.nodes.r_merge as r_merge
 import definitions.ir.nodes.r_split as r_split
 import definitions.ir.nodes.r_unwrap as r_unwrap
 import definitions.ir.nodes.dgsh_tee as dgsh_tee
+import definitions.ir.nodes.dfs_split_reader as dfs_split_reader
 import definitions.ir.nodes.remote_pipe as remote_pipe
 import shlex
 import subprocess
@@ -402,57 +403,49 @@ def get_best_worker_for_subgraph(subgraph:IR, get_worker:Callable):
     worker._running_processes += 1
     return worker
 
-def update_remote_nodes(subgraph:IR, worker):
-    """Update remote nodes (remote writer/reader)'s host and port fields
-       with the new worker's host
+def get_neighbor_subgraph_node_pairs(subgraphs: [IR], crashed_worker):
+    """Get all (subgraph, node) pairs such that the node has established communication
+        with the crashed_worker. This includes remote_pipes on the crashed_worker too
 
     Assumption: the subgraph has already gone through the initial processing in prepare_graph_for_remote_exec()
-                therefore, all sink_nodes are remote_writer_nodes
-                and all source_nodes are remote_reader_nodes
+                therefore, all remote_writer_nodes are sink_nodes 
+                and all remote_reader_nodes are source_nodes 
+                (not true the other way - source_nodes can also be DFSSplitReader nodes)
 
-    subgraph: the ir to be updated
-    worker: the "replacement worker" (type: WorkerConnection) whose host should be used to update the nodes
+    subgraphs: list of IRs after split
+    crashed_worker: the worker who crashed
     Return: None
     """
-        
-    # At this point all sink_nodes are remote_writer_nodes
-    sink_nodes = subgraph.sink_nodes()
-    for sink_node in sink_nodes:
-        # Sanity checks
-        assert(isinstance(subgraph.get_node(sink_node), remote_pipe.RemotePipe))
-        assert(len(subgraph.get_node_output_fids(sink_node)) == 1)
-        out_edge = subgraph.get_node_output_fids(sink_node)[0]
-        out_edge_id = out_edge.get_ident() 
-        to_node = subgraph.get_edge_to(out_edge_id)
-        assert(to_node == None)
-        assert(len(subgraph.get_previous_nodes(sink_node)) == 1)
+    neighbor_subgraph_node_pairs = []
+    for subgraph in subgraphs:
+        for update_node in subgraph.source_nodes() + subgraph.sink_nodes():
+            # Sanity check
+            if isinstance(subgraph.get_node(update_node), remote_pipe.RemotePipe):
+                # If the current remote_pipe had communicated with crashed_worker before,
+                # append it to the list
+                if subgraph.get_node(update_node).get_host() == crashed_worker.host():
+                    neighbor_subgraph_node_pairs.append((subgraph, update_node))
+    return neighbor_subgraph_node_pairs
 
-        # Update node's addr
-        subgraph.get_node(sink_node).set_addr(host_ip=worker.host(), port=DISCOVERY_PORT)
-
-    # TODO: symmetrically also update all source_nodes (source_nodes are remote_reader_nodes)
-
-def update_remote_neighbors(subgraph:IR, neighbor, new_neighbor):
+def update_remote_pipe_addresses(subgraphs:[IR], crashed_worker, replacement_worker):
     """Update remote nodes (remote writer/reader)'s host and port fields
        with the new neighbor's host
 
     Assumption: the subgraph has already gone through the initial processing in prepare_graph_for_remote_exec()
-                therefore, all sink_nodes are remote_writer_nodes
-                and all source_nodes are remote_reader_nodes
+                therefore, all remote_writer_nodes are sink_nodes 
+                and all remote_reader_nodes are source_nodes 
+                (not true the other way - source_nodes can also be DFSSplitReader nodes)
 
-    subgraph: the ir to be updated
-    neighbor: the original worker who communicated to a node in subgraph through remote pipe
-    new_neighbor: the new "replacement worker" who now communicates to a node in subgraph through remote pipe
+    subgraph: list of IRs after split
+    crashed_worker: the original crashed worker (type: WorkerConnection)
+    replacement_worker: the replacement worker (type: WorkerConnection) whose host should be used to update the nodes
     Return: None
     """
-
-    # Updating remote_reader_nodes
-    for source_node in subgraph.source_nodes():
+    update_nodes = get_neighbor_subgraph_node_pairs(subgraphs, crashed_worker)
+    for subgraph, update_node in update_nodes:
         # Sanity check
-        assert(isinstance(subgraph.get_node(source_node), remote_pipe.RemotePipe))
-        assert(len(subgraph.get_node_input_fids(source_node)) == 0)
-        # Update host
-        subgraph.get_node(source_node).set_addr_conditional(host_ip=new_neighbor.host(), port=DISCOVERY_PORT, 
-                                                            original_host_ip=neighbor.host(), original_port=DISCOVERY_PORT)
-        
-    # TODO: symmetrically also update all sink_nodes (sink_nodes are remote_writer_nodes)
+        assert(isinstance(subgraph.get_node(update_node), remote_pipe.RemotePipe))
+
+        # Update node's addr
+        subgraph.get_node(update_node).set_addr(host_ip=replacement_worker.host(), port=DISCOVERY_PORT)
+

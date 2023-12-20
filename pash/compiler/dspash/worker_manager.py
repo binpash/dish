@@ -8,11 +8,13 @@ import collections
 
 from dspash.socket_utils import SocketManager, encode_request, decode_request, send_msg, recv_msg
 from util import log
-from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, update_remote_nodes, update_remote_neighbors
+from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, update_remote_pipe_addresses
 from dspash.utils import read_file
 import config 
 import copy
 import requests
+import definitions.ir.nodes.remote_pipe as remote_pipe
+
 
 PORT = 65425        # Port to listen on (non-privileged ports are > 1023)
 # TODO: get the url from the environment or config
@@ -176,6 +178,8 @@ class WorkersManager():
 
                     # Execute subgraphs on workers
                     worker_subgraph_pairs = collections.deque(worker_subgraph_pairs)
+                    subgraphs = [pair[1] for pair in worker_subgraph_pairs]
+
                     while worker_subgraph_pairs:
                         worker, subgraph = worker_subgraph_pairs.popleft()
                         worker_timeout = workers_manager.args.worker_timeout if worker.name == crashed_worker and workers_manager.args.worker_timeout else 0
@@ -184,21 +188,20 @@ class WorkersManager():
                         except Exception as e:
                             # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
                             replacement_worker = get_best_worker_for_subgraph(subgraph, workers_manager.get_worker)
-                           
-                            # Update subgraph
-                            update_remote_nodes(subgraph, replacement_worker)
-
-                            # TODO: Update other dependent subgraphs' remote read/write nodes (minimal subset of neighbors)
-                            # currently only doing it for main_graph
-                            update_remote_neighbors(main_graph, worker, replacement_worker)
-
+                            # Update all remote_pipes that have addr of the crashed worker
+                            update_remote_pipe_addresses(subgraphs, worker, replacement_worker)
+                            # update remote_pipes on main_graph that have addr of the crashed worker
+                            update_remote_pipe_addresses([main_graph], worker, replacement_worker)
                             # Push new worker graph pair back to container
                             worker_graph_pair = (replacement_worker, subgraph)
                             worker_subgraph_pairs.append(worker_graph_pair)
 
                             # Shuts down crashed worker gracefully
-                            worker.close()
-                            log(f"{worker} closed")
+                            if worker.is_online():
+                                worker.close()
+                                log(f"{worker} closed")
+                            else:
+                                log(f"{worker} is already closed")
 
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph
