@@ -3,10 +3,10 @@
 PASH_TOP=${PASH_TOP:-$(git rev-parse --show-toplevel)}
 . "$PASH_TOP/scripts/utils.sh"
 cd $(dirname $0)
-input_files=("100M.txt")
+input_files=("100M.txt" "200M.txt" "300M.txt" "500M.txt")
 local_fils=("dict.txt")
 
-[ "$1" = "-c" ] && rm-files 100M.txt words sorted_words
+[ "$1" = "-c" ] && rm-files 100M.txt 200M.txt 300M.txt 500M.txt words sorted_words
 
 hdfs dfs -mkdir -p /intro
 
@@ -23,6 +23,27 @@ if [ ! -f ./100M.txt ]; then
     done
   fi
   append_nl_if_not ./100M.txt
+fi
+
+if [ ! -f ./200M.txt ]; then
+    touch 200M.txt
+    for (( i = 0; i < 2; i++ )); do
+        cat 100M.txt >> 200M.txt
+    done
+fi
+
+if [ ! -f ./300M.txt ]; then
+    touch 300M.txt
+    for (( i = 0; i < 3; i++ )); do
+        cat 100M.txt >> 300M.txt
+    done
+fi
+
+if [ ! -f ./500M.txt ]; then
+    touch 500M.txt
+    for (( i = 0; i < 5; i++ )); do
+        cat 100M.txt >> 500M.txt
+    done
 fi
 
 if [ ! -f ./words ]; then

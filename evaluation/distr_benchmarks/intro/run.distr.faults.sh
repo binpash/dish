@@ -3,6 +3,13 @@ export TIMEFORMAT=%R
 export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
 curl -sf 'http://ndr.md/data/dummy/dict.txt' | sort > $dict
 
+scripts_inputs=(
+      "demo-spell;100M.txt"
+      "dev-1-subgraph;100M.txt"
+      "dev-2-subgraph;200M.txt"
+      "dev-3-subgraph;300M.txt"
+      "dev-4-subgraph;500M.txt"
+  )
 
 intro_pash(){
   flags=${1:-$PASH_FLAGS}
@@ -23,22 +30,27 @@ intro_pash(){
   echo executing one-liners with $prefix pash with data $(date) | tee "$times_file"
   echo '' >> "$times_file"
 
+  for script_input in ${scripts_inputs[@]}
+  do
+    IFS=";" read -r -a script_input_parsed <<< "${script_input}"
+    script="${script_input_parsed[0]}"
+    input="${script_input_parsed[1]}"
 
-  script="demo-spell"
+    export IN="/intro/$input"
+    export dict=
 
+    printf -v pad %30s
+    padded_script="${script}.sh:${pad}"
+    padded_script=${padded_script:0:30}
 
-  printf -v pad %30s
-  padded_script="${script}.sh:${pad}"
-  padded_script=${padded_script:0:30}
+    outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
+    pash_log="${pash_logs_dir}/${script}.pash.log"
+    single_time_file="${outputs_dir}/${script}.${time_suffix}"
 
-  outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
-  pash_log="${pash_logs_dir}/${script}.pash.log"
-  single_time_file="${outputs_dir}/${script}.${time_suffix}"
-
-  echo -n "${padded_script}" | tee -a "$times_file"
-  { time "$PASH_TOP/pa.sh" $flags --log_file "${pash_log}" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
-  cat "${single_time_file}" | tee -a "$times_file"
-
+    echo -n "${padded_script}" | tee -a "$times_file"
+    { time "$PASH_TOP/pa.sh" $flags --log_file "${pash_log}" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
+    cat "${single_time_file}" | tee -a "$times_file"
+  done
 }
 
 intro_faults() {
