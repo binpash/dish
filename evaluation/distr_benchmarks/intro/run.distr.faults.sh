@@ -27,7 +27,7 @@ intro_pash(){
 
   touch "$times_file"
   cat $times_file >> $times_file.d
-  echo executing one-liners with $prefix pash with data $(date) | tee "$times_file"
+  echo executing intro scripts with $prefix pash with data $(date) | tee "$times_file"
   echo '' >> "$times_file"
 
   for script_input in ${scripts_inputs[@]}

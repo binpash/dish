@@ -167,7 +167,7 @@ class WorkersManager():
                 args = request.split(':', 1)[1].strip()
                 filename, declared_functions_file = args.split()
 
-                crashed_worker = workers_manager.args.worker_timeout_choice if workers_manager.args.worker_timeout_choice != '' else "worker1" # default to be worker1
+                crashed_worker_choice = workers_manager.args.worker_timeout_choice if workers_manager.args.worker_timeout_choice != '' else "worker1" # default to be worker1
                 try:
                     # In the naive fault tolerance, we want all workers to receive its subgraph(s) without crashing
                     # if a crash happens, we'll re-split the IR and do it again until scheduling is done without any crash.
@@ -187,26 +187,36 @@ class WorkersManager():
                         print(worker.name, worker)
                         print(to_shell(subgraph, workers_manager.args))
                         print('---------------------------------')
-                        worker_timeout = workers_manager.args.worker_timeout if worker.name == crashed_worker and workers_manager.args.worker_timeout else 0
+                        worker_timeout = workers_manager.args.worker_timeout if worker.name == crashed_worker_choice and workers_manager.args.worker_timeout else 0
                         try:
                             worker.send_graph_exec_request(subgraph, shell_vars, declared_functions, workers_manager.args.debug, worker_timeout)
                         except Exception as e:
                             # For each subgraph assigned to worker (now crashed), do:
                             #   1) find the next best worker as the replacement_worker
-                            #   2) get every remote_pipe (call it RP) in the subgraph as well as all neighboring remote_pipes (call it RP-N)
+                            #   2) get every remote_pipe (call it RP) in the subgraph whose addr is the crashed_worker's host
+                            #       and all neighboring remote_pipes (call it RP-N) to RP
                             #       which are remote_pipes on other subgraphs that communicated with RP.
-                            #      we will need to update addresses for RP | RP-N from the crashed_worker's host to replacement_worker's host
+                            #       we will need to update addresses for RP | RP-N from the crashed_worker's host to replacement_worker's host
+                            #       Note: we don't want to update host for evert remote_pipe on the subgraph because it could have been
+                            #              a remote_read pipe reading from a healthy worker. In this case we want to keep it as it is
                             #   3) Update the addresses for RP | RP-N from the crashed_worker's host to replacement_worker's host
                             #   *Note: subgraphs assigned to the same crashed worker may be assigned to different replacement workers
-                            new_worker_subgraph_pairs = collections.deque([worker_subgraph_pair for worker_subgraph_pair in worker_subgraph_pairs 
-                                                                           if worker_subgraph_pair[0] != worker])
-                            for crashed_worker_subgraph in worker_subgraph_map[worker]:
+                            
+                            # Shuts down crashed worker gracefully
+                            crashed_worker = worker
+                            if crashed_worker.is_online():
+                                crashed_worker.close()
+                                log(f"{crashed_worker} closed")
+                            else:
+                                log(f"{crashed_worker} is already closed")
+
+                            for crashed_worker_subgraph in worker_subgraph_map[crashed_worker]:
                                 # Step 1
                                 # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
                                 replacement_worker = get_best_worker_for_subgraph(crashed_worker_subgraph, workers_manager.get_worker)
 
                                 # Step 2 and 3
-                                update_remote_pipe_addresses(subgraphs + [main_graph], crashed_worker_subgraph, worker, replacement_worker)
+                                update_remote_pipe_addresses(subgraphs + [main_graph], crashed_worker_subgraph, crashed_worker, replacement_worker)
 
                                 # Update meta-data
                                 # crashed_worker_subgraph is now updated so it can be executed by replacement_worker
@@ -216,17 +226,16 @@ class WorkersManager():
 
                                 # Push new worker graph pair back to container
                                 worker_subgraph_pair = (replacement_worker, subgraph)
-                                new_worker_subgraph_pairs.append(worker_subgraph_pair)
+                                worker_subgraph_pairs.append(worker_subgraph_pair)
+
+                            # Remove all worker_subgraph pairs whose worker is the crashed worker
+                            new_worker_subgraph_pairs = [(worker, subgraph) for worker, subgraph in worker_subgraph_pairs 
+                                                        if worker != crashed_worker]
+                                    
                             # Update meta-data
-                            del worker_subgraph_map[worker]
+                            del worker_subgraph_map[crashed_worker]
                             worker_subgraph_pairs = new_worker_subgraph_pairs
 
-                            # Shuts down crashed worker gracefully
-                            if worker.is_online():
-                                worker.close()
-                                log(f"{worker} closed")
-                            else:
-                                log(f"{worker} is already closed")
 
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph
@@ -238,7 +247,6 @@ class WorkersManager():
                 except Exception as e:
                     print(e)
 
-                    
 
             else:
                 raise Exception(f"Unknown request: {request}")
