@@ -8,7 +8,7 @@ import collections
 
 from dspash.socket_utils import SocketManager, encode_request, decode_request, send_msg, recv_msg
 from util import log
-from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, update_remote_pipe_addresses, get_worker_subgraph_map
+from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, get_remote_pipe_update_candidates, update_remote_pipes, get_worker_subgraph_map
 from dspash.utils import read_file
 import config 
 import copy
@@ -209,28 +209,36 @@ class WorkersManager():
                                 log(f"{crashed_worker} closed")
                             else:
                                 log(f"{crashed_worker} is already closed")
-
-                            for crashed_worker_subgraph in worker_subgraph_map[crashed_worker]:
+                            
+                            update_candidates_replacements_map = {}
+                            crashed_worker_subgraphs = worker_subgraph_map[crashed_worker]
+                            crashed_worker_subgraphs_replacements_map = {}
+                            for crashed_worker_subgraph in crashed_worker_subgraphs:
                                 # Step 1
                                 # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
                                 replacement_worker = get_best_worker_for_subgraph(crashed_worker_subgraph, workers_manager.get_worker)
+                                crashed_worker_subgraphs_replacements_map[crashed_worker_subgraph] = replacement_worker
 
-                                # Step 2 and 3
-                                update_remote_pipe_addresses(subgraphs + [main_graph], crashed_worker_subgraph, crashed_worker, replacement_worker)
+                                # Step 2
+                                update_candidates_replacements_map.update(
+                                    get_remote_pipe_update_candidates(subgraphs + [main_graph], subgraph, crashed_worker, replacement_worker))
 
-                                # Update meta-data
-                                # crashed_worker_subgraph is now updated so it can be executed by replacement_worker
-                                worker_subgraph_map[replacement_worker].append(crashed_worker_subgraph)
                                 
                                 # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
 
+                            # Step 3
+                            update_remote_pipes(update_candidates_replacements_map)
+                            
+                            # crashed_worker_subgraphs are now updated so it can be executed by replacement_workers
+                            for updated_subgraph, replacement_worker in crashed_worker_subgraphs_replacements_map.items():
+                                worker_subgraph_map[replacement_worker].append(crashed_worker_subgraph)
                                 # Push new worker graph pair back to container
-                                worker_subgraph_pair = (replacement_worker, subgraph)
+                                worker_subgraph_pair = (replacement_worker, updated_subgraph)
                                 worker_subgraph_pairs.append(worker_subgraph_pair)
-
+                                
                             # Remove all worker_subgraph pairs whose worker is the crashed worker
-                            new_worker_subgraph_pairs = [(worker, subgraph) for worker, subgraph in worker_subgraph_pairs 
-                                                        if worker != crashed_worker]
+                            new_worker_subgraph_pairs = collections.deque([(worker, subgraph) for worker, subgraph in worker_subgraph_pairs 
+                                                        if worker != crashed_worker])
                                     
                             # Update meta-data
                             del worker_subgraph_map[crashed_worker]

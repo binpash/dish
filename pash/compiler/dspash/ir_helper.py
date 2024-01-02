@@ -429,7 +429,7 @@ def get_neighbor_remote_pipes(subgraphs: [IR], remote_pipe_id) -> [remote_pipe.R
                     update_remote_pipe_candidates.add(update_node)
     return update_remote_pipe_candidates
 
-def update_remote_pipe_addresses(subgraphs:[IR], subgraph: IR, crashed_worker, replacement_worker):
+def get_remote_pipe_update_candidates(subgraphs: [IR], subgraph: IR, crashed_worker, replacement_worker):
     """Update remote nodes (remote writer/reader)'s host and port fields
        with the new neighbor's host
 
@@ -443,21 +443,27 @@ def update_remote_pipe_addresses(subgraphs:[IR], subgraph: IR, crashed_worker, r
               we also need to update remote_pipe addresses for any neighbor remote_pipes for each of the [rp] 
     crashed_worker: the original crashed worker (type: WorkerConnection)
     replacement_worker: the replacement worker (type: WorkerConnection) whose host should be used to update the nodes
-    Return: None
+    Return: {update_candidate:replacement_worker} where update_candidate is any remote pipe candidate for update that belong to subgraph
     """
-    # Find all neighboring remote_pipes for every remote_pipe in subgraph 
+    # Find all remote_pipes for every remote_pipe in subgraph that needs to be updated
+    # remote_pipes whose addr is not the crashed worker don't need to be updated 
     # (their addresses will be updated to be the same replacement_worker)
-    update_remote_pipe_candidates = set()
+    update_candidates_replacements_map = {}
     for boundary_node_id in subgraph.source_nodes() + subgraph.sink_nodes():
         boundary_node = subgraph.get_node(boundary_node_id)
         if isinstance(boundary_node, remote_pipe.RemotePipe) and boundary_node.get_host() == crashed_worker.host():
             candidates = get_neighbor_remote_pipes(subgraphs, boundary_node.get_uuid())
-            update_remote_pipe_candidates = update_remote_pipe_candidates | candidates
+            for candidate in candidates:
+                update_candidates_replacements_map[candidate] = replacement_worker
 
-    # Update addresses for remote pipes
-    for remote_pipe_node in update_remote_pipe_candidates:
-        # Update node's addr
+    return update_candidates_replacements_map
+
+
+def update_remote_pipes(update_candidates_replacements_map):
+    for remote_pipe_node, replacement_worker in update_candidates_replacements_map.items():
+        assert(isinstance(remote_pipe_node, remote_pipe.RemotePipe))
         remote_pipe_node.set_addr(host_ip=replacement_worker.host(), port=DISCOVERY_PORT)
+
 
 def get_worker_subgraph_map(worker_subgraph_pairs):
     worker_subgraph_map = collections.defaultdict(list)
