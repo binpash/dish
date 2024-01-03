@@ -126,7 +126,6 @@ def manage_connection(conn, addr):
         dfs_configs_paths = {}
         while True:
             data = recv_msg(conn)
-            body = {}
             if not data:
                 break
 
@@ -137,22 +136,18 @@ def manage_connection(conn, addr):
                 graph, shell_vars, functions = parse_exec_graph(request)
                 debug = True if request['debug'] else False
                 save_configs(graph, dfs_configs_paths)
-                if int(request['worker_timeout']) > 0:
-                    time.sleep(int(request['worker_timeout']))
-                else:
-                    send_success(conn, body)
-                    time.sleep(50)
+                time.sleep(int(request['worker_timeout']))
                 rc = exec_graph(graph, shell_vars, functions, debug)
                 rcs.append((rc, request))
-                
+                body = {}
             elif request['type'] == 'Done':
                 print("Received 'Done' signal. Closing connection from the worker.")
                 break
             elif request['type'] == 'abortAll':
                 # This is buggy so not used
-                # for rc, request in rcs:
-                #     rc.kill()
-                send_success(conn, body)
+                for rc, request in rcs:
+                    rc.kill()
+                break
             else:
                 print(f"Unsupported request {request}")
             send_success(conn, body)

@@ -233,9 +233,9 @@ class WorkersManager():
 
                             # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
                             # This is buggy so not used
-                            # for worker in self.workers:
-                            #     if worker.is_online():
-                            #         worker.abortAll()
+                            for worker in self.workers:
+                                if worker.is_online():
+                                    worker.abortAll()
 
                             subgraphs = [pair[1] for pair in worker_subgraph_pairs_backup]
                             for i in range(len(worker_subgraph_pairs_backup)):
