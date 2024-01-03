@@ -83,6 +83,9 @@ class WorkerConnection:
             # self._running_processes += 1 #TODO: decrease in case of failure or process ended
             response = decode_request(response_data)
             return True
+        
+    def abortAll(self):
+        self._socket.send(encode_request({"type": "abortAll"}))
 
     def close(self):
         self._socket.send(encode_request({"type": "Done"}))
@@ -225,7 +228,10 @@ class WorkersManager():
                                     get_remote_pipe_update_candidates(subgraphs + [main_graph], subgraph, crashed_worker, replacement_worker))
 
                                 
-                                # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
+                            # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
+                            for worker in self.workers:
+                                if worker.is_online():
+                                    worker.abortAll()
 
                             # Step 3
                             update_remote_pipes(update_candidates_replacements_map)
@@ -235,10 +241,10 @@ class WorkersManager():
                                 worker_subgraph_map[replacement_worker].append(crashed_worker_subgraph)
                                 # Push new worker graph pair back to container
                                 worker_subgraph_pair = (replacement_worker, updated_subgraph)
-                                worker_subgraph_pairs.append(worker_subgraph_pair)
+                                worker_subgraph_pairs_backup.append(worker_subgraph_pair)
                                 
                             # Remove all worker_subgraph pairs whose worker is the crashed worker
-                            new_worker_subgraph_pairs = collections.deque([(worker, subgraph) for worker, subgraph in worker_subgraph_pairs 
+                            new_worker_subgraph_pairs = collections.deque([(worker, subgraph) for worker, subgraph in worker_subgraph_pairs_backup 
                                                         if worker != crashed_worker])
                                     
                             # Update meta-data
