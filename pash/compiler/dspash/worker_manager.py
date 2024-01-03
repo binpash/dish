@@ -180,6 +180,7 @@ class WorkersManager():
                     # Execute subgraphs on workers
                     worker_subgraph_map = get_worker_subgraph_map(worker_subgraph_pairs)
                     worker_subgraph_pairs = collections.deque(worker_subgraph_pairs)
+                    worker_subgraph_pairs_backup = copy.copy(worker_subgraph_pairs)
                     subgraphs = [pair[1] for pair in worker_subgraph_pairs]
 
                     while worker_subgraph_pairs:
@@ -228,7 +229,7 @@ class WorkersManager():
 
                             # Step 3
                             update_remote_pipes(update_candidates_replacements_map)
-                            
+                            print(len(worker_subgraph_pairs_backup))
                             # crashed_worker_subgraphs are now updated so it can be executed by replacement_workers
                             for updated_subgraph, replacement_worker in crashed_worker_subgraphs_replacements_map.items():
                                 worker_subgraph_map[replacement_worker].append(crashed_worker_subgraph)
