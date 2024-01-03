@@ -144,7 +144,7 @@ def manage_connection(conn, addr):
                 print("Received 'Done' signal. Closing connection from the worker.")
                 break
             elif request['type'] == 'abortAll':
-                for rc in rcs:
+                for rc, request in rcs:
                     rc.kill()
                 body = {}
             else:

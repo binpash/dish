@@ -48,12 +48,17 @@ def put_log():
     stderr = request.json['stderr']
     returncode = request.json['returncode']
     shellscript = request.json['shellscript']
-
+    
     if not worker:
         abort(401)
     
     stderr = stderr.replace("\n", "<br />")
     shellscript = shellscript.replace("\n", "<br />")
+
+    print(worker)
+    print(stderr)
+    print(shellscript)
+    print()
 
     conn = get_db_connection()
     conn.execute('INSERT INTO logs (worker, returncode, stderr, shellscript) VALUES (?, ?, ?, ?)',
