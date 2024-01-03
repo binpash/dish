@@ -8,7 +8,7 @@ import collections
 
 from dspash.socket_utils import SocketManager, encode_request, decode_request, send_msg, recv_msg
 from util import log
-from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, get_remote_pipe_update_candidates, update_remote_pipes, get_worker_subgraph_map
+from dspash.ir_helper import prepare_graph_for_remote_exec, to_shell_file, get_best_worker_for_subgraph, get_remote_pipe_update_candidates, update_subgraphs, get_worker_subgraph_map, update_remote_pipe_addr
 from dspash.utils import read_file
 import config 
 import copy
@@ -149,6 +149,14 @@ class WorkersManager():
             port = worker['port']
             self.add_worker(name, host, port)
             
+
+    def deep_copy_worker_subgraph_pairs(self, worker_subgraph_pairs):
+        # worker is not serializable and shallow copy is fine
+        deep_copy = []
+        for worker, subgraph in worker_subgraph_pairs:
+            deep_copy.append([worker, copy.deepcopy(subgraph)])
+        return collections.deque(deep_copy)
+
             
     def run(self):
         workers_manager = self
@@ -181,10 +189,11 @@ class WorkersManager():
                     declared_functions = read_file(declared_functions_file)
 
                     # Execute subgraphs on workers
-                    worker_subgraph_map = get_worker_subgraph_map(worker_subgraph_pairs)
+                    # worker_subgraph_map = get_worker_subgraph_map(worker_subgraph_pairs)
                     worker_subgraph_pairs = collections.deque(worker_subgraph_pairs)
-                    worker_subgraph_pairs_backup = copy.copy(worker_subgraph_pairs)
-                    subgraphs = [pair[1] for pair in worker_subgraph_pairs]
+                    #TODO: deepcopy
+                    worker_subgraph_pairs_backup = self.deep_copy_worker_subgraph_pairs(worker_subgraph_pairs)
+                    
 
                     while worker_subgraph_pairs:
                         worker, subgraph = worker_subgraph_pairs.popleft()
@@ -203,9 +212,17 @@ class WorkersManager():
                             #       we will need to update addresses for RP | RP-N from the crashed_worker's host to replacement_worker's host
                             #       Note: we don't want to update host for evert remote_pipe on the subgraph because it could have been
                             #              a remote_read pipe reading from a healthy worker. In this case we want to keep it as it is
-                            #   3) Update the addresses for RP | RP-N from the crashed_worker's host to replacement_worker's host
+                            #   3) Update addr for all remote_write pipes on RP and all remote_read pipes on RP-N from the crashed_worker's host to replacement_worker's host
+                            #       (we want to hold off updating addr for remote_read pipe on RP as subgraph1 and subgraphs2 can be assigned to different workers)                                    
                             #   *Note: subgraphs assigned to the same crashed worker may be assigned to different replacement workers
-                            
+                            #   For example, 
+                            #   worker1 at addr 5 has subgraph1 and subgraph2, and subgraph1 is a merger node such that
+                            #           subgraph1 has a remote_read 5 uuid123 and also a remote_write 5 uuid567
+                            #           subgraph2 has a remote_write 5 uuid123
+                            #   When worker1 crashes, subgraph1 can be assigned to worker2 at addr 6 and subgraph2 to worker3
+                            #
+                            #
+            
                             # Shuts down crashed worker gracefully
                             crashed_worker = worker
                             if crashed_worker.is_online():
@@ -213,43 +230,36 @@ class WorkersManager():
                                 log(f"{crashed_worker} closed")
                             else:
                                 log(f"{crashed_worker} is already closed")
-                            
-                            update_candidates_replacements_map = {}
-                            crashed_worker_subgraphs = worker_subgraph_map[crashed_worker]
-                            crashed_worker_subgraphs_replacements_map = {}
-                            for crashed_worker_subgraph in crashed_worker_subgraphs:
-                                # Step 1
-                                # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
-                                replacement_worker = get_best_worker_for_subgraph(crashed_worker_subgraph, workers_manager.get_worker)
-                                crashed_worker_subgraphs_replacements_map[crashed_worker_subgraph] = replacement_worker
 
-                                # Step 2
-                                update_candidates_replacements_map.update(
-                                    get_remote_pipe_update_candidates(subgraphs + [main_graph], subgraph, crashed_worker, replacement_worker))
-
-                                
                             # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
-                            for worker in self.workers:
-                                if worker.is_online():
-                                    worker.abortAll()
+                            # This is buggy so not used
+                            # for worker in self.workers:
+                            #     if worker.is_online():
+                            #         worker.abortAll()
 
-                            # Step 3
-                            update_remote_pipes(update_candidates_replacements_map)
-                            print(len(worker_subgraph_pairs_backup))
-                            # crashed_worker_subgraphs are now updated so it can be executed by replacement_workers
-                            for updated_subgraph, replacement_worker in crashed_worker_subgraphs_replacements_map.items():
-                                worker_subgraph_map[replacement_worker].append(crashed_worker_subgraph)
-                                # Push new worker graph pair back to container
-                                worker_subgraph_pair = (replacement_worker, updated_subgraph)
-                                worker_subgraph_pairs_backup.append(worker_subgraph_pair)
+                            subgraphs = [pair[1] for pair in worker_subgraph_pairs_backup]
+                            for i in range(len(worker_subgraph_pairs_backup)):
+                                worker, subgraph = worker_subgraph_pairs_backup[i]
+                                if worker == crashed_worker:
+                                    # Step 1
+                                    # find the next best worker for the subgraph and push (worker, subgraph) pair back to the deque
+                                    replacement_worker = get_best_worker_for_subgraph(subgraph, workers_manager.get_worker)
+                                    worker_subgraph_pairs_backup[i][0] = replacement_worker
+
+                                    # Step 2
+                                    # Find all write RP on subgraph and all read RP-N on neighboring subgraphs (including main_graph)
+                                    update_candidates = get_remote_pipe_update_candidates(subgraphs + [main_graph], subgraph, crashed_worker)
+                                    for candidate in update_candidates:
+                                        print(candidate.get_uuid(), candidate.get_host())
+                                    # Step 3
+                                    for update_candidate in update_candidates:
+                                        update_remote_pipe_addr(update_candidate, replacement_worker.host())
                                 
-                            # Remove all worker_subgraph pairs whose worker is the crashed worker
-                            new_worker_subgraph_pairs = collections.deque([(worker, subgraph) for worker, subgraph in worker_subgraph_pairs_backup 
-                                                        if worker != crashed_worker])
+                            
                                     
                             # Update meta-data
-                            del worker_subgraph_map[crashed_worker]
-                            worker_subgraph_pairs = new_worker_subgraph_pairs
+                                        # TODO: DEEPCOPY
+                            worker_subgraph_pairs = self.deep_copy_worker_subgraph_pairs(worker_subgraph_pairs_backup)
 
 
                     # Report to main shell a script to execute
