@@ -39,6 +39,7 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 	}
 
 	s.addrs[id] = addr
+	log.Printf("Discovery server PutAddr mapping id %s to addr %s\n", id, addr)
 	return &pb.Status{Success: true}, nil
 }
 
@@ -137,6 +138,7 @@ func main() {
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterDiscoveryServer(grpcServer, newServer())
+	log.Printf("Hello from discovery server")
 	fmt.Printf("Discovery server running on %v\n", lis.Addr())
 	grpcServer.Serve(lis)
 }
