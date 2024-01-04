@@ -154,7 +154,8 @@ def manage_connection(conn, addr, discovery_server: subprocess.Popen):
 
 
             print("got new request")
-            request = decode_request(data)            
+            request = decode_request(data) 
+            print(request)           
             if request['type'] == 'Exec-Graph':
                 graph, shell_vars, functions = parse_exec_graph(request)
                 debug = True if request['debug'] else False
@@ -181,7 +182,7 @@ def manage_connection(conn, addr, discovery_server: subprocess.Popen):
     if len(rcs) > 0:
         _, request = rcs[0]
         send_discovery_server_log(discovery_server, request)
-        
+
     for rc, request in rcs:
         if request['debug']:
             send_log(rc, request)

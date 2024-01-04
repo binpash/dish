@@ -256,7 +256,6 @@ class WorkersManager():
                                         update_remote_pipe_addr(update_candidate, replacement_worker.host())
                                 
                             
-                                    
                             # Update meta-data
                                         # TODO: DEEPCOPY
                             worker_subgraph_pairs = self.deep_copy_worker_subgraph_pairs(worker_subgraph_pairs_backup)
