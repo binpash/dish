@@ -177,8 +177,11 @@ def manage_connection(conn, addr, discovery_server: subprocess.Popen):
             send_success(conn, body)
 
     # Ensure subprocesses have finished, and releasing corresponding resources
-    # For now, always log discovery server whether debug flag is set or not
-    send_discovery_server_log(discovery_server, request)
+    # Assume all requests have the same url for debug server
+    if len(rcs) > 0:
+        _, request = rcs[0]
+        send_discovery_server_log(discovery_server, request)
+        
     for rc, request in rcs:
         if request['debug']:
             send_log(rc, request)
