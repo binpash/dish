@@ -7,6 +7,7 @@ import os
 import argparse
 import requests
 import time
+import threading
 
 DISH_TOP = os.environ['DISH_TOP']
 PASH_TOP = os.environ['PASH_TOP']
@@ -23,7 +24,6 @@ import config
 # from ... import config
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
-
 
 def err_print(*args):
     print(*args, file=sys.stderr)
@@ -73,8 +73,9 @@ def exec_graph(graph, shell_vars, functions, debug=False):
 
 
 class Worker:
-    def __init__(self, port=None):
+    def __init__(self, discovery_server: subprocess.Popen, port=None):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.discovery_server = discovery_server
         if port == None:
             # pick a random port
             self.s.bind((HOST, 0))
@@ -89,7 +90,7 @@ class Worker:
             while (True):
                 conn, addr = self.s.accept()
                 print(f"got new connection")
-                t = Process(target=manage_connection, args=[conn, addr])
+                t = Process(target=manage_connection, args=[conn, addr, self.discovery_server])
                 t.start()
                 connections.append(t)
         for t in connections:
@@ -118,8 +119,30 @@ def send_log(rc: subprocess.Popen, request):
 
     requests.post(url=url, json=response)
 
+def send_discovery_server_log(rc: subprocess.Popen, request):
+    name = f"{request['debug']['name']}:Discovery Server"
+    url = request['debug']['url']
+    shell_script = 'N/A'
 
-def manage_connection(conn, addr):
+    try:
+        # timeout is set to 10s for debuggin
+        _, err = rc.communicate(timeout=10)
+    except:
+        print("process timedout")
+        rc.kill()
+        _, err = rc.communicate()
+
+    response = {
+        'name': name,
+        'returncode': rc.returncode,
+        'stderr': err.decode("UTF-8"),
+        'shellscript': shell_script,
+    }
+
+    requests.post(url=url, json=response)
+
+
+def manage_connection(conn, addr, discovery_server: subprocess.Popen):
     rcs = []
     with conn:
         print('Connected by', addr)
@@ -145,6 +168,7 @@ def manage_connection(conn, addr):
                 break
             elif request['type'] == 'abortAll':
                 # This is buggy so not used
+                print("Received abortAll request")
                 for rc, request in rcs:
                     rc.kill()
                 break
@@ -153,6 +177,8 @@ def manage_connection(conn, addr):
             send_success(conn, body)
 
     # Ensure subprocesses have finished, and releasing corresponding resources
+    # For now, always log discovery server whether debug flag is set or not
+    send_discovery_server_log(discovery_server, request)
     for rc, request in rcs:
         if request['debug']:
             send_log(rc, request)
@@ -189,7 +215,12 @@ def init():
 
 def main():
     init()
-    worker = Worker(config.pash_args.port)
+    # start discovery server and track its logs
+    dish_top = os.getenv('DISH_TOP')
+    command = [f'{dish_top}/runtime/dspash/file_reader/discovery_server', '&']
+    discovery_server = subprocess.Popen(command, stderr=subprocess.PIPE, shell=True)
+
+    worker = Worker(discovery_server, config.pash_args.port)
     worker.run()
 
 

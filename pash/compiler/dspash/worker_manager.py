@@ -85,7 +85,7 @@ class WorkerConnection:
             return True
         
     def abortAll(self):
-        self._socket.send(encode_request({"type": "abortAll"}))
+        send_msg(self._socket, encode_request({"type": "abortAll"}))
 
     def close(self):
         self._socket.send(encode_request({"type": "Done"}))

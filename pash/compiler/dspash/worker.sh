@@ -27,6 +27,6 @@ function cleanup() {
 
 "$DISH_TOP/runtime/dspash/file_reader/filereader_server" &
 FILEREADER_PID=$!
-"$DISH_TOP/runtime/dspash/file_reader/discovery_server" &
-DISCOVERY_PID=$!
+# "$DISH_TOP/runtime/dspash/file_reader/discovery_server" &
+# DISCOVERY_PID=$!
 python3 "$DISH_TOP/pash/compiler/dspash/worker.py" "$@"
