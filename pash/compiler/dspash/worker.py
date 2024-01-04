@@ -120,8 +120,8 @@ def send_log(rc: subprocess.Popen, request):
     requests.post(url=url, json=response)
 
 def send_discovery_server_log(rc: subprocess.Popen, request):
-    name = f"{request['debug']['name']}:Discovery Server"
-    url = request['debug']['url']
+    name = f"{request['name']}:Discovery Server"
+    url = request['url']
     shell_script = 'N/A'
 
     try:

@@ -85,7 +85,7 @@ class WorkerConnection:
             return True
         
     def abortAll(self):
-        send_msg(self._socket, encode_request({"type": "abortAll"}))
+        send_msg(self._socket, encode_request({"type": "abortAll", 'name': self.name, 'url': f'{DEBUG_URL}/putlog'}))
 
     def getDiscoveryServerLog(self):
         send_msg(self._socket, encode_request({"type": "getDiscoveryServerLog"}))
