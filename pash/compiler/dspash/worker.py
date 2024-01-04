@@ -8,6 +8,7 @@ import argparse
 import requests
 import time
 import threading
+import signal
 
 DISH_TOP = os.environ['DISH_TOP']
 PASH_TOP = os.environ['PASH_TOP']
@@ -68,7 +69,7 @@ def exec_graph(graph, shell_vars, functions, debug=False):
     cmd = f"source {functions_file}; source {script_path}"
 
     rc = subprocess.Popen(
-        cmd, env=e, executable="/bin/bash", shell=True, stderr=stderr)
+        cmd, env=e, executable="/bin/bash", shell=True, stderr=stderr, preexec_fn=os.setsid)
     return rc
 
 
@@ -90,8 +91,9 @@ class Worker:
             while (True):
                 conn, addr = self.s.accept()
                 print(f"got new connection")
-                t = Process(target=manage_connection, args=[conn, addr, self.discovery_server])
+                t = Process(target=manage_connection, args=[conn, addr, self.discovery_server, list(connections)])
                 t.start()
+
                 connections.append(t)
         for t in connections:
             t.join()
@@ -122,61 +124,65 @@ def send_log(rc: subprocess.Popen, request):
 def send_discovery_server_log(rc: subprocess.Popen, request):
     name = f"{request['debug']['name']}:Discovery Server"
     url = request['debug']['url']
-
-    try:
-        # timeout is set to 10s for debuggin
-        _, err = rc.communicate(timeout=10)
-    except:
-        print("process timedout")
-        rc.kill()
-        _, err = rc.communicate()
+    print(type(rc), rc)
+    log_output = rc.stderr.read()
 
     response = {
         'name': name,
-        'returncode': rc.returncode,
-        'stderr': err.decode("UTF-8"),
+        'returncode': 0,
+        'stderr': log_output.decode("UTF-8") if log_output else "N/A",
+        'shellscript': 'N/A'
     }
 
     requests.post(url=url, json=response)
 
 
-def manage_connection(conn, addr, discovery_server: subprocess.Popen):
+def manage_connection(conn, addr, discovery_server: subprocess.Popen, connections: [Process]):
     rcs = []
     with conn:
         print('Connected by', addr)
         dfs_configs_paths = {}
         while True:
-            data = recv_msg(conn)
-            if not data:
-                break
+            try:
+                data = recv_msg(conn)
+                if not data:
+                    break
+                print("got new request")
+                request = decode_request(data) 
+                print(request)           
+                if request['type'] == 'Exec-Graph':
+                    graph, shell_vars, functions = parse_exec_graph(request)
+                    debug = True if request['debug'] else False
+                    save_configs(graph, dfs_configs_paths)
+                    time.sleep(int(request['worker_timeout']))
+                    rc = exec_graph(graph, shell_vars, functions, debug)
+                    rcs.append((rc, request))
+                    body = {}
+                elif request['type'] == 'Done':
+                    print("Received 'Done' signal. Closing connection from the worker.")
+                    break
+                elif request['type'] == 'abortAll':
+                    # This is buggy so not used
+                    num_aborted = 0
+                    while rcs:
+                        rc, request = rcs.pop()
+                        print(rc.pid)
+                        os.killpg(os.getpgid(rc.pid), signal.SIGTERM)
 
+                        # os.system('pkill -TERM -P {pid}'.format(pid=rc.pid))
+                        num_aborted += 1
+                    body = {"num_aborted": num_aborted}
 
-            print("got new request")
-            request = decode_request(data) 
-            print(request)           
-            if request['type'] == 'Exec-Graph':
-                graph, shell_vars, functions = parse_exec_graph(request)
-                debug = True if request['debug'] else False
-                save_configs(graph, dfs_configs_paths)
-                time.sleep(int(request['worker_timeout']))
-                rc = exec_graph(graph, shell_vars, functions, debug)
-                rcs.append((rc, request))
-                body = {}
-            elif request['type'] == 'Done':
-                print("Received 'Done' signal. Closing connection from the worker.")
+                elif request['type'] == 'getDiscoveryServerLog':
+                    send_discovery_server_log(discovery_server, request)
+                    break
+                else:
+                    print(f"Unsupported request {request}")
+                send_success(conn, body)
+            except Exception as e:
+                print(e)
                 break
-            elif request['type'] == 'abortAll':
-                # This is buggy so not used
-                print("Received abortAll request")
-                for rc, request in rcs:
-                    rc.kill()
-                break
-            elif request['type'] == 'getDiscoveryServerLog':
-                send_discovery_server_log(discovery_server, request)
-                break
-            else:
-                print(f"Unsupported request {request}")
-            send_success(conn, body)
+            
 
     # Ensure subprocesses have finished, and releasing corresponding resources
 

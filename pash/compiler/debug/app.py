@@ -42,6 +42,11 @@ def worker_log(worker):
     worker_logs = get_logs(worker)
     return render_template('wlog.html', logs=worker_logs)
 
+@app.route('/debug', methods=['POST'])
+def debug():
+    for key, val in request.json:
+        print(key, val.stderr.replace("\n", "<br />"))
+
 @app.route('/putlog', methods=['POST'])
 def put_log():
     worker = request.json['name']

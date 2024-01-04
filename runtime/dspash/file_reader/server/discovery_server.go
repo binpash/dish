@@ -34,9 +34,9 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 	defer s.mu.Unlock()
 
 	addr, id := msg.Addr, msg.Id
-	if _, ok := s.addrs[id]; ok {
-		return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
-	}
+	// if _, ok := s.addrs[id]; ok {
+	// 	return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
+	// }
 
 	s.addrs[id] = addr
 	log.Printf("Discovery server PutAddr mapping id %s to addr %s\n", id, addr)

@@ -84,15 +84,27 @@ class WorkerConnection:
             response = decode_request(response_data)
             return True
         
-    def abortAll(self):
-        send_msg(self._socket, encode_request({"type": "abortAll", 'name': self.name, 'url': f'{DEBUG_URL}/putlog'}))
+    def abortAll(self, debug=False):
+        request_dict = { 'type': 'abortAll',
+                        'debug': None
+                    }
+        if debug:
+            request_dict['debug'] = {'name': self.name, 'url': f'{DEBUG_URL}/debug'}
+        request = encode_request(request_dict)
+        send_msg(self._socket, request)
+        response_data = recv_msg(self._socket)
+        if not response_data or decode_request(response_data)['status'] != "OK":
+            raise Exception(f"didn't recieved ack on request {response_data}")
+        else:
+            response = decode_request(response_data)
+            print(response)
 
     def getDiscoveryServerLog(self, debug=False):
         request_dict = { 'type': 'getDiscoveryServerLog',
                         'debug': None
                     }
         if debug:
-            request_dict['debug'] = {'name': self.name, 'url': f'{DEBUG_URL}/putlog'}
+            request_dict['debug'] = {'name': self.name, 'url': f'{DEBUG_URL}/debug'}
 
         request = encode_request(request_dict)
         send_msg(self._socket, request)
@@ -243,9 +255,9 @@ class WorkersManager():
 
                             # TODO: do we want to send all relevant workers a msg to abort current subgraphs?
                             # This is buggy so not used
-                            # for worker in self.workers:
-                            #     if worker.is_online():
-                            #         worker.abortAll()
+                            for worker in self.workers:
+                                if worker.is_online():
+                                    worker.abortAll(workers_manager.args.debug)
 
                             subgraphs = [pair[1] for pair in worker_subgraph_pairs_backup]
                             for i in range(len(worker_subgraph_pairs_backup)):
@@ -273,7 +285,8 @@ class WorkersManager():
                     if workers_manager.args.debug:
                         for worker in self.workers:
                             if worker.is_online():
-                                worker.getDiscoveryServerLog(workers_manager.args.debug)
+                                continue
+                                # worker.getDiscoveryServerLog(workers_manager.args.debug)
 
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph
