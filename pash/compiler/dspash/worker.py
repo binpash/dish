@@ -120,9 +120,8 @@ def send_log(rc: subprocess.Popen, request):
     requests.post(url=url, json=response)
 
 def send_discovery_server_log(rc: subprocess.Popen, request):
-    name = f"{request['name']}:Discovery Server"
-    url = request['url']
-    shell_script = 'N/A'
+    name = f"{request['debug']['name']}:Discovery Server"
+    url = request['debug']['url']
 
     try:
         # timeout is set to 10s for debuggin
@@ -136,7 +135,6 @@ def send_discovery_server_log(rc: subprocess.Popen, request):
         'name': name,
         'returncode': rc.returncode,
         'stderr': err.decode("UTF-8"),
-        'shellscript': shell_script,
     }
 
     requests.post(url=url, json=response)

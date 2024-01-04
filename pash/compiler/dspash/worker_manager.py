@@ -87,8 +87,15 @@ class WorkerConnection:
     def abortAll(self):
         send_msg(self._socket, encode_request({"type": "abortAll", 'name': self.name, 'url': f'{DEBUG_URL}/putlog'}))
 
-    def getDiscoveryServerLog(self):
-        send_msg(self._socket, encode_request({"type": "getDiscoveryServerLog"}))
+    def getDiscoveryServerLog(self, debug=False):
+        request_dict = { 'type': 'getDiscoveryServerLog',
+                        'debug': None
+                    }
+        if debug:
+            request_dict['debug'] = {'name': self.name, 'url': f'{DEBUG_URL}/putlog'}
+
+        request = encode_request(request_dict)
+        send_msg(self._socket, request)
 
     def close(self):
         self._socket.send(encode_request({"type": "Done"}))
@@ -266,7 +273,7 @@ class WorkersManager():
                     if workers_manager.args.debug:
                         for worker in self.workers:
                             if worker.is_online():
-                                worker.getDiscoveryServerLog()
+                                worker.getDiscoveryServerLog(workers_manager.args.debug)
 
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph
