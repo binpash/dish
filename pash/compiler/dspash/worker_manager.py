@@ -87,6 +87,9 @@ class WorkerConnection:
     def abortAll(self):
         send_msg(self._socket, encode_request({"type": "abortAll"}))
 
+    def getDiscoveryServerLog(self):
+        send_msg(self._socket, encode_request({"type": "getDiscoveryServerLog"}))
+
     def close(self):
         self._socket.send(encode_request({"type": "Done"}))
         self._socket.close()
@@ -260,6 +263,10 @@ class WorkersManager():
                                         # TODO: DEEPCOPY
                             worker_subgraph_pairs = self.deep_copy_worker_subgraph_pairs(worker_subgraph_pairs_backup)
 
+                    if workers_manager.args.debug:
+                        for worker in self.workers:
+                            if worker.is_online():
+                                worker.getDiscoveryServerLog()
 
                     # Report to main shell a script to execute
                     # Delay this to the very end when every worker has received the subgraph

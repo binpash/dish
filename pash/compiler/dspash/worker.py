@@ -173,15 +173,14 @@ def manage_connection(conn, addr, discovery_server: subprocess.Popen):
                 for rc, request in rcs:
                     rc.kill()
                 break
+            elif request['type'] == 'getDiscoveryServerLog':
+                send_discovery_server_log(discovery_server, request)
+                break
             else:
                 print(f"Unsupported request {request}")
             send_success(conn, body)
 
     # Ensure subprocesses have finished, and releasing corresponding resources
-    # Assume all requests have the same url for debug server
-    if len(rcs) > 0:
-        _, request = rcs[0]
-        send_discovery_server_log(discovery_server, request)
 
     for rc, request in rcs:
         if request['debug']:
