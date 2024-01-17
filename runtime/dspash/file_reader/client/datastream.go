@@ -57,7 +57,7 @@ func removeAddr(client pb.DiscoveryClient) {
 }
 
 func read(client pb.DiscoveryClient) (int, error) {
-	timeout := 10 * time.Second
+	timeout := 50 * time.Second
 	addr, err := getAddr(client, timeout)
 	if err != nil {
 		return 0, err

@@ -34,11 +34,12 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 	defer s.mu.Unlock()
 
 	addr, id := msg.Addr, msg.Id
-	if _, ok := s.addrs[id]; ok {
-		return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
-	}
+	// if _, ok := s.addrs[id]; ok {
+	// 	return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
+	// }
 
 	s.addrs[id] = addr
+	log.Printf("Discovery server PutAddr mapping id %s to addr %s\n", id, addr)
 	return &pb.Status{Success: true}, nil
 }
 
@@ -131,12 +132,19 @@ func newServer() *DiscoveryServer {
 func main() {
 	flag.Parse()
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", *port))
+	log.SetFlags(log.Flags() | log.Lmsgprefix)
+	log.SetPrefix(fmt.Sprintf("discovery server "))
+
+
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterDiscoveryServer(grpcServer, newServer())
+
+	
+	log.Printf("Hello from discovery server")
 	fmt.Printf("Discovery server running on %v\n", lis.Addr())
 	grpcServer.Serve(lis)
 }
