@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -44,10 +45,11 @@ func readFirstLine(block DFSBlock, writer *bufio.Writer) (ok bool, e error) {
 	ok = false
 	e = errors.New("Failed to read newline from all replicas")
 	for _, host := range block.Hosts {
-		addr := fmt.Sprintf("%s:%d", host, *serverPort)
+		addr := fmt.Sprintf("%s:%d", strings.Split(host, ":")[0], *serverPort)
 		conn, err := grpc.Dial(addr, opts...)
 
 		if err != nil {
+			log.Println("Failed to connect to ", addr, err)
 			continue // try next addr
 		}
 		defer conn.Close()
@@ -56,6 +58,7 @@ func readFirstLine(block DFSBlock, writer *bufio.Writer) (ok bool, e error) {
 
 		stream, err := client.ReadFile(ctx, &pb.FileRequest{Path: block.Path})
 		if err != nil {
+			log.Println("Failed to read file from ", addr, err)
 			continue
 		}
 
@@ -147,7 +150,7 @@ func readDFSLogicalSplit(conf DFSConfig, split int) error {
 
 func serialize_conf(p string) DFSConfig {
 	conf := DFSConfig{}
-	byt, err := os.ReadFile(p)
+	byt, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatalln(err)
 	}
