@@ -103,7 +103,7 @@ func write(client pb.DiscoveryClient) (int, error) {
 		return 0, err
 	}
 	defer conn.Close()
-	log.Println("accepted a connection")
+	log.Println("accepted a connection", conn.RemoteAddr())
 
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
@@ -173,6 +173,7 @@ func writeStream(client pb.DiscoveryClient) (n int, err error) {
 
 func main() {
 	flag.Parse()
+	// log.Println("Starting datastream client", *streamType, *streamId, *serverAddr, *debug, *chunkSize)
 	arg_idx := 0
 	if *streamType == "" {
 		*streamType = flag.Arg(arg_idx)

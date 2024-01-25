@@ -19,7 +19,6 @@ import (
 )
 
 var (
-	config     = flag.String("config", "", "File to read")
 	splitNum   = flag.Int("split", 0, "The logical split number")
 	serverPort = flag.Int("port", 50051, "The server port, all machines should use same port")
 )
@@ -148,7 +147,7 @@ func readDFSLogicalSplit(conf DFSConfig, split int) error {
 
 }
 
-func serialize_conf(p string) DFSConfig {
+func serialize_conf() DFSConfig {
 	conf := DFSConfig{}
 	byt, err := io.ReadAll(os.Stdin)
 	if err != nil {
@@ -162,14 +161,9 @@ func serialize_conf(p string) DFSConfig {
 
 func main() {
 	flag.Parse()
-	if flag.NArg() < 1 && *config == "" {
-		flag.Usage()
-		os.Exit(0)
-	} else if *config == "" {
-		*config = flag.Arg(0)
-	}
+	log.Println("Starting dfs_split_reader client", *splitNum, *serverPort)
 
-	conf := serialize_conf(*config)
+	conf := serialize_conf()
 	err := readDFSLogicalSplit(conf, *splitNum)
 	if err != nil {
 		log.Fatalln(err)
