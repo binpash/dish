@@ -59,6 +59,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 echo -e "\nexport PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
 export PATH="$PATH:$(go env GOPATH)/bin"
 
+# Compile runtime
 cd $DISH_TOP/runtime/dspash
 go build socket_pipe.go
 cd file_reader
