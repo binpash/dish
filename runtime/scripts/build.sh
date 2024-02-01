@@ -7,11 +7,8 @@ then
     export DISH_TOP=$(realpath $(dirname "$0")/../..)
 fi
 
-# Compile runtime
-cd $DISH_TOP/runtime/dspash
-go build socket_pipe.go
-cd file_reader
-go build client/dfs_split_reader.go
-go build -o filereader_server server/server.go
-go build -o discovery_server server/discovery_server.go
-go build -o datastream_client client/datastream.go
+cd $DISH_TOP/runtime
+go build -o bin/ dfs/server/server.go
+go build -o bin/ dfs/client/dfs_split_reader.go
+go build -o bin/ pipe/datastream/datastream.go
+go build -o bin/ pipe/discovery/discovery_server.go
