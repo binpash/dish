@@ -13,7 +13,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "dspash/datastream"
+	pb "runtime/pipe/datastream"
 )
 
 var (

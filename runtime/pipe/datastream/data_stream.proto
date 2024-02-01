@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "dspash/datastream";
+option go_package = "runtime/pipe/datastream";
 
 service Discovery {
     rpc PutAddr(PutAddrMsg) returns (Status) {}

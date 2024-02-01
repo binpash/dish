@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "dspash/filereader"
+	pb "runtime/dfs/filereader"
 )
 
 var (

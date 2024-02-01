@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pb "dspash/filereader"
+	pb "runtime/dfs/filereader"
 )
 
 var (
