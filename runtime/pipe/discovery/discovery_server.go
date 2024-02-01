@@ -13,7 +13,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "runtime/pipe/datastream"
+	pb "runtime/pipe/proto"
 )
 
 var (

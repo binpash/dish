@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "runtime/dfs/filereader"
+	pb "runtime/dfs/proto"
 )
 
 var (

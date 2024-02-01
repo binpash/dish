@@ -1,4 +1,4 @@
-package filereader
+package proto
 
 import (
 	"fmt"
