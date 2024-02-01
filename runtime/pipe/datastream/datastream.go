@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	pb "runtime/pipe/datastream"
+	pb "runtime/pipe/proto"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
