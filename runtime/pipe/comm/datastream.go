@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	pb "dspash/datastream"
+	pb "runtime/pipe/datastream"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -140,8 +140,6 @@ func readStream(client pb.DiscoveryClient) (n int, err error) {
 		nn, err := writer.Write(reply.Buffer)
 		n += nn
 	}
-
-	return
 }
 
 func writeStream(client pb.DiscoveryClient) (n int, err error) {

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "dspash/filereader";
+option go_package = "runtime/dfs/filereader";
 
 service FileReader {
     rpc ReadFile(FileRequest) returns (stream ReadReply) {}
