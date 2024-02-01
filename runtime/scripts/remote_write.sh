@@ -1,3 +1,3 @@
-command="$DISH_TOP/runtime/dspash/file_reader/datastream_client --type write $@"
+command="$DISH_TOP/runtime/bin/datastream --type write $@"
 # echo $command >&2
 $command
