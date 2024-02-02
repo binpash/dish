@@ -24,6 +24,8 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
 	chunkSize  = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
+	_          = flag.String("fault_target", "", "The target to inject fault")
+	_          = flag.Int("fault_time", 1, "How many MB to write before injecting fault")
 )
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
@@ -169,9 +171,16 @@ func writeStream(client pb.DiscoveryClient) (n int, err error) {
 	}
 }
 
+func logFlagValues() {
+	var flags string
+	flag.VisitAll(func(f *flag.Flag) {
+		flags += fmt.Sprintf(" %s", f.Value.String())
+	})
+	log.Printf("Flag values:%s\n", flags)
+}
+
 func main() {
 	flag.Parse()
-	// log.Println("Starting datastream client", *streamType, *streamId, *serverAddr, *debug, *chunkSize)
 	arg_idx := 0
 	if *streamType == "" {
 		*streamType = flag.Arg(arg_idx)
@@ -189,6 +198,8 @@ func main() {
 		log.SetFlags(log.Flags() | log.Lmsgprefix)
 		log.SetPrefix(fmt.Sprintf("%v %v client ", (*streamId)[0:8], *streamType))
 	}
+
+	logFlagValues()
 
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
