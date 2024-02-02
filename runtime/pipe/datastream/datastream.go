@@ -58,6 +58,10 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
+func crash() {
+	log.Printf("successfuly crashed")
+}
+
 func read(client pb.DiscoveryClient) (int, error) {
 	timeout := 10 * time.Second
 	addr, err := getAddr(client, timeout)
@@ -73,9 +77,34 @@ func read(client pb.DiscoveryClient) (int, error) {
 	log.Printf("successfuly dialed to %v\n", addr)
 
 	reader := bufio.NewReader(conn)
-	n, err := reader.WriteTo(os.Stdout)
+	// n, err := reader.WriteTo(os.Stdout)
 
-	return int(n), err
+	chunkSize64 := int64(*chunkSize)
+	var total int64 = 0
+
+	for {
+		n, err := io.CopyN(os.Stdout, reader, chunkSize64)
+		total += n
+		if err != nil {
+			break
+		}
+
+		b, err := reader.ReadByte()
+		if err != nil {
+			break
+		}
+		total++
+
+		if b == 1 {
+			crash()
+		}
+	}
+
+	if err == io.EOF {
+		err = nil
+	}
+
+	return int(total), err
 }
 
 func write(client pb.DiscoveryClient) (int, error) {
@@ -110,9 +139,29 @@ func write(client pb.DiscoveryClient) (int, error) {
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
 
-	n, err := writer.ReadFrom(os.Stdin)
+	chunkSize64 := int64(*chunkSize)
+	var total int64 = 0
 
-	return int(n), err
+	for {
+		n, err := io.CopyN(writer, os.Stdin, chunkSize64)
+		total += n
+		if err != nil {
+			break
+		}
+
+		err = writer.WriteByte(0)
+		if err != nil {
+			break
+		}
+		total++
+	}
+
+	if err == io.EOF {
+		err = nil
+	}
+
+	// n, err := writer.ReadFrom(os.Stdin)
+	return int(total), err
 }
 
 // TODO: readStream/writeStream are buggy but also not used so low priority.
