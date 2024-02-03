@@ -9,6 +9,8 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -24,7 +26,7 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
 	chunkSize  = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
-	kill_addr  = flag.String("kill", "", "Kill the node at the given address")
+	killTarget = flag.String("kill", "", "Kill the node at the given address")
 )
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
@@ -55,10 +57,6 @@ func removeAddr(client pb.DiscoveryClient) {
 
 	_, err := client.RemoveAddr(ctx, &pb.AddrReq{Id: *streamId})
 	log.Printf("Remove id %v returned %v", *streamId, err)
-}
-
-func crash() {
-	log.Printf("successfuly crashed")
 }
 
 func read(client pb.DiscoveryClient) (int, error) {
@@ -95,7 +93,14 @@ func read(client pb.DiscoveryClient) (int, error) {
 		total++
 
 		if b == 1 {
-			crash()
+			log.Println("Received poison pill")
+			ex, _ := os.Executable()
+			exPath := filepath.Dir(ex)
+			scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
+			err = exec.Command("bash", scriptPath).Start()
+			if err != nil {
+				log.Println("Error running killall script", err)
+			}
 		}
 	}
 
@@ -141,6 +146,8 @@ func write(client pb.DiscoveryClient) (int, error) {
 	chunkSize64 := int64(*chunkSize)
 	var total int64 = 0
 
+	isKillTarget := *killTarget == strings.Split(conn.RemoteAddr().String(), ":")[0]
+
 	for {
 		n, err := io.CopyN(writer, os.Stdin, chunkSize64)
 		total += n
@@ -148,7 +155,13 @@ func write(client pb.DiscoveryClient) (int, error) {
 			break
 		}
 
-		err = writer.WriteByte(0)
+		if isKillTarget {
+			log.Println("Sending poison pill to", *killTarget)
+			err = writer.WriteByte(1)
+		} else {
+			err = writer.WriteByte(0)
+		}
+
 		if err != nil {
 			break
 		}
