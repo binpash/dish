@@ -2,7 +2,7 @@
 if [ -z "$DISH_TOP" ]
 then
     # If not set, assign a default path
-    export DISH_TOP=$(cd ../.. && pwd)
+    export DISH_TOP=$(realpath $(dirname "$0")/../..)
 fi
 
 cd $DISH_TOP/runtime
