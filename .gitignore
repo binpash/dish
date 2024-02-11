@@ -43,6 +43,7 @@ notes.txt
 
 # python
 **/__pycache__/*
+.venv
 
 #testing and plotting
 scripts/test_eval/*.png
