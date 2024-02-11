@@ -59,6 +59,17 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
+func poisonPill() {
+	log.Println("Received poison pill")
+	ex, _ := os.Executable()
+	exPath := filepath.Dir(ex)
+	scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
+	err := exec.Command("bash", scriptPath).Start()
+	if err != nil {
+		log.Println("Error running killall script", err)
+	}
+}
+
 func read(client pb.DiscoveryClient) (int, error) {
 	timeout := 10 * time.Second
 	addr, err := getAddr(client, timeout)
@@ -93,14 +104,8 @@ func read(client pb.DiscoveryClient) (int, error) {
 		total++
 
 		if b == 1 {
-			log.Println("Received poison pill")
-			ex, _ := os.Executable()
-			exPath := filepath.Dir(ex)
-			scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
-			err = exec.Command("bash", scriptPath).Start()
-			if err != nil {
-				log.Println("Error running killall script", err)
-			}
+			poisonPill()
+			break
 		}
 	}
 
@@ -147,6 +152,7 @@ func write(client pb.DiscoveryClient) (int, error) {
 	var total int64 = 0
 
 	isKillTarget := *killTarget == strings.Split(conn.RemoteAddr().String(), ":")[0]
+	// shouldSuicide := *killTarget == strings.Split(conn.LocalAddr().String(), ":")[0]
 
 	for {
 		n, err := io.CopyN(writer, os.Stdin, chunkSize64)
@@ -154,6 +160,12 @@ func write(client pb.DiscoveryClient) (int, error) {
 		if err != nil {
 			break
 		}
+
+		// if shouldSuicide {
+		// 	log.Println("Swallowing poison pill")
+		// 	poisonPill()
+		// 	err = writer.WriteByte(0)
+		// }
 
 		if isKillTarget {
 			log.Println("Sending poison pill to", *killTarget)
