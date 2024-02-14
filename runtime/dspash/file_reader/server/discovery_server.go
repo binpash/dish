@@ -24,9 +24,11 @@ var (
 
 type DiscoveryServer struct {
 	pb.UnimplementedDiscoveryServer
-	addrs   map[string]string
-	streams map[string]chan []byte
-	mu      sync.Mutex // protects addrs
+	addrs                        map[string]string
+	streams                      map[string]chan []byte
+	mu                           sync.Mutex // protects addrs
+	writerDiscoveryServerAddrs   map[string]string
+	muWriterDiscoveryServerAddrs sync.Mutex // protect writerDiscoveryServerAddrs
 }
 
 func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.Status, error) {
@@ -34,9 +36,9 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 	defer s.mu.Unlock()
 
 	addr, id := msg.Addr, msg.Id
-	// if _, ok := s.addrs[id]; ok {
-	// 	return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
-	// }
+	if _, ok := s.addrs[id]; ok {
+		return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
+	}
 
 	s.addrs[id] = addr
 	log.Printf("Discovery server PutAddr mapping id %s to addr %s\n", id, addr)
@@ -46,8 +48,9 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 func (s *DiscoveryServer) GetAddr(ctx context.Context, msg *pb.AddrReq) (*pb.GetAddrReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
+	log.Printf("Received a request to get addr for id%v\n", msg.Id)
 	addr, ok := s.addrs[msg.Id]
+	log.Printf("s.addrs: %v\n", s.addrs)
 	if !ok {
 		return &pb.GetAddrReply{Success: false}, errors.New("GetAddr: id not found, retry in a little bit\n")
 	}
@@ -66,6 +69,39 @@ func (s *DiscoveryServer) RemoveAddr(ctx context.Context, msg *pb.AddrReq) (*pb.
 
 	delete(s.addrs, msg.Id)
 	return &pb.Status{Success: true}, nil
+}
+
+// Note: this isn't exactly to update writer's addr - we don't even have the writer's exact addr yet
+//		this is to update the peer discovery_server's addr for rfifo port so that we can ask this new discovery_server addr
+//		what the writer's addr is exactly.
+func (s *DiscoveryServer) UpdateWriterServerAddr(ctx context.Context, msg *pb.UpdateWriterServerAddrReq) (*pb.Status, error) {
+	s.muWriterDiscoveryServerAddrs.Lock()
+	defer s.muWriterDiscoveryServerAddrs.Unlock()
+
+	// TODO: msg.OldAddr isn't really used
+	if s.writerDiscoveryServerAddrs == nil {
+		s.writerDiscoveryServerAddrs = make(map[string]string)
+	}
+	log.Printf("%v\n", msg)
+	id, newAddr := msg.Id, msg.NewAddr
+	s.writerDiscoveryServerAddrs[id] = newAddr
+	log.Printf("Update complete. To get writer addr for id %s, ask discovery_server at addr %s\n", id, newAddr)
+	return &pb.Status{Success: true}, nil
+
+	// TODO: when can we remove this mapping from s.writerDiscoveryServerAddrs like removeWriterAddr()?
+}
+
+func (s *DiscoveryServer) GetLatestWriterServerAddr(ctx context.Context, msg *pb.GetLatestWriterServerAddrReq) (*pb.GetAddrReply, error) {
+	s.muWriterDiscoveryServerAddrs.Lock()
+	defer s.muWriterDiscoveryServerAddrs.Unlock()
+
+	id, writerServerAddr := msg.Id, msg.WriterServerAddr
+	addr, ok := s.writerDiscoveryServerAddrs[id]
+	if !ok {
+		// Current writer server addr is still up-to-date
+		return &pb.GetAddrReply{Success: true, Addr: writerServerAddr}, nil
+	}
+	return &pb.GetAddrReply{Success: true, Addr: addr}, nil
 }
 
 func (s *DiscoveryServer) ReadStream(req *pb.AddrReq, stream pb.Discovery_ReadStreamServer) error {
@@ -135,7 +171,6 @@ func main() {
 	log.SetFlags(log.Flags() | log.Lmsgprefix)
 	log.SetPrefix(fmt.Sprintf("discovery server "))
 
-
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -143,7 +178,6 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterDiscoveryServer(grpcServer, newServer())
 
-	
 	log.Printf("Hello from discovery server")
 	fmt.Printf("Discovery server running on %v\n", lis.Addr())
 	grpcServer.Serve(lis)

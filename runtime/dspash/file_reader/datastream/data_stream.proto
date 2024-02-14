@@ -8,6 +8,8 @@ service Discovery {
     rpc RemoveAddr(AddrReq) returns (Status) {}
     rpc readStream(AddrReq) returns (stream Data) {}
     rpc writeStream(stream Data) returns (Status) {}
+    rpc UpdateWriterServerAddr(UpdateWriterServerAddrReq) returns (Status) {}
+    rpc GetLatestWriterServerAddr(GetLatestWriterServerAddrReq) returns (GetAddrReply) {}
 }
 
 message PutAddrMsg {
@@ -31,4 +33,15 @@ message Status {
 message Data {
     bytes buffer = 1;
     string Id = 2; // only sent with first message
+}
+
+message UpdateWriterServerAddrReq {
+    string Id = 1;
+    string OldAddr = 2;
+    string NewAddr = 3;
+}
+
+message GetLatestWriterServerAddrReq {
+    string Id = 1;
+    string WriterServerAddr = 2;
 }

@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	google.golang.org/grpc v1.36.0
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/protobuf v1.28.1
 )
 
 require (
@@ -13,6 +13,7 @@ require (
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.8 // indirect
 	google.golang.org/genproto v0.0.0-20200806141610-86f49bd18e98 // indirect
+	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.3.0 // indirect
 )
 
 replace dspash => ../
