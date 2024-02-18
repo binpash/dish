@@ -44,6 +44,7 @@ notes.txt
 # python
 **/__pycache__/*
 .venv
+venv
 
 #testing and plotting
 scripts/test_eval/*.png
