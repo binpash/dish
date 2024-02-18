@@ -43,6 +43,8 @@ notes.txt
 
 # python
 **/__pycache__/*
+venv
+.venv
 
 #testing and plotting
 scripts/test_eval/*.png
@@ -56,3 +58,6 @@ runtime/dgsh-tee
 .vscode/*
 .idea/*
 .vs/*
+
+# ft-future leftovers
+runtime/bin
