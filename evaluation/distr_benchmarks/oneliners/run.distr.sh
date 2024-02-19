@@ -1,7 +1,7 @@
 PASH_FLAGS='--width 8 --r_split'
 export TIMEFORMAT=%R
 export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
-curl -sf 'http://ndr.md/data/dummy/dict.txt' | sort > $dict
+curl -sf 'http://atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > $dict
 
 
 scripts_inputs=(

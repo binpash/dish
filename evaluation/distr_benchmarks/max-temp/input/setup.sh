@@ -1,7 +1,7 @@
 #!/bin/bash
 FROM=${FROM:-2015}
 TO=${TO:-2015}
-IN=${IN:-'http://ndr.md/data/noaa/'}
+IN=${IN:-'http://atlas-group.cs.brown.edu/data/noaa/'}
 fetch=${fetch:-"curl -s"}
 
 data_file=temperatures.txt

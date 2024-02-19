@@ -38,7 +38,7 @@ hdfs dfs -mkdir /unix50
 for input in ${inputs[@]}
 do
     if [ ! -f "${input}.txt" ]; then
-        wget "http://ndr.md/data/unix50/${input}.txt"
+        wget "http://atlas-group.cs.brown.edu/data/unix50/${input}.txt"
         "$PASH_TOP/scripts/append_nl_if_not.sh" "${input}.txt"
     fi
     hdfs dfs -put "${input}.txt" /unix50/"${input}.txt"
