@@ -67,3 +67,6 @@ runtime/dspash/file_reader/datastream_client
 runtime/dspash/file_reader/dfs_split_reader
 runtime/dspash/file_reader/discovery_server
 runtime/dspash/file_reader/filereader_server
+
+# graphviz files
+graphviz
