@@ -1,6 +1,13 @@
 #!/bin/bash
 #set -e
 
+# Check if DISH_TOP is set
+if [ -z "$DISH_TOP" ]
+then
+    # If not set, assign a default path
+    export DISH_TOP=$(realpath $(dirname "$0")/../../../..)
+fi
+
 PASH_TOP=${PASH_TOP:-$DISH_TOP/pash}
 . "$PASH_TOP/scripts/utils.sh"
 
@@ -15,10 +22,8 @@ if [[ "$1" == "-c" ]]; then
     exit
 fi
 
-hdfs dfs -mkdir -p /oneliners
-
 if [ ! -f ./1M.txt ]; then
-    curl -sf --connect-timeout 10 'http://atlas-group.cs.brown.edu/data/dummy/1M.txt' > 1M.txt
+    curl -sf --connect-timeout 10 -L 'http://atlas-group.cs.brown.edu/data/dummy/1M.txt' > 1M.txt
     if [ $? -ne 0 ]; then
         curl -f 'https://zenodo.org/record/7650885/files/1M.txt' > 1M.txt
         [ $? -ne 0 ] && eexit 'cannot find 1M.txt'
@@ -41,7 +46,7 @@ if [ ! -f ./100M.txt ]; then
 fi
 
 if [ ! -f ./1G.txt ]; then
-    curl -sf --connect-timeout 10 'http://atlas-group.cs.brown.edu/data/dummy/1G.txt' > 1G.txt
+    curl -sf --connect-timeout 10 -L 'http://atlas-group.cs.brown.edu/data/dummy/1G.txt' > 1G.txt
     if [ $? -ne 0 ]; then
         touch 1G.txt
         for (( i = 0; i < 10; i++ )); do
@@ -51,9 +56,9 @@ if [ ! -f ./1G.txt ]; then
 fi
 
 if [ ! -f ./words ]; then
-  curl -sf --connect-timeout 10 'http://atlas-group.cs.brown.edu/data/dummy/words' > words
+  curl -sf --connect-timeout 10 -L 'http://atlas-group.cs.brown.edu/data/dummy/words' > words
   if [ $? -ne 0 ]; then
-    curl -f 'https://zenodo.org/record/7650885/files/words' > words
+    curl -f -L 'https://zenodo.org/record/7650885/files/words' > words
     if [ $? -ne 0 ]; then
       if [ $(uname) = 'Darwin' ]; then
         cp /usr/share/dict/web2 words || eexit "cannot find dict file"
@@ -68,14 +73,14 @@ fi
 
 # download wamerican-insane dictionary and sort according to machine
 if [ ! -f ./dict.txt ]; then
-    curl -sf --connect-timeout 10 'http://atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > dict.txt
+    curl -sf --connect-timeout 10 -L 'http://atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > dict.txt
     if [ $? -ne 0 ]; then
         sort words > sorted_words
     fi
 fi
 
 if [ ! -f ./all_cmds.txt ]; then
-    curl -sf --connect-timeout 10 'http://atlas-group.cs.brown.edu/data/dummy/all_cmds.txt' > all_cmds.txt
+    curl -sf --connect-timeout 10 -L 'http://atlas-group.cs.brown.edu/data/dummy/all_cmds.txt' > all_cmds.txt
     if [ $? -ne 0 ]; then
         # This should be OK for tests, no need for abort
         ls /usr/bin/* > all_cmds.txt
@@ -97,6 +102,8 @@ if [ ! -f ./3G.txt ]; then
     done
 fi
 input_files+=("3G.txt")
+
+hdfs dfs -mkdir -p /oneliners
 
 # Add files with different replication factors
 for file in "${input_files[@]}"; do
