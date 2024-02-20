@@ -25,13 +25,15 @@ if [ ! -d ${IN}/deps/samtools-1.7 ]; then
     echo 'Samtools installed'
 fi
 
-if [ ! -d ${IN}/mir-sa ]; then
-    # download the specific mir version
-    cd ${IN}
-    wget http://pac-n4.csail.mit.edu:81/pash_data/mir-sa.zip
-    unzip mir-sa.zip
-    rm mir-sa.zip
-fi
+# This data is missing for now
+
+# if [ ! -d ${IN}/mir-sa ]; then
+#     # download the specific mir version
+#     cd ${IN}
+#     wget http://pac-n4.csail.mit.edu:81/pash_data/mir-sa.zip
+#     unzip mir-sa.zip
+#     rm mir-sa.zip
+# fi
 
 # if ! dpkg -s "makedeb-makepkg" >/dev/null 2>&1 ; then
 #     cd ${IN}/deps/
