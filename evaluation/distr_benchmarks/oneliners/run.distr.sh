@@ -1,8 +1,13 @@
+export DISH_TOP=$(realpath $(dirname "$0")/../../..)
+export PASH_TOP=$(realpath $DISH_TOP/pash)
+
+echo $DISH_TOP
+echo $PASH_TOP
+
 PASH_FLAGS='--width 8 --r_split'
 export TIMEFORMAT=%R
-export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
-curl -sf 'http://atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > $dict
-
+# export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
+# curl -sfL 'http://atlas-group.cs.brown.edu/data/dummy/dict.txt' | sort > $dict
 
 scripts_inputs=(
       "nfa-regex;1G.txt"
@@ -90,9 +95,12 @@ oneliners_pash(){
   done
 }
 
+# For testing purposes
+# hdfs dfs -rm -r "/outputs/hadoop-streaming/oneliners"
+# hadoop jar "/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" -files nfa-regex.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input "/oneliners/1G.txt" -output "/outputs/hadoop-streaming/oneliners/nfa-regex" -mapper nfa-regex.sh # nfa-regex
 oneliners_hadoopstreaming(){
   jarpath="/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" # Adjust as required
-  basepath="" # Adjust as required
+  basepath="/oneliners" # Adjust as required
   times_file="hadoopstreaming.res"
   outputs_suffix="hadoopstreaming.out"
   outputs_dir="/outputs/hadoop-streaming/oneliners"

@@ -108,5 +108,5 @@ hdfs dfs -mkdir -p /oneliners
 # Add files with different replication factors
 for file in "${input_files[@]}"; do
     hdfs dfs -put $file /oneliners/$file
-    rm -f $file
+    # rm -f $file
 done
