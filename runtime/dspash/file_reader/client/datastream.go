@@ -19,48 +19,78 @@ import (
 )
 
 var (
-	streamType = flag.String("type", "", "Either read/write")
-	serverAddr = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
-	streamId   = flag.String("id", "", "The id of the stream")
-	debug      = flag.Bool("d", false, "Turn on debugging messages")
-	chunkSize  = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
+	streamType      = flag.String("type", "", "Either read/write/update")
+	serverAddr      = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
+	localServerAddr = flag.String("localAddr", "", "The local server address in the format of host:port")
+	streamId        = flag.String("id", "", "The id of the stream")
+	debug           = flag.Bool("d", false, "Turn on debugging messages")
+	chunkSize       = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
+	oldServerAddr   = flag.String("oldAddr", "", "The local server address in the format of host:port")
+	newServerAddr   = flag.String("newAddr", "", "The local server address in the format of host:port")
 )
 
-func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
+func getClientForGlobal(clientForLocal pb.DiscoveryClient) (*grpc.ClientConn, pb.DiscoveryClient, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	totimer := time.NewTimer(timeout)
-	defer totimer.Stop()
-	for {
-		reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
-		if err == nil {
-			log.Printf("GetAddr: found %v\n", reply)
-			return reply.Addr, nil
-		}
-		select {
-		case <-time.After(time.Millisecond * 100):
-			log.Printf("%s retrying to connect\n", err)
-			continue
-		case <-totimer.C:
-			return "", err
-		}
+	// Get latest address
+	reply, err := clientForLocal.GetLatestWriterServerAddr(ctx, &pb.GetLatestWriterServerAddrReq{Id: *streamId, WriterServerAddr: *serverAddr})
+	if err != nil {
+		log.Fatalf("Failed to get latest server addr: %v\n", err)
 	}
+	serverAddr = &reply.Addr
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// log.Printf("Connecting to Discovery Service at %v\n", *serverAddr)
+	conn, err := grpc.Dial(*serverAddr, opts...)
+	if err != nil {
+		log.Fatalf("Failed to connect to grpc server: %v\n", err)
+		return nil, nil, err
+	}
+	clientForGlobal := pb.NewDiscoveryClient(conn)
+	return conn, clientForGlobal, nil
+}
+
+func getAddr(client pb.DiscoveryClient) (string, error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	log.Printf("Before calling GetAddr for id %v\n", *streamId)
+	reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
+	if err == nil {
+		log.Printf("GetAddr: found %v\n", reply)
+		return reply.Addr, nil
+	}
+	return "", err
 }
 
 func removeAddr(client pb.DiscoveryClient) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
+	// ctx, cancel := context.WithCancel(context.Background())
+	// defer cancel()
 
 	_, err := client.RemoveAddr(ctx, &pb.AddrReq{Id: *streamId})
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
 func read(client pb.DiscoveryClient) (int, error) {
-	timeout := 10 * time.Second
-	addr, err := getAddr(client, timeout)
-	if err != nil {
-		return 0, err
+	var addr string
+	for {
+		connForGlobalServer, clientForGlobalServer, err := getClientForGlobal(client)
+		defer connForGlobalServer.Close()
+
+		if err != nil {
+			return 0, err
+		}
+		log.Printf("Successfully connected to Discovery Service at %v\n", *serverAddr)
+		addr, err = getAddr(clientForGlobalServer)
+		if err != nil {
+			log.Printf("err %v\n", err)
+			time.Sleep(300 * time.Millisecond)
+			continue
+		} else {
+			break
+		}
 	}
 
 	conn, err := net.Dial("tcp4", addr)
@@ -68,7 +98,7 @@ func read(client pb.DiscoveryClient) (int, error) {
 		return 0, err
 	}
 	defer conn.Close()
-	log.Printf("successfuly dialed to %v\n", addr)
+	log.Printf("successfully dialed to %v\n", addr)
 
 	reader := bufio.NewReader(conn)
 	n, err := reader.WriteTo(os.Stdout)
@@ -103,7 +133,7 @@ func write(client pb.DiscoveryClient) (int, error) {
 		return 0, err
 	}
 	defer conn.Close()
-	log.Println("accepted a connection")
+	log.Println("accepted a connection", conn.RemoteAddr())
 
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
@@ -111,6 +141,20 @@ func write(client pb.DiscoveryClient) (int, error) {
 	n, err := writer.ReadFrom(os.Stdin)
 
 	return int(n), err
+}
+
+func update(client pb.DiscoveryClient, oldDiscoveryServerAddr string, newDiscoveryServerAddr string) error {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	log.Printf("update is called!")
+	reply, err := client.UpdateWriterServerAddr(ctx,
+		&pb.UpdateWriterServerAddrReq{Id: *streamId, OldAddr: oldDiscoveryServerAddr, NewAddr: newDiscoveryServerAddr})
+	if err == nil {
+		log.Printf("update: found %v\n", reply)
+		return nil
+	}
+
+	return err
 }
 
 // TODO: readStream/writeStream are buggy but also not used so low priority.
@@ -194,20 +238,28 @@ func main() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	log.Printf("Connecting to Discovery Service at %v\n", *serverAddr)
-	conn, err := grpc.Dial(*serverAddr, opts...)
+	var addr *string
+	if *localServerAddr == "" {
+		addr = serverAddr
+	} else {
+		addr = localServerAddr
+	}
+	log.Printf("Connecting to Discovery Service at %v\n", *addr)
+	conn, err := grpc.Dial(*addr, opts...)
 	if err != nil {
 		log.Fatalf("Failed to connect to grpc server: %v\n", err)
 	}
 	defer conn.Close()
-	client := pb.NewDiscoveryClient(conn)
+	clientForLocal := pb.NewDiscoveryClient(conn)
 
 	var reqerr error
 	var n int
 	if *streamType == "read" {
-		n, reqerr = read(client)
+		n, reqerr = read(clientForLocal)
 	} else if *streamType == "write" {
-		n, reqerr = write(client)
+		n, reqerr = write(clientForLocal)
+	} else if *streamType == "update" {
+		reqerr = update(clientForLocal, *oldServerAddr, *newServerAddr)
 	} else {
 		flag.Usage()
 		os.Exit(1)
@@ -216,6 +268,9 @@ func main() {
 	if reqerr != nil {
 		log.Fatalln(reqerr)
 	}
-
-	log.Printf("Success %s %d bytes\n", *streamType, n)
+	if *streamType == "read" || *streamType == "write" {
+		log.Printf("Success %s %d bytes\n", *streamType, n)
+	} else {
+		log.Printf("Success %s", *streamType)
+	}
 }
