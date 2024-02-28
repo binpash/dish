@@ -2,7 +2,7 @@
 # Calculate mispelled words in an input
 # https://dl.acm.org/doi/10.1145/3532.315102
 IN=${IN:-/oneliners/1G.txt}
-dict=${dict:-$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt}
+dict=${dict:-$DISH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt}
 
 hdfs dfs -cat -ignoreCrc $IN |
     iconv -f utf-8 -t ascii//translit | # remove non utf8 characters
