@@ -4,7 +4,7 @@
 touch words-repeated.txt
 
 # Write the contents of /usr/share/dict/words 100 times to the file
-for i in {1..100}
+for i in {1..200}
 do
     cat /usr/share/dict/words >> words-repeated.txt
 done

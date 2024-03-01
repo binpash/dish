@@ -1,3 +1,3 @@
-command="$DISH_TOP/runtime/bin/dfs_split_reader $@"
+command="$DISH_TOP/runtime/bin/dfs_split_reader --config $@"
 echo $command >&2
 $command
