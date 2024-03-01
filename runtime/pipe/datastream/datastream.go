@@ -24,6 +24,7 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
 	chunkSize  = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
+	_  = flag.String("kill", "", "Kill the node at the given address")
 )
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
