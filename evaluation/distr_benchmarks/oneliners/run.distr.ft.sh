@@ -174,7 +174,7 @@ oneliners_faults() {
     crashed_worker="worker$i"
     echo Mocking crash for $crashed_worker with timeout of $timeout seconds
     echo ----------------------------------------------------------------
-    intro_pash "$PASH_FLAGS --distributed_exec --naive_fault worker$i" "faults_$crashed_worker"
+    oneliners_pash "$PASH_FLAGS --distributed_exec --naive_fault worker$i" "faults_$crashed_worker"
     # echo "Iteration $i"
     # Your loop body here
   done
@@ -183,12 +183,11 @@ oneliners_faults() {
 outputs_dir="outputs"
 rm -rf "$outputs"
 
-# oneliners_bash
+oneliners_bash
 
 # oneliners_pash "$PASH_FLAGS" "par"
 
-oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
-
 oneliners_faults
 
-# oneliners_hadoopstreaming
+oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
+oneliners_hadoopstreaming
