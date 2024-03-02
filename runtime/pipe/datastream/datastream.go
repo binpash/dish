@@ -9,6 +9,9 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,8 +26,8 @@ var (
 	serverAddr = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
-	chunkSize  = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
-	_  = flag.String("kill", "", "Kill the node at the given address")
+	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
+	killAddr  = flag.String("kill", "", "Kill the node at the given address")
 )
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
@@ -105,6 +108,20 @@ func write(client pb.DiscoveryClient) (int, error) {
 	}
 	defer conn.Close()
 	log.Println("accepted a connection")
+
+	if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
+		log.Println("killing myself")
+		pid := os.Getpid()
+		ex, _ := os.Executable()
+		exPath := filepath.Dir(ex)
+		scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
+		cmd := exec.Command("/bin/sh", scriptPath, strconv.Itoa(pid))
+		err := cmd.Run()
+		if err != nil {
+			log.Fatal(err)
+		}
+		os.Exit(1)
+	}
 
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
