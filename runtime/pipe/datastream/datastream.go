@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -110,17 +109,7 @@ func write(client pb.DiscoveryClient) (int, error) {
 	log.Println("accepted a connection")
 
 	if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
-		log.Println("killing myself")
-		pid := os.Getpid()
-		ex, _ := os.Executable()
-		exPath := filepath.Dir(ex)
-		scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
-		cmd := exec.Command("/bin/sh", scriptPath, strconv.Itoa(pid))
-		err := cmd.Run()
-		if err != nil {
-			log.Fatal(err)
-		}
-		os.Exit(1)
+		kill(conn)
 	}
 
 	writer := bufio.NewWriter(conn)
@@ -129,6 +118,33 @@ func write(client pb.DiscoveryClient) (int, error) {
 	n, err := writer.ReadFrom(os.Stdin)
 
 	return int(n), err
+}
+
+func kill(conn net.Conn) {
+	buf := make([]byte, *chunkSize)
+	n, err := os.Stdin.Read(buf)
+
+	if err != nil && err != io.EOF {
+		log.Fatal(err)
+	}
+
+	// we don't write everything here, thats why we use n/2 instead of n
+	n /= 2
+	n, err = conn.Write(buf[:n])
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("killing myself after writing %v bytes\n", n)
+
+	ex, _ := os.Executable()
+	exPath := filepath.Dir(ex)
+	scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
+	cmd := exec.Command("/bin/sh", scriptPath)
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	os.Exit(1)
 }
 
 // TODO: readStream/writeStream are buggy but also not used so low priority.
