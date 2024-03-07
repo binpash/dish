@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"io"
@@ -28,6 +30,8 @@ var (
 	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
 	killAddr  = flag.String("kill", "", "Kill the node at the given address")
 )
+
+const eof uint64 = 0xd1d2d3d4d5d6d7d8
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -73,10 +77,24 @@ func read(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 	log.Printf("successfuly dialed to %v\n", addr)
 
-	reader := bufio.NewReader(conn)
-	n, err := reader.WriteTo(os.Stdout)
+	// maybe limit recursion here?
+	var buf bytes.Buffer
+	n, err := buf.ReadFrom(conn)
+	if err != nil || n < 8 {
+		log.Println("re-reading, previous read failed because:", err, n)
+		nn, err := read(client)
+		return nn, err
+	}
 
-	return int(n), err
+	if binary.LittleEndian.Uint64(buf.Bytes()[n-8:n]) != eof {
+		log.Println("re-reading, previous read failed because eof not found")
+		nn, err := read(client)
+		return nn, err
+	}
+
+	nn, err := os.Stdout.Write(buf.Bytes()[:n-8])
+
+	return nn, err
 }
 
 func write(client pb.DiscoveryClient) (int, error) {
@@ -116,6 +134,11 @@ func write(client pb.DiscoveryClient) (int, error) {
 	defer writer.Flush()
 
 	n, err := writer.ReadFrom(os.Stdin)
+	if err != nil {
+		return int(n), err
+	}
+
+	err = binary.Write(writer, binary.NativeEndian, eof)
 
 	return int(n), err
 }
