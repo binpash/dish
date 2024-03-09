@@ -1,8 +1,8 @@
 [submodule "pash"]
 	path = pash
 	url = https://github.com/binpash/pash.git
-	branch = ft-orig
+	branch = ft-orig-naive
 [submodule "docker-hadoop"]
 	path = docker-hadoop
 	url = https://github.com/binpash/docker-hadoop
-	branch = ft-orig
+	branch = ft-orig-naive
