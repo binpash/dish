@@ -1,1 +1,1 @@
-hdfs dfs -cat /words-repeated.txt | grep ARPANET
+hdfs dfs -cat /words-repeated.txt | grep ARPANET | wc
