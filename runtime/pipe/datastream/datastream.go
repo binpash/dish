@@ -38,6 +38,7 @@ func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
 	defer cancel()
 
 	totimer := time.NewTimer(timeout)
+	startTime := time.Now()
 	defer totimer.Stop()
 	for {
 		reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
@@ -46,8 +47,10 @@ func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
 			return reply.Addr, nil
 		}
 		select {
-		case <-time.After(time.Millisecond * 100):
-			log.Printf("%s retrying to connect\n", err)
+		case <-time.After(time.Millisecond * 1000):
+			elapsed := time.Since(startTime)
+			remaining := timeout - elapsed
+			log.Printf("%s retrying to connect, %v remaining time to timeout\n", err, remaining)
 			continue
 		case <-totimer.C:
 			return "", err
