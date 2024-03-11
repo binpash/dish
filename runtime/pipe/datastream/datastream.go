@@ -57,17 +57,18 @@ func removeAddr(client pb.DiscoveryClient) {
 
 func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
 	for i := 0; i < numRetry; i++ {
-		n, err = read(client)
+		nn, err := read(client, n)
+		n += nn
 		if err == nil {
 			break
 		}
-		log.Println("read failed because:", err, "retrying:", i+1)
+		log.Println("read failed because:", err, "retrying:", i+1, "will skip:", n)
 		time.Sleep(1 * time.Second)
 	}
 	return
 }
 
-func read(client pb.DiscoveryClient) (int, error) {
+func read(client pb.DiscoveryClient, skip int) (int, error) {
 	addr, err := getAddr(client)
 	if err != nil {
 		return 0, err
@@ -103,8 +104,20 @@ func read(client pb.DiscoveryClient) (int, error) {
 			}
 		}
 
-		// write except for the last 8 bytes
-		nn, err := writer.Write(buf[:n])
+		var nn int
+		if skip == 0 {
+			// write except for the last 8 bytes
+			nn, err = writer.Write(buf[:n])
+		} else if skip < n {
+			// write except for the last 8 bytes, skip first skip bytes
+			nn, err = writer.Write(buf[skip:n])
+			skip = 0
+		} else {
+			// write nothing, reduce skip by n
+			nn = 0
+			skip -= n
+		}
+
 		written += nn
 		if err != nil {
 			return written, err
