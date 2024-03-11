@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"encoding/binary"
 	"errors"
@@ -62,7 +61,7 @@ func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
 		if err == nil {
 			break
 		}
-		log.Println("read failed because:", err, "retrying:", i + 1)
+		log.Println("read failed because:", err, "retrying:", i+1)
 		time.Sleep(1 * time.Second)
 	}
 	return
@@ -81,24 +80,47 @@ func read(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 	log.Printf("successfuly dialed to %v\n", addr)
 
-	// maybe limit recursion here?
-	var buf bytes.Buffer
-	n, err := buf.ReadFrom(conn)
-	if n < 8 {
+	buf := make([]byte, *chunkSize)
+	writer := bufio.NewWriter(os.Stdout)
+	defer writer.Flush()
+	written := 0
+	exit := false
+
+	// read first 8 bytes
+	_, err = io.ReadFull(conn, buf[:8])
+	if err != nil {
 		return 0, errors.New("read eof failure: too few bytes read")
 	}
 
-	if err != nil {
-		return 0, errors.New("read eof failure: " + err.Error())
+	for {
+		// read to after 8th byte in buffer
+		n, err := conn.Read(buf[8:])
+		if err != nil {
+			if err == io.EOF {
+				exit = true
+			} else {
+				return written, err
+			}
+		}
+
+		// write except for the last 8 bytes
+		nn, err := writer.Write(buf[:n])
+		written += nn
+		if err != nil {
+			return written, err
+		}
+
+		if exit {
+			if binary.NativeEndian.Uint64(buf[n:n+8]) != eof {
+				return written, errors.New("read eof failure: token doesn't match")
+			}
+			return written, nil
+		}
+
+		// copy last 8 bytes to the beginning of the buffer
+		// we start from
+		copy(buf, buf[n:n+8])
 	}
-
-	if binary.LittleEndian.Uint64(buf.Bytes()[n-8:n]) != eof {
-		return 0, errors.New("read eof failure: token doesn't match")
-	}
-
-	nn, err := os.Stdout.Write(buf.Bytes()[:n-8])
-
-	return nn, err
 }
 
 func write(client pb.DiscoveryClient) (int, error) {
@@ -111,9 +133,9 @@ func write(client pb.DiscoveryClient) (int, error) {
 	}
 
 	ips, err := net.LookupIP(host)
-    if err != nil {
-        return 0, err
-    }
+	if err != nil {
+		return 0, err
+	}
 
 	host = ips[0].String()
 
