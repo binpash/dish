@@ -104,7 +104,17 @@ func write(client pb.DiscoveryClient) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	host := strings.Split(*serverAddr, ":")[0]
+	host, err := os.Hostname()
+	if err != nil {
+		return 0, err
+	}
+
+	ips, err := net.LookupIP(host)
+    if err != nil {
+        return 0, err
+    }
+
+	host = ips[0].String()
 
 	ln, err := net.Listen("tcp4", host+":0") // connect to random port
 	if err != nil {
