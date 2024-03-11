@@ -21,6 +21,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -29,7 +31,7 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
 	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
-	killAddr  = flag.String("kill", "", "Kill the node at the given address")
+	killAddr   = flag.String("kill", "", "Kill the node at the given address")
 )
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
@@ -240,6 +242,15 @@ func writeStream(client pb.DiscoveryClient) (n int, err error) {
 
 func main() {
 	flag.Parse()
+
+	id, err := uuid.Parse(*streamId)
+	if err != nil {
+		log.Fatalf("Failed to parse uuid: %v\n", err)
+	}
+
+	b := make([]byte, 17)
+	copy(b[1:], id[:])
+
 	arg_idx := 0
 	if *streamType == "" {
 		*streamType = flag.Arg(arg_idx)
@@ -272,8 +283,10 @@ func main() {
 	var reqerr error
 	var n int
 	if *streamType == "read" {
+		b[0] = 0
 		n, reqerr = readWrapper(client, 20)
 	} else if *streamType == "write" {
+		b[0] = 1
 		n, reqerr = write(client)
 	} else {
 		flag.Usage()
@@ -285,4 +298,21 @@ func main() {
 	}
 
 	log.Printf("Success %s %d bytes\n", *streamType, n)
+
+	// Create addr TCP connection
+	addr := strings.Split(*serverAddr, ":")[0] + ":65425"
+	log.Printf("Connecting to Worker Manager at %v\n", addr)
+	c, err := net.Dial("tcp", addr)
+	if err != nil {
+		log.Fatalf("Failed to connect to Worker Manager: %v\n", err)
+	}
+	defer c.Close()
+
+	// Send the request
+	n, err = c.Write(b)
+	if err != nil {
+		log.Fatalf("Failed to send request to Worker Manager: %v\n", err)
+	}
+
+	log.Printf("Success %s %d bytes to Worker Manager\n", *streamType, n)
 }
