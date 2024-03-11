@@ -34,9 +34,10 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 	defer s.mu.Unlock()
 
 	addr, id := msg.Addr, msg.Id
-	if _, ok := s.addrs[id]; ok {
-		return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
-	}
+	// we let the workers overwrite the address
+	// if _, ok := s.addrs[id]; ok {
+	// 	return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
+	// }
 
 	s.addrs[id] = addr
 	return &pb.Status{Success: true}, nil
@@ -48,7 +49,7 @@ func (s *DiscoveryServer) GetAddr(ctx context.Context, msg *pb.AddrReq) (*pb.Get
 
 	addr, ok := s.addrs[msg.Id]
 	if !ok {
-		return &pb.GetAddrReply{Success: false}, errors.New("GetAddr: id not found, retry in a little bit\n")
+		return &pb.GetAddrReply{Success: false}, errors.New("GetAddr: id not found, retry in a little bit")
 	}
 
 	return &pb.GetAddrReply{Success: true, Addr: addr}, nil

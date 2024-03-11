@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -33,29 +34,16 @@ var (
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
 
-func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
+func getAddr(client pb.DiscoveryClient) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	totimer := time.NewTimer(timeout)
-	startTime := time.Now()
-	defer totimer.Stop()
-	for {
-		reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
-		if err == nil {
-			log.Printf("GetAddr: found %v\n", reply)
-			return reply.Addr, nil
-		}
-		select {
-		case <-time.After(time.Millisecond * 1000):
-			elapsed := time.Since(startTime)
-			remaining := timeout - elapsed
-			log.Printf("%s retrying to connect, %v remaining time to timeout\n", err, remaining)
-			continue
-		case <-totimer.C:
-			return "", err
-		}
+	reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
+	if err == nil {
+		log.Printf("GetAddr: found %v\n", reply)
+		return reply.Addr, nil
 	}
+	return "", err
 }
 
 func removeAddr(client pb.DiscoveryClient) {
@@ -66,9 +54,20 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
+func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
+	for i := 0; i < numRetry; i++ {
+		n, err = read(client)
+		if err == nil {
+			break
+		}
+		log.Println("read failed because:", err, "retrying:", i + 1)
+		time.Sleep(1 * time.Second)
+	}
+	return
+}
+
 func read(client pb.DiscoveryClient) (int, error) {
-	timeout := 10 * time.Second
-	addr, err := getAddr(client, timeout)
+	addr, err := getAddr(client)
 	if err != nil {
 		return 0, err
 	}
@@ -83,16 +82,16 @@ func read(client pb.DiscoveryClient) (int, error) {
 	// maybe limit recursion here?
 	var buf bytes.Buffer
 	n, err := buf.ReadFrom(conn)
-	if err != nil || n < 8 {
-		log.Println("re-reading, previous read failed because:", err, n)
-		nn, err := read(client)
-		return nn, err
+	if n < 8 {
+		return 0, errors.New("read eof failure: too few bytes read")
+	}
+
+	if err != nil {
+		return 0, errors.New("read eof failure: " + err.Error())
 	}
 
 	if binary.LittleEndian.Uint64(buf.Bytes()[n-8:n]) != eof {
-		log.Println("re-reading, previous read failed because eof not found")
-		nn, err := read(client)
-		return nn, err
+		return 0, errors.New("read eof failure: token doesn't match")
 	}
 
 	nn, err := os.Stdout.Write(buf.Bytes()[:n-8])
@@ -273,7 +272,7 @@ func main() {
 	var reqerr error
 	var n int
 	if *streamType == "read" {
-		n, reqerr = read(client)
+		n, reqerr = readWrapper(client, 20)
 	} else if *streamType == "write" {
 		n, reqerr = write(client)
 	} else {
