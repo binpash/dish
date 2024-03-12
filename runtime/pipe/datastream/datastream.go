@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -23,12 +24,13 @@ import (
 )
 
 var (
-	streamType = flag.String("type", "", "Either read/write")
-	serverAddr = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
-	streamId   = flag.String("id", "", "The id of the stream")
-	debug      = flag.Bool("d", false, "Turn on debugging messages")
-	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
-	killAddr  = flag.String("kill", "", "Kill the node at the given address")
+	streamType        = flag.String("type", "", "Either read/write")
+	serverAddr        = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
+	streamId          = flag.String("id", "", "The id of the stream")
+	debug             = flag.Bool("d", false, "Turn on debugging messages")
+	chunkSize         = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
+	killAddr          = flag.String("kill", "", "Kill the node at the given address")
+	managerServerAddr = flag.String("managerAddr", "addr:50052", "The server address on nodemanager node in the format of host:port")
 )
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
@@ -46,7 +48,7 @@ func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
 			return reply.Addr, nil
 		}
 		select {
-		case <-time.After(time.Millisecond * 100):
+		case <-time.After(time.Millisecond * 1000):
 			log.Printf("%s retrying to connect\n", err)
 			continue
 		case <-totimer.C:
@@ -63,23 +65,62 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
+func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
+	for i := 0; i < numRetry; i++ {
+		nn, err := read(client)
+		n += nn
+		if err == nil {
+			break
+		}
+		// log.Println("read failed because:", err, "retrying:", i+1, "will skip:", n)
+		time.Sleep(1 * time.Second)
+	}
+	return
+}
+
 func read(client pb.DiscoveryClient) (int, error) {
 	timeout := 10 * time.Second
-	addr, err := getAddr(client, timeout)
-	if err != nil {
-		return 0, err
-	}
+	var (
+		addr string
+		conn net.Conn
+		err  error
+	)
 
-	conn, err := net.Dial("tcp4", addr)
-	if err != nil {
-		return 0, err
+	// Keep trying to connect to the writer if failed
+	// This logic may not be necessary with the readWrapper handling re-tries
+	totimer := time.NewTimer(timeout)
+	defer totimer.Stop()
+loop:
+	for {
+		select {
+		case <-totimer.C:
+			// Timeout occurred
+			return 0, errors.New("connection timed out")
+		default:
+			addr, err = getAddr(client, timeout)
+			if err != nil {
+				log.Printf("err %v\n", err)
+				time.Sleep(300 * time.Millisecond)
+				continue
+			} else {
+				conn, err = net.Dial("tcp4", addr)
+				if err != nil {
+					log.Printf("err %v\n", err)
+					time.Sleep(300 * time.Millisecond)
+					continue
+				} else {
+					log.Printf("successfuly dialed to %v\n", addr)
+					break loop
+				}
+			}
+		}
 	}
 	defer conn.Close()
-	log.Printf("successfuly dialed to %v\n", addr)
 
 	// maybe limit recursion here?
 	var buf bytes.Buffer
 	n, err := buf.ReadFrom(conn)
+	log.Printf("buffer size: %v\n", buf.Len())
 	if err != nil || n < 8 {
 		log.Println("re-reading, previous read failed because:", err, n)
 		nn, err := read(client)
@@ -138,7 +179,19 @@ func write(client pb.DiscoveryClient) (int, error) {
 		return int(n), err
 	}
 
-	err = binary.Write(writer, binary.NativeEndian, eof)
+	// var i uint32 = 0x01020304
+	// b := make([]byte, 4)
+	// binary.LittleEndian.PutUint32(b, i)
+
+	// if b[0] == 0x04 {
+	// 	log.Println("Little Endian")
+	// } else if b[0] == 0x01 {
+	// 	log.Println("Big Endian")
+	// } else {
+	// 	log.Println("Unknown Endian")
+	// }
+
+	err = binary.Write(writer, binary.LittleEndian, eof)
 
 	return int(n), err
 }
@@ -249,8 +302,8 @@ func main() {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	log.Printf("Connecting to Discovery Service at %v\n", *serverAddr)
-	conn, err := grpc.Dial(*serverAddr, opts...)
+	log.Printf("Connecting to Discovery Service at %v\n", *managerServerAddr)
+	conn, err := grpc.Dial(*managerServerAddr, opts...)
 	if err != nil {
 		log.Fatalf("Failed to connect to grpc server: %v\n", err)
 	}
@@ -260,7 +313,8 @@ func main() {
 	var reqerr error
 	var n int
 	if *streamType == "read" {
-		n, reqerr = read(client)
+		n, reqerr = readWrapper(client, 20)
+		// n, reqerr = read(client)
 	} else if *streamType == "write" {
 		n, reqerr = write(client)
 	} else {

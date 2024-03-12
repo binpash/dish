@@ -32,10 +32,11 @@ type DiscoveryServer struct {
 func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.Status, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
 	addr, id := msg.Addr, msg.Id
 	if _, ok := s.addrs[id]; ok {
-		return &pb.Status{Success: false}, errors.New("PutAddr: id already inserted\n")
+		log.Printf("PutAddr: overwriting id %v's address from %v to %v \n", id, s.addrs[id], addr)
+	} else {
+		log.Printf("PutAddr: storing id %v's address as to %v \n", id, addr)
 	}
 
 	s.addrs[id] = addr
@@ -45,7 +46,7 @@ func (s *DiscoveryServer) PutAddr(ctx context.Context, msg *pb.PutAddrMsg) (*pb.
 func (s *DiscoveryServer) GetAddr(ctx context.Context, msg *pb.AddrReq) (*pb.GetAddrReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-
+	log.Printf("GetAddr: finding id %v's address\n", msg.Id)
 	addr, ok := s.addrs[msg.Id]
 	if !ok {
 		return &pb.GetAddrReply{Success: false}, errors.New("GetAddr: id not found, retry in a little bit\n")
