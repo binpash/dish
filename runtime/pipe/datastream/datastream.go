@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -33,7 +34,42 @@ var (
 	managerServerAddr = flag.String("managerAddr", "addr:50052", "The server address on nodemanager node in the format of host:port")
 )
 
+type ReportRequest struct {
+	Type  string `json:"type"`
+	Bytes int    `json:"bytes"`
+}
+
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
+const WORKER_PORT = "65432"
+
+func reportProgress(workerConn net.Conn, bytes int) {
+	// if read from kill target, report to its worker.py server
+	// every time we read from it
+	request := ReportRequest{
+		Type:  "Report-Reception",
+		Bytes: bytes,
+	}
+	encodeRequest, err := json.Marshal(request)
+	log.Printf("Request to worker server: %v\n", string(encodeRequest))
+	if err != nil {
+		log.Println(err)
+	}
+
+	// get message header
+	reqLen := make([]byte, 4)
+	binary.BigEndian.PutUint32(reqLen, uint32(len(encodeRequest)))
+
+	fullRequest := append(reqLen, encodeRequest...)
+
+	_, err = workerConn.Write(fullRequest)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Printf("Successfully reported progress to worker server: %v\n", workerConn.RemoteAddr().String())
+	}
+
+}
 
 func getAddr(client pb.DiscoveryClient, timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -66,8 +102,28 @@ func removeAddr(client pb.DiscoveryClient) {
 }
 
 func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
+	read_from_host := strings.Split(*serverAddr, ":")[0]
+	report := false
+	var workerConn net.Conn
+
+	if *killAddr == read_from_host {
+		// if read from kill target, report to its worker.py server
+		// every time we read from it
+		report = true
+		workerConn, err = net.Dial("tcp", *killAddr+":"+WORKER_PORT)
+		if err != nil {
+			fmt.Println("Error connecting to server:", err)
+			return 0, err
+		}
+		log.Printf("Connected to worker server at: %v\n", workerConn.RemoteAddr().String())
+		defer workerConn.Close()
+	}
 	for i := 0; i < numRetry; i++ {
 		nn, err := read(client)
+		if report && workerConn != nil {
+
+			// reportProgress(workerConn, nn)
+		}
 		n += nn
 		if err == nil {
 			break
@@ -167,9 +223,9 @@ func write(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 	log.Println("accepted a connection")
 
-	if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
-		kill(conn)
-	}
+	// if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
+	// 	kill(conn)
+	// }
 
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
