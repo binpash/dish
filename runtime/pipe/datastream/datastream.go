@@ -90,7 +90,7 @@ func read(client pb.DiscoveryClient, skip int) (int, error) {
 	// read first 8 bytes
 	_, err = io.ReadFull(conn, buf[:8])
 	if err != nil {
-		return 0, errors.New("read eof failure: too few bytes read")
+		return 0, errors.New("read eof failure: too few bytes read" + err.Error())
 	}
 
 	for {
