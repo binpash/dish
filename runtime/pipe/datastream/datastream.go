@@ -124,7 +124,7 @@ func read(client pb.DiscoveryClient, skip int) (int, error) {
 		}
 
 		if exit {
-			if binary.NativeEndian.Uint64(buf[n:n+8]) != eof {
+			if binary.BigEndian.Uint64(buf[n:n+8]) != eof {
 				return written, errors.New("read eof failure: token doesn't match")
 			}
 			return written, nil
@@ -187,7 +187,7 @@ func write(client pb.DiscoveryClient) (int, error) {
 		return int(n), err
 	}
 
-	err = binary.Write(writer, binary.NativeEndian, eof)
+	err = binary.Write(writer, binary.BigEndian, eof)
 
 	return int(n), err
 }
