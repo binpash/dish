@@ -78,7 +78,7 @@ unix50_pash(){
 
 unix50_hadoopstreaming(){
   jarpath="/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" # Adjust as required
-  basepath="/unix50in" # Adjust as required
+  basepath="/unix50" # Adjust as required
   times_file="hadoopstreaming.res"
   outputs_suffix="hadoopstreaming.out"
   outputs_dir="/outputs/hadoop-streaming/unix50"
