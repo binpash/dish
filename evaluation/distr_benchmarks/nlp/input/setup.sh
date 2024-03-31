@@ -10,38 +10,29 @@ if [ ! -f ./genesis ]; then
 fi 
 
 if [ ! -f ./exodus ]; then
-  curl -sf https://www.gutenberg.org/files/33420/33420-0.txt > exodus
-  "$PASH_TOP/scripts/append_nl_if_not.sh" exodus
+    curl -sf https://www.gutenberg.org/files/33420/33420-0.txt > exodus
+    "$PASH_TOP/scripts/append_nl_if_not.sh" exodus
 fi
 
 if [ ! -e ./pg ]; then
-  mkdir pg
-  cd pg
-  if [[ "$1" == "--full" ]]; then
-    echo 'N.b.: download/extraction will take about 10min'
-    wget atlas-group.cs.brown.edu/data/pg.tar.xz
-    if [ $? -ne 0 ]; then
-		cat <<-'EOF' | sed 's/^ *//'
-		Downloading input dataset failed, thus need to manually rsync all books from  project gutenberg:
-		rsync -av --del --prune-empty-dirs --include='*.txt' --include='*/' --exclude='*' ftp@ftp.ibiblio.org::gutenberg .
-		please contact the pash developers pash-devs@googlegroups.com
-		EOF
-    exit 1
-  fi
-  cat pg.tar.xz | tar -xJ
-  
-  else
-    wget http://pac-n4.csail.mit.edu:81/pash_data/nlp.zip
-    unzip nlp.zip
-    mv data/* .
-    rm nlp.zip data -rf
-  fi
+    mkdir pg
+    cd pg
+    book_count=120
+    if [[ "$1" == "--full" ]]; then
+        book_count=1000
+    fi
 
-  for f in *.txt; do
-    "$PASH_TOP/scripts/append_nl_if_not.sh" $f
-  done
-  cd ..
-  
+    head -n $book_count ../book_txt_links.txt | while IFS= read -r line
+    do
+        echo "Downloading $line"
+        # Your code here
+        wget -q "$line"
+    done
+
+    for f in *.txt; do
+        "$PASH_TOP/scripts/append_nl_if_not.sh" $f
+    done
+    cd ..
 fi
 
 # Put files in hdfs
