@@ -175,9 +175,9 @@ func write(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 	log.Println("accepted a connection")
 
-	if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
-		kill(conn)
-	}
+	// if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
+	// 	kill(conn)
+	// }
 
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
