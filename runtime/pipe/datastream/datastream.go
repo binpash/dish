@@ -30,7 +30,8 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
 	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
-	killAddr   = flag.String("kill", "", "Kill the node at the given address")
+	_          = flag.String("kill", "", "Kill the node at the given address")
+	ft         = flag.String("ft", "disabled", "Fault tolerance mode. naive, base or optimized. Default is disabled")
 )
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
@@ -304,6 +305,8 @@ func main() {
 		log.SetPrefix(fmt.Sprintf("%v %v client ", (*streamId)[0:8], *streamType))
 	}
 
+	log.Println("Stream: ", *streamType, *streamId)
+
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
@@ -319,7 +322,7 @@ func main() {
 	var n int
 	if *streamType == "read" {
 		b[0] = 0
-		n, reqerr = readWrapper(client, 20)
+		n, reqerr = readWrapper(client, 30)
 	} else if *streamType == "write" {
 		b[0] = 1
 		n, reqerr = write(client)
@@ -334,20 +337,22 @@ func main() {
 
 	log.Printf("Success %s %d bytes\n", *streamType, n)
 
-	// Create addr TCP connection
-	addr := strings.Split(*serverAddr, ":")[0] + ":65425"
-	log.Printf("Connecting to Worker Manager at %v\n", addr)
-	c, err := net.Dial("tcp", addr)
-	if err != nil {
-		log.Fatalf("Failed to connect to Worker Manager: %v\n", err)
-	}
-	defer c.Close()
+	if *ft != "disabled" {
+		// Create addr TCP connection
+		addr := strings.Split(*serverAddr, ":")[0] + ":65425"
+		log.Printf("Connecting to Worker Manager at %v\n", addr)
+		c, err := net.Dial("tcp", addr)
+		if err != nil {
+			log.Fatalf("Failed to connect to Worker Manager: %v\n", err)
+		}
+		defer c.Close()
 
-	// Send the request
-	n, err = c.Write(b)
-	if err != nil {
-		log.Fatalf("Failed to send request to Worker Manager: %v\n", err)
-	}
+		// Send the request
+		n, err = c.Write(b)
+		if err != nil {
+			log.Fatalf("Failed to send request to Worker Manager: %v\n", err)
+		}
 
-	log.Printf("Success %s %d bytes to Worker Manager\n", *streamType, n)
+		log.Printf("Success %s %d bytes to Worker Manager\n", *streamType, n)
+	}
 }
