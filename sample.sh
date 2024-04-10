@@ -19,3 +19,4 @@ hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc18.txt
 hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc19.txt
 hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc20.txt
 #  time (./di.sh sample.sh --parallel_pipelines --parallel_pipelines_limit 24 -d 1 2> err.log)
+# /opt/dish/runtime/scripts/killall.sh; sleep 3; pkill -f worker; sleep 1; /opt/dish/docker-hadoop/datanode/run.sh

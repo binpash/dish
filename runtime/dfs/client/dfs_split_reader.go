@@ -20,6 +20,8 @@ import (
 var (
 	config     = flag.String("config", "", "File to read")
 	splitNum   = flag.Int("split", 0, "The logical split number")
+	subSplit   = flag.Int("subSplit", 0, "The sub split number")
+	numSplit   = flag.Int("numSplits", 1, "The number of sub splits")
 	serverPort = flag.Int("port", 50051, "The server port, all machines should use same port")
 )
 
@@ -34,6 +36,7 @@ type DFSConfig struct {
 	Blocks []DFSBlock
 }
 
+// very important
 // TODO: improve so that we don't use network if block is replicated on the same machine
 func readFirstLine(block DFSBlock, writer *bufio.Writer) (ok bool, e error) {
 	var opts []grpc.DialOption
@@ -84,14 +87,30 @@ func readFirstLine(block DFSBlock, writer *bufio.Writer) (ok bool, e error) {
 	return
 }
 
-func readLocalFile(p string, skipFirstLine bool, writer *bufio.Writer) error {
+func readLocalFile(p string, skipFirstLine bool, writer *bufio.Writer, sub int, num int) error {
 	file, err := os.Open(p)
 	if err != nil {
 		return err
 	}
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	fileSize := fileInfo.Size()
+	partSize := fileSize/int64(num) + 1
+	startOffset := int64(sub) * partSize
+
+	_, err = file.Seek(startOffset, 0) // Seek to the offset
+	if err != nil {
+		return err
+	}
+
 	defer file.Close()
 
-	reader := bufio.NewReader(file)
+	partReader := io.LimitReader(file, partSize)
+	reader := bufio.NewReader(partReader)
 
 	if skipFirstLine {
 		_, err = reader.ReadString('\n') //discarded
@@ -108,13 +127,13 @@ func readLocalFile(p string, skipFirstLine bool, writer *bufio.Writer) error {
 func readUntilDelim(reader *bufio.Reader, writer *bufio.Writer) {
 }
 
-func readDFSLogicalSplit(conf DFSConfig, split int) error {
+func readDFSLogicalSplit(conf DFSConfig, split int, sub int, num int) error {
 
 	skipFirstLine := true
 	writer := bufio.NewWriter(os.Stdout)
 	defer writer.Flush()
 
-	if split == 0 {
+	if split == 0 && sub == 0 {
 		skipFirstLine = false
 	}
 
@@ -123,7 +142,7 @@ func readDFSLogicalSplit(conf DFSConfig, split int) error {
 		return err
 	}
 
-	err = readLocalFile(filepath, skipFirstLine, writer)
+	err = readLocalFile(filepath, skipFirstLine, writer, sub, num)
 	if err != nil {
 		return err
 	}
@@ -167,7 +186,7 @@ func main() {
 	}
 
 	conf := serialize_conf(*config)
-	err := readDFSLogicalSplit(conf, *splitNum)
+	err := readDFSLogicalSplit(conf, *splitNum, *subSplit, *numSplit)
 	if err != nil {
 		log.Fatalln(err)
 	}
