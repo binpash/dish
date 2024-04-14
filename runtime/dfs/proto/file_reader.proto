@@ -4,6 +4,8 @@ option go_package = "runtime/dfs/proto";
 
 service FileReader {
     rpc ReadFile(FileRequest) returns (stream ReadReply) {}
+    rpc ReadNewLine(FileRequest) returns (ReadReply) {}
+    rpc ReadFileFull(FileRequest) returns (ReadReply) {}
 }
 
 message FileRequest {

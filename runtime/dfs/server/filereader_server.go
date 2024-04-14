@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -53,6 +54,48 @@ func (s *fileReaderServer) ReadFile(req *pb.FileRequest, stream pb.FileReader_Re
 	}
 
 	return nil
+}
+
+func (s *fileReaderServer) ReadNewLine(ctx context.Context, req *pb.FileRequest) (*pb.ReadReply, error) {
+	filename, err := pb.GetAbsPath(req.Path)
+	if err != nil {
+		log.Println(err)
+		return &pb.ReadReply{}, err
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		log.Println(err)
+		return &pb.ReadReply{}, err
+	}
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+	line, err := reader.ReadBytes('\n')
+	if err != nil {
+		log.Println(err)
+		return &pb.ReadReply{}, err
+	}
+
+	return &pb.ReadReply{Buffer: line}, nil
+}
+
+func (s *fileReaderServer) ReadFileFull(ctx context.Context, req *pb.FileRequest) (*pb.ReadReply, error) {
+	filepath := req.Path
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Println(err)
+		return &pb.ReadReply{}, err
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Println(err)
+		return &pb.ReadReply{}, err
+	}
+
+	return &pb.ReadReply{Buffer: data}, nil
 }
 
 func newServer() *fileReaderServer {

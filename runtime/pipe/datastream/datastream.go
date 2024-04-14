@@ -11,11 +11,10 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"time"
 
+	fr "runtime/dfs/proto"
 	pb "runtime/pipe/proto"
 
 	"google.golang.org/grpc"
@@ -36,11 +35,17 @@ var (
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
 
-func getAddr(client pb.DiscoveryClient) (string, error) {
+func getAddr(client pb.DiscoveryClient, optimized bool) (string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	reply, err := client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
+	var reply *pb.GetAddrReply
+	var err error
+	if optimized {
+		reply, err = client.GetAddrOptimized(ctx, &pb.AddrReq{Id: *streamId})
+	} else {
+		reply, err = client.GetAddr(ctx, &pb.AddrReq{Id: *streamId})
+	}
 	if err == nil {
 		log.Printf("GetAddr: found %v\n", reply)
 		return reply.Addr, nil
@@ -56,9 +61,14 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
-func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
+func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err error) {
 	for i := 0; i < numRetry; i++ {
-		nn, err := read(client, n)
+		var nn int
+		if ft == "optimized" {
+			nn, err = readOptimized(client)
+		} else {
+			nn, err = read(client, n)
+		}
 		n += nn
 		if err == nil {
 			break
@@ -70,7 +80,7 @@ func readWrapper(client pb.DiscoveryClient, numRetry int) (n int, err error) {
 }
 
 func read(client pb.DiscoveryClient, skip int) (int, error) {
-	addr, err := getAddr(client)
+	addr, err := getAddr(client, false)
 	if err != nil {
 		return 0, err
 	}
@@ -137,6 +147,38 @@ func read(client pb.DiscoveryClient, skip int) (int, error) {
 	}
 }
 
+func readOptimized(client pb.DiscoveryClient) (int, error) {
+	addr, err := getAddr(client, true)
+	if err != nil {
+		return 0, err
+	}
+
+	parts := strings.Split(addr, ",")
+	host := parts[0]
+	path := parts[1]
+
+	addr = fmt.Sprintf("%s:%d", host, 50051)
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		return 0, err
+	}
+	defer conn.Close()
+
+	fileReader := fr.NewFileReaderClient(conn)
+	reply, err := fileReader.ReadFileFull(context.Background(), &fr.FileRequest{Path: path})
+	if err != nil {
+		return 0, err
+	}
+	file := reply.Buffer
+
+	if binary.BigEndian.Uint64(file[len(file)-8:]) != eof {
+		return 0, errors.New("read eof failure: token doesn't match")
+	}
+
+	n, err := os.Stdout.Write(file[:len(file)-8])
+	return n, err
+}
+
 func write(client pb.DiscoveryClient) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -176,10 +218,6 @@ func write(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 	log.Println("accepted a connection")
 
-	// if *killAddr == strings.Split(conn.LocalAddr().String(), ":")[0] {
-	// 	kill(conn)
-	// }
-
 	writer := bufio.NewWriter(conn)
 	defer writer.Flush()
 
@@ -193,87 +231,42 @@ func write(client pb.DiscoveryClient) (int, error) {
 	return int(n), err
 }
 
-func kill(conn net.Conn) {
-	buf := make([]byte, *chunkSize)
-	n, err := os.Stdin.Read(buf)
-
-	if err != nil && err != io.EOF {
-		log.Fatal(err)
-	}
-
-	// we don't write everything here, thats why we use n/2 instead of n
-	n /= 2
-	n, err = conn.Write(buf[:n])
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("killing myself after writing %v bytes\n", n)
-
-	ex, _ := os.Executable()
-	exPath := filepath.Dir(ex)
-	scriptPath := filepath.Join(exPath, "../scripts/killall.sh")
-	cmd := exec.Command("/bin/sh", scriptPath)
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	os.Exit(1)
-}
-
-// TODO: readStream/writeStream are buggy but also not used so low priority.
-func readStream(client pb.DiscoveryClient) (n int, err error) {
+func writeOpimized(client pb.DiscoveryClient) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	n = 0
-	stream, err := client.ReadStream(ctx, &pb.AddrReq{Id: *streamId})
+	file, err := os.CreateTemp("", "datastream-")
 	if err != nil {
-		return
+		return 0, err
 	}
+	defer file.Close()
 
-	writer := bufio.NewWriter(os.Stdout)
-	defer writer.Flush()
-
-	for {
-		reply, err := stream.Recv()
-		if err == io.EOF {
-			return n, nil
-		}
-
-		if err != nil {
-			return n, err
-		}
-
-		nn, err := writer.Write(reply.Buffer)
-		n += nn
-	}
-}
-
-func writeStream(client pb.DiscoveryClient) (n int, err error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	n = 0
-	stream, err := client.WriteStream(ctx)
+	host, err := os.Hostname()
 	if err != nil {
-		return
+		return 0, err
 	}
-	// First message
-	stream.Send(&pb.Data{Id: *streamId})
+	ips, err := net.LookupIP(host)
+	if err != nil {
+		return 0, err
+	}
+	host = ips[0].String()
 
-	reader := bufio.NewReader(os.Stdin)
-	buffer := make([]byte, *chunkSize)
-	for {
-		nn, err := reader.Read(buffer)
-		if err != nil {
-			if err == io.EOF {
-				_, err = stream.CloseAndRecv()
-			}
-			return n, err
-		}
-		stream.Send(&pb.Data{Buffer: buffer})
-		n += nn
+	n, err := io.Copy(file, os.Stdin)
+	if err != nil {
+		return 0, err
 	}
+
+	err = binary.Write(file, binary.BigEndian, eof)
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = client.PutAddrOptimized(ctx, &pb.PutAddrMsg{Id: *streamId, Addr: fmt.Sprintf("%s,%s", host, file.Name())})
+	if err != nil {
+		return 0, err
+	}
+
+	return int(n), err
 }
 
 func main() {
@@ -322,10 +315,14 @@ func main() {
 	var n int
 	if *streamType == "read" {
 		b[0] = 0
-		n, reqerr = readWrapper(client, 30)
+		n, reqerr = readWrapper(client, 30, *ft)
 	} else if *streamType == "write" {
 		b[0] = 1
-		n, reqerr = write(client)
+		if *ft == "optimized" {
+			n, reqerr = writeOpimized(client)
+		} else {
+			n, reqerr = write(client)
+		}
 	} else {
 		flag.Usage()
 		os.Exit(1)

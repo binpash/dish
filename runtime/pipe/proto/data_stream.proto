@@ -8,6 +8,8 @@ service Discovery {
     rpc RemoveAddr(AddrReq) returns (Status) {}
     rpc readStream(AddrReq) returns (stream Data) {}
     rpc writeStream(stream Data) returns (Status) {}
+    rpc PutAddrOptimized(PutAddrMsg) returns (Status) {}
+    rpc GetAddrOptimized(AddrReq) returns(GetAddrReply) {}
 }
 
 message PutAddrMsg {

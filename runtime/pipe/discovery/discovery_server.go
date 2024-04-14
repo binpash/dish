@@ -25,6 +25,7 @@ var (
 type DiscoveryServer struct {
 	pb.UnimplementedDiscoveryServer
 	addrs   map[string]string
+	chans   map[string]chan string
 	streams map[string]chan []byte
 	mu      sync.Mutex // protects addrs
 }
@@ -66,6 +67,40 @@ func (s *DiscoveryServer) RemoveAddr(ctx context.Context, msg *pb.AddrReq) (*pb.
 
 	delete(s.addrs, msg.Id)
 	return &pb.Status{Success: true}, nil
+}
+
+func (s *DiscoveryServer) PutAddrOptimized(ctx context.Context, msg *pb.PutAddrMsg) (*pb.Status, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	addr, id := msg.Addr, msg.Id
+	c, ok := s.chans[id]
+	if ok {
+		c <- addr
+		delete(s.chans, id)
+	}
+	s.addrs[id] = addr
+
+	return &pb.Status{Success: true}, nil
+}
+
+func (s *DiscoveryServer) GetAddrOptimized(ctx context.Context, msg *pb.AddrReq) (*pb.GetAddrReply, error) {
+	s.mu.Lock()
+
+	addr, ok := s.addrs[msg.Id]
+	var c chan string
+	if !ok {
+		c = make(chan string)
+		s.chans[msg.Id] = c
+	}
+
+	s.mu.Unlock()
+
+	if !ok {
+		addr = <-c
+	}
+
+	return &pb.GetAddrReply{Success: true, Addr: addr}, nil
 }
 
 func (s *DiscoveryServer) ReadStream(req *pb.AddrReq, stream pb.Discovery_ReadStreamServer) error {
@@ -124,6 +159,7 @@ func (s *DiscoveryServer) WriteStream(stream pb.Discovery_WriteStreamServer) err
 func newServer() *DiscoveryServer {
 	s := &DiscoveryServer{}
 	s.addrs = map[string]string{}
+	s.chans = map[string]chan string{}
 	s.streams = map[string]chan []byte{}
 	s.mu = sync.Mutex{}
 	return s

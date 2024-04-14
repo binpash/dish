@@ -16,36 +16,17 @@ pip3 install flask
 pip3 install requests --target "$PASH_TOP/python_pkgs/"
 
 # Install Go
-wget https://go.dev/dl/go1.17.7.linux-amd64.tar.gz
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.17.7.linux-amd64.tar.gz
+GO_VERSION="1.22.2"
+wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
 echo -e '\nexport PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 export PATH=$PATH:/usr/local/go/bin
-rm go1.17.7.linux-amd64.tar.gz
-
-# Install deps
-GO111MODULE=on go get github.com/urfave/cli/v2
+rm go${GO_VERSION}.linux-amd64.tar.gz
 
 # Protobuf
 apt-get update && apt-get install -y zip
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-PROTOBUF_VER="3.15.8"
-PROTOBUF_PACKAGE="protoc-$PROTOBUF_VER-linux-x86_64.zip"
-curl -LO $PB_REL/download/v$PROTOBUF_VER/$PROTOBUF_PACKAGE
-unzip $PROTOBUF_PACKAGE -d $HOME/.local
-rm $PROTOBUF_PACKAGE
-export PATH="$PATH:$HOME/.local/bin"
-echo -e "\nPATH=\$PATH:$HOME/.local/bin" >> ~/.bashrc
-
-# Go protobuf deps
-go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-echo -e "\nexport PATH=\$PATH:$(go env GOPATH)/bin" >> ~/.bashrc
-export PATH="$PATH:$(go env GOPATH)/bin"
-
-# Protobuf
-apt-get update && apt-get install -y zip
-PB_REL="https://github.com/protocolbuffers/protobuf/releases"
-PROTOBUF_VER="3.15.8"
+PROTOBUF_VER="26.1"
 PROTOBUF_PACKAGE="protoc-$PROTOBUF_VER-linux-x86_64.zip"
 curl -LO $PB_REL/download/v$PROTOBUF_VER/$PROTOBUF_PACKAGE
 unzip $PROTOBUF_PACKAGE -d $HOME/.local
