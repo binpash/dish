@@ -20,4 +20,4 @@ hdfs dfs -cat /words-repeated.txt | grep AA | wc
 # hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc20.txt
 #  time (./di.sh sample.sh --parallel_pipelines --parallel_pipelines_limit 24 -d 1 2> err.log)
 # /opt/dish/runtime/scripts/killall.sh; sleep 2; pkill -f worker; sleep 2; /opt/dish/docker-hadoop/datanode/run.sh
-# pkill -f worker; pkill -f discovery; pkill -f filereader; sleep 2; /opt/dish/pash/compiler/dspash/worker.sh &> /worker.log &
+# pkill -f worker; pkill -f discovery; pkill -f filereader; sleep 2; bash /opt/dish/pash/compiler/dspash/worker.sh &> /worker.log &
