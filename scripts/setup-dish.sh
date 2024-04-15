@@ -17,17 +17,19 @@ pip3 install requests --target "$PASH_TOP/python_pkgs/"
 
 # Install Go
 GO_VERSION="1.22.2"
-wget https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
-rm -rf /usr/local/go && tar -C /usr/local -xzf go${GO_VERSION}.linux-amd64.tar.gz
+if [ "$(uname -m)" = "x86_64" ]; then GO_ARCH="amd64"; else GO_ARCH="arm64"; fi
+wget https://go.dev/dl/go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
 echo -e '\nexport PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
 export PATH=$PATH:/usr/local/go/bin
-rm go${GO_VERSION}.linux-amd64.tar.gz
+rm go${GO_VERSION}.linux-${GO_ARCH}.tar.gz
 
 # Protobuf
 apt-get update && apt-get install -y zip
 PB_REL="https://github.com/protocolbuffers/protobuf/releases"
 PROTOBUF_VER="26.1"
-PROTOBUF_PACKAGE="protoc-$PROTOBUF_VER-linux-x86_64.zip"
+if [ "$(uname -m)" = "x86_64" ]; then PROTOBUF_ARCH="x86_64"; else PROTOBUF_ARCH="aarch_64"; fi
+PROTOBUF_PACKAGE="protoc-$PROTOBUF_VER-linux-$PROTOBUF_ARCH.zip"
 curl -LO $PB_REL/download/v$PROTOBUF_VER/$PROTOBUF_PACKAGE
 unzip $PROTOBUF_PACKAGE -d $HOME/.local
 rm $PROTOBUF_PACKAGE

@@ -97,9 +97,9 @@ oneliners_pash(){
 
 # For testing purposes
 # hdfs dfs -rm -r "/outputs/hadoop-streaming/oneliners"
-# hadoop jar "/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" -files nfa-regex.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input "/oneliners/1G.txt" -output "/outputs/hadoop-streaming/oneliners/nfa-regex" -mapper nfa-regex.sh # nfa-regex
+# hadoop jar "/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" -files nfa-regex.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input "/oneliners/1G.txt" -output "/outputs/hadoop-streaming/oneliners/nfa-regex" -mapper nfa-regex.sh # nfa-regex
 oneliners_hadoopstreaming(){
-  jarpath="/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" # Adjust as required
+  jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" # Adjust as required
   basepath="/oneliners" # Adjust as required
   times_file="hadoopstreaming.res"
   outputs_suffix="hadoopstreaming.out"

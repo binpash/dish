@@ -69,7 +69,7 @@ analytics-mts_pash(){
 }
 
 analytics-mts_hadoopstreaming(){
-  jarpath="/opt/hadoop-3.2.2/share/hadoop/tools/lib/hadoop-streaming-3.2.2.jar" # Adjust as required
+  jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" # Adjust as required
   times_file="hadoopstreaming.res"
   outputs_suffix="hadoopstreaming.out"
   outputs_dir="/outputs/hadoop-streaming/analytics-mts"
@@ -102,6 +102,16 @@ analytics-mts_bash
 analytics-mts_pash "$PASH_FLAGS" "par"
 
 analytics-mts_pash "$PASH_FLAGS --distributed_exec" "distr"
+
+analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft naive" "naive"
+
+analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft base" "base"
+
+analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 20 --split 8" "optim"
+
+analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 40 --split 8" "optim"
+
+analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 40 --split 8" "optim"
 
 analytics-mts_hadoopstreaming
 
