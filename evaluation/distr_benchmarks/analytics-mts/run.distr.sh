@@ -103,15 +103,4 @@ analytics-mts_pash "$PASH_FLAGS" "par"
 
 analytics-mts_pash "$PASH_FLAGS --distributed_exec" "distr"
 
-analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft naive" "naive"
-
-analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft base" "base"
-
-analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 20 --split 8" "optim"
-
-analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 40 --split 8" "optim"
-
-analytics-mts_pash "$PASH_FLAGS --distributed_exec --ft optimized --pool 40 --split 8" "optim"
-
 analytics-mts_hadoopstreaming
-
