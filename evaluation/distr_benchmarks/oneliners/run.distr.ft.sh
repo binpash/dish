@@ -248,6 +248,13 @@ oneliners_faults() {
     mkdir -p "$outputs_dir"
   fi
 
+  # Get 2 worker names from dspash_config.json
+  config_path="$PASH_TOP/cluster.json"
+  merger_worker=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
+  regular_worker=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
+
+  echo "Merger worker host: $merger_worker"
+  echo "Regular worker host: $regular_worker"
   for script_input in ${scripts_inputs[@]}
   do
     IFS=";" read -r -a script_input_parsed <<< "${script_input}"
@@ -263,17 +270,17 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_faultless.out" $@ 
       
       # Naive ft
-      # Inject fault on merger node (default to be datanode1)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode1 --ft naive" "ft_naive_merger" "$outputs_dir" "$script_input"
-      # Bring back datanode1
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode1
+      # Inject fault on merger node (default to be "$merger_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft naive" "ft_naive_merger" "$outputs_dir" "$script_input"
+      # Bring back "$merger_worker"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_merger.out" $@
       
       # Naive ft
-      # Inject fault on non-merger node (default to be datanode2)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode2 --ft naive" "ft_naive_regular" "$outputs_dir" "$script_input"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode2
+      # Inject fault on non-merger node (default to be "$regular_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft naive" "ft_naive_regular" "$outputs_dir" "$script_input"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_regular.out" $@
     fi
@@ -285,18 +292,18 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_faultless.out" $@
 
       # Base ft
-      # Inject fault on merger node (default to be datanode1)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode1 --ft base" "ft_base_merger" "$outputs_dir" "$script_input"
-      # Bring back datanode1
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode1
+      # Inject fault on merger node (default to be "$merger_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft base" "ft_base_merger" "$outputs_dir" "$script_input"
+      # Bring back "$merger_worker"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_merger.out" $@
       
       # Base ft
-      # Inject fault on non-merger node (default to be datanode2)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode2 --ft base" "ft_base_regular" "$outputs_dir" "$script_input"
-      # Bring back datanode2
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode2
+      # Inject fault on non-merger node (default to be "$regular_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft base" "ft_base_regular" "$outputs_dir" "$script_input"
+      # Bring back "$regular_worker"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_regular.out" $@
     fi
@@ -308,18 +315,18 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_faultless.out" $@
 
       # Optimized ft
-      # Inject fault on merger node (default to be datanode1)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode1 --ft optimized" "ft_optimized_merger" "$outputs_dir" "$script_input"
-      # Bring back datanode1
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode1
+      # Inject fault on merger node (default to be "$merger_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft optimized" "ft_optimized_merger" "$outputs_dir" "$script_input"
+      # Bring back "$merger_worker"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_merger.out" $@
   
       # Optimized ft
-      # Inject fault on non-merger node (default to be datanode2)
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill datanode2 --ft optimized" "ft_optimized_regular" "$outputs_dir" "$script_input"
-      # Bring back datanode2
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect datanode2
+      # Inject fault on non-merger node (default to be "$regular_worker")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft optimized" "ft_optimized_regular" "$outputs_dir" "$script_input"
+      # Bring back "$regular_worker"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_regular.out" $@
     fi
@@ -378,5 +385,5 @@ oneliners_faults "$@"
 
 # TODO: add support for small inputs?
 # $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 | wc -l
-# $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 --kill datanode1 | wc -l
-# python3 $DISH_TOP/evaluation/notify_worker.py resurrect datanode1
+# $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 --kill "$merger_worker" | wc -l
+# python3 $DISH_TOP/evaluation/notify_worker.py resurrect "$merger_worker"
