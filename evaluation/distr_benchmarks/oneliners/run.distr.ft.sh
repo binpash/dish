@@ -250,6 +250,12 @@ oneliners_faults() {
 
   # Get 2 worker names from dspash_config.json
   config_path="$PASH_TOP/cluster.json"
+
+  # extract name of each worker node
+  # merger_worker=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
+  # regular_worker=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
+
+  # extract host of each worker node
   merger_worker=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
   regular_worker=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
 
