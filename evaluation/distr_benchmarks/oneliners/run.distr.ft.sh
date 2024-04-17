@@ -261,7 +261,7 @@ oneliners_faults() {
     script="${script_input_parsed[0]}"
     if [[ "$@" == *"correctness"* ]]; then
       # Run dish first to set up baseline
-      oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec" "distr" "$outputs_dir" "$script_input"
     fi
     if [[ "$@" == *"naive"* ]]; then
       # Naive ft no faults
