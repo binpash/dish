@@ -1,5 +1,8 @@
 PASH_FLAGS='--width 8 --r_split'
 export TIMEFORMAT=%R
+source $DISH_TOP/evaluation/eval_utils.sh
+
+
 # export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
 # curl -sf 'http://ndr.md/data/dummy/dict.txt' | sort > $dict
 
@@ -7,132 +10,74 @@ export TIMEFORMAT=%R
 # for checking correctness, specify [correctness] in the args
 
 
-# scripts_inputs=(
+scripts_inputs=(
 #       "nfa-regex;1G.txt"
 #       "sort;3G.txt"
 #       "top-n;3G.txt"
 #       "wf;3G.txt"
 #       "spell;3G.txt"
-#       "diff;3G.txt"
-#       "bi-grams;3G.txt"
-#       "set-diff;3G.txt"
-#       "sort-sort;3G.txt"
-#       "shortest-scripts;all_cmdsx100.txt"
-#   )
-
-# For debugging this automation script
-scripts_inputs=(
-      "nfa-regex;1M.txt"
-      "sort;1M.txt"
-      "top-n;1M.txt"
-      "wf;1M.txt"
-      "spell;1M.txt"
-      "diff;1M.txt"
-      "bi-grams;1M.txt"
-      "set-diff;1M.txt"
-      "sort-sort;1M.txt"
+      "diff;3G.txt"
+      "bi-grams;3G.txt"
+      "set-diff;3G.txt"
+      "sort-sort;3G.txt"
       "shortest-scripts;all_cmdsx100.txt"
   )
 
-outputs_dir="outputs"
+# For debugging this automation script
+# scripts_inputs=(
+#       # "nfa-regex;1M.txt"
+#       # "sort;1M.txt"
+#       # "top-n;1M.txt"
+#       # "wf;1M.txt"
+#       # "spell;1M.txt"
+#       # "diff;1M.txt"
+#       # "bi-grams;1M.txt"
+#       # "set-diff;1M.txt"
+#       # "sort-sort;1M.txt"
+#       # "shortest-scripts;all_cmdsx100.txt"
+#   )
 
-# Clean up repo
-if [[ "$@" == *"clean"* ]]; then
-  rm *.res *.d
-  rm -rf "$outputs_dir"
-fi
-rm oneliners.run.time
-touch oneliners.run.time
-timefile="oneliners.run.time"
 
+oneliners_run_bash_script() {
+  prefix="seq"
+  outputs_dir=${1:-outputs}
+  script_input=${2:-"N/A"}
 
-check_correctness() {
-  script_name="$1"
-  out_baseline="$2"
-  out_target="$3"
-  echo "📝  Checking output for $script_name: $out_baseline and $out_target"
+  times_file="$prefix.res"
+  outputs_suffix="$prefix.out"
+  time_suffix="$prefix.time"
 
-  # Check if out files exist
-  if [ ! -f "$out_baseline" ]; then
-      echo "    Error: $out_baseline not found"
-      exit 1
-  fi
-  if [ ! -f "$out_target" ]; then
-      echo "    Error: $out_target not found"
-      exit 1
-  fi
-
-  
-  # Perform diff between current configuration file and seq.out
-  diff_result=$(diff "$out_baseline" "$out_target")
-  
-  # Check if there are differences
-  if [ -n "$diff_result" ]; then
-      echo "$diff_result"
-      echo "    ❌ Differences found:"
-      return 1
-  else
-      echo "    ✅ No differences found"
-      return 0
-  fi
-}
-
-# If option "correctness" is specified, check for out_baseline vs out_target
-#       if no diff, removing out_target
-#       if diff, don't remove out_target for debugging
-# else, remove out_target to save SSD
-handle_outputs() {
-  script_name="$1"
-  out_baseline="$2"
-  out_target="$3"
-  if [[ "$@" == *"correctness"* ]]; then
-    check_correctness "$script_name" "$out_baseline" "$out_target"
-    if [[ "$?" == 1 ]]; then
-      echo "    Output file "$out_baseline" is not removed for debugging"
-      # Return on the first diff
-      exit 1
-    else
-      echo "    Output file "$out_target" is removed"
-    fi
-  else
-    echo "Output file "$out_target" is removed"
-  fi
-}
-
-oneliners_bash() {
-    outputs_dir="outputs"
-    seq_times_file="seq.res"
-    seq_outputs_suffix="seq.out"
-
+  if [ ! -d "$outputs_dir" ]; then
     mkdir -p "$outputs_dir"
+  fi
 
-    touch "$seq_times_file"
-    cat "$seq_times_file" >> "$seq_times_file.d"
-    echo "executing one-liners $(date)" | tee -a "$seq_times_file" "$timefile"
-    echo '' >> "$seq_times_file"
-    echo '' >> "$timefile"
+  touch "$times_file"
+  cat $times_file >> $times_file.d
+  echo executing one-liners with bash with data $(date) | tee -a "$times_file" "$timefile"
+  echo '' >> "$times_file"
 
-    for script_input in "${scripts_inputs[@]}"
-    do
-        IFS=";" read -r -a script_input_parsed <<< "${script_input}"
-        script="${script_input_parsed[0]}"
-        input="${script_input_parsed[1]}"
-        echo "executing one-liners [bash] for ${script}"
-        echo "$script" >> $timefile
-        export IN="/oneliners/$input"
-        export dict=
 
-        printf -v pad %30s
-        padded_script="${script}.sh:${pad}"
-        padded_script=${padded_script:0:30}
+  IFS=";" read -r -a script_input_parsed <<< "${script_input}"
+  script="${script_input_parsed[0]}"
+  input="${script_input_parsed[1]}"
+  echo "$script" >> "$timefile"
 
-        seq_outputs_file="${outputs_dir}/${script}.${seq_outputs_suffix}"
+  export IN="/oneliners/$input"
+  export dict=
 
-        { time ./${script}.sh > "$seq_outputs_file"; } 2>&1 | tee -a "$seq_times_file" "$timefile"
-    done
-    cat "$seq_times_file" >> "$seq_times_file.d"
-    echo '' >> "$timefile"
+  printf -v pad %30s
+  padded_script="${script}.sh:${pad}"
+  padded_script=${padded_script:0:30}
+
+  outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
+  single_time_file="${outputs_dir}/${script}.${time_suffix}"
+
+  echo -n "${padded_script}" | tee -a "$times_file"
+  { time "bash" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
+  cat "${single_time_file}" | tee -a "$times_file" "$timefile"
+  echo '' >> "$timefile"
 }
+
 
 oneliners_run_pash_script() {
   # USAGE: [flags..., prefix, outputs_dir, script_input]
@@ -187,26 +132,6 @@ oneliners_run_pash_script() {
 }
 
 
-oneliners_pash(){
-  flags=${1:-$PASH_FLAGS}
-  prefix=${2:-par}
-  prefix=$prefix
-
-  times_file="$prefix.res"
-  outputs_suffix="$prefix.out"
-  time_suffix="$prefix.time"
-  outputs_dir="outputs"
-  pash_logs_dir="pash_logs_$prefix"
-
-  mkdir -p "$outputs_dir"
-  mkdir -p "$pash_logs_dir"
-
-  for script_input in ${scripts_inputs[@]}
-  do
-    oneliners_run_pash_script "$flags" "$prefix" "$outputs_dir" "$script_input"
-  done
-}
-
 
 oneliners_hadoopstreaming(){
   jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" # Adjust as required
@@ -223,7 +148,7 @@ oneliners_hadoopstreaming(){
 
   touch "$times_file"
   cat "$times_file" >> "$times_file".d
-  echo executing oneliners $(date) | tee -a "$times_file" "$timefile"
+  echo executing oneliners with hadoop streaming $(date) | tee -a "$times_file" "$timefile"
   echo '' >> "$times_file"
 
   while IFS= read -r line; do
@@ -240,7 +165,7 @@ oneliners_hadoopstreaming(){
   mv "hadoop-streaming/$times_file" .
 }
 
-oneliners_faults() {
+run() {
   outputs_dir="outputs"
 
   if [ ! -d "$outputs_dir" ]; then
@@ -249,18 +174,24 @@ oneliners_faults() {
   fi
 
   # Get 2 worker names from dspash_config.json
-  config_path="$PASH_TOP/cluster.json"
-  merger_worker=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
-  regular_worker=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
-
-  echo "Merger worker host: $merger_worker"
-  echo "Regular worker host: $regular_worker"
   for script_input in ${scripts_inputs[@]}
   do
     IFS=";" read -r -a script_input_parsed <<< "${script_input}"
     script="${script_input_parsed[0]}"
-    if [[ "$@" == *"correctness"* ]]; then
-      # Run dish first to set up baseline
+
+    if [[ "$@" == *"bash"*]]; then
+      # Run bash
+      oneliners_run_bash_script "$outputs_dir" "$script_input"
+    fi
+
+
+    if [[ "$@" == *"pash"*]]; then
+      # Run PaSh
+      oneliners_run_pash_script "$PASH_FLAGS" "par" "$outputs_dir" "$script_input"
+    fi
+
+    if [[ "$@" == *"correctness"* ||  "$@" == *"dish"*]]; then
+      # Run DiSh first to set up baseline
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec" "distr" "$outputs_dir" "$script_input"
     fi
     if [[ "$@" == *"naive"* ]]; then
@@ -270,19 +201,26 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_faultless.out" $@ 
       
       # Naive ft
-      # Inject fault on merger node (default to be "$merger_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft naive" "ft_naive_merger" "$outputs_dir" "$script_input"
-      # Bring back "$merger_worker"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
+      # Inject fault on merger node (default to be "$(get_merger_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_merger_worker_host)" --ft naive" "ft_naive_merger" "$outputs_dir" "$script_input"
+      # Bring back "$(get_merger_worker_host)"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_merger.out" $@
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
       
       # Naive ft
-      # Inject fault on non-merger node (default to be "$regular_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft naive" "ft_naive_regular" "$outputs_dir" "$script_input"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
+      # Inject fault on non-merger node (default to be "$(get_regular_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_regular_worker_host)" --ft naive" "ft_naive_regular" "$outputs_dir" "$script_input"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_naive_regular.out" $@
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      echo "${old_datanodes[@]}"
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
     fi
 
     if [[ "$@" == *"base"* ]]; then
@@ -292,18 +230,18 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_faultless.out" $@
 
       # Base ft
-      # Inject fault on merger node (default to be "$merger_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft base" "ft_base_merger" "$outputs_dir" "$script_input"
-      # Bring back "$merger_worker"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
+      # Inject fault on merger node (default to be "$(get_merger_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_merger_worker_host)" --ft base" "ft_base_merger" "$outputs_dir" "$script_input"
+      # Bring back "$(get_merger_worker_host)"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_merger.out" $@
       
       # Base ft
-      # Inject fault on non-merger node (default to be "$regular_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft base" "ft_base_regular" "$outputs_dir" "$script_input"
-      # Bring back "$regular_worker"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
+      # Inject fault on non-merger node (default to be "$(get_regular_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_regular_worker_host)" --ft base" "ft_base_regular" "$outputs_dir" "$script_input"
+      # Bring back "$(get_regular_worker_host)"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_regular.out" $@
     fi
@@ -315,18 +253,18 @@ oneliners_faults() {
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_faultless.out" $@
 
       # Optimized ft
-      # Inject fault on merger node (default to be "$merger_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$merger_worker" --ft optimized" "ft_optimized_merger" "$outputs_dir" "$script_input"
-      # Bring back "$merger_worker"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$merger_worker"
+      # Inject fault on merger node (default to be "$(get_merger_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_merger_worker_host)" --ft optimized" "ft_optimized_merger" "$outputs_dir" "$script_input"
+      # Bring back "$(get_merger_worker_host)"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_merger.out" $@
   
       # Optimized ft
-      # Inject fault on non-merger node (default to be "$regular_worker")
-      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$regular_worker" --ft optimized" "ft_optimized_regular" "$outputs_dir" "$script_input"
-      # Bring back "$regular_worker"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$regular_worker"
+      # Inject fault on non-merger node (default to be "$(get_regular_worker_host)")
+      oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_regular_worker_host)" --ft optimized" "ft_optimized_regular" "$outputs_dir" "$script_input"
+      # Bring back "$(get_regular_worker_host)"
+      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_regular.out" $@
     fi
@@ -335,14 +273,31 @@ oneliners_faults() {
   
 }
 
+# Make sure the cluster is stable
+num_datanodes=$(get_num_active_nodes)
+echo "This experiment has $num_datanodes datanodes"
+update_config
+old_datanodes=($(get_active_nodes))
 
 
-# ./check_ft_correctness.sh
+
+outputs_dir="outputs"
+timefile="oneliners.run.time"
+
+# Clean up repo
+if [[ "$@" == *"clean"* ]]; then
+  if [ -f "$timefile" ]; then
+    rm "$timefile"
+    touch "$timefile"
+  fi
+  rm *.res *.d
+  rm -rf "$outputs_dir"
+
+
+
 if [[ "$@" == *"sanity"* ]]; then
-  # Run bash as groundtruth
-  oneliners_bash
-  # dish
-  oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
+  # Run bash as groundtruth and also DiSh
+  run "bash dish"
   # Check correctness
   for script_input in ${scripts_inputs[@]}
   do
@@ -354,36 +309,16 @@ if [[ "$@" == *"sanity"* ]]; then
   exit 0
 fi
 
-if [[ "$@" == *"bash"* ]]; then
-  # bash
-  oneliners_bash
-fi
-
-if [[ "$@" == *"hadoop-streaming"* ]]; then
-  # hadoop streaming
+if [[ "$@" == *"hadoop-streaming"*]]; then
+  # Run hadoop streaming
   oneliners_hadoopstreaming
 fi
 
-if [[ "$@" == *"pash"* ]]; then
-  # pash
-  oneliners_pash "$PASH_FLAGS" "par"
-fi
-
-if [[ "$@" == *"dish"* ]]; then
-  # TODO: add frozen dish (with no overhead)
-  # This below is defaulted to optimized ft
-  oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
-fi
-
-
-# for debugging this automation script:
-# oneliners_bash
-# oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
-oneliners_faults "$@"
+run "$@"
 
 
 
 # TODO: add support for small inputs?
 # $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 | wc -l
-# $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 --kill "$merger_worker" | wc -l
-# python3 $DISH_TOP/evaluation/notify_worker.py resurrect "$merger_worker"
+# $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 --kill "$(get_merger_worker_host)" | wc -l
+# python3 $DISH_TOP/evaluation/notify_worker.py resurrect "$(get_merger_worker_host)"
