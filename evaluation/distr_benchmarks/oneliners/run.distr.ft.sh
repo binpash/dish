@@ -1,4 +1,8 @@
-PASH_FLAGS='--width 8 --r_split'
+if [[ "$@" == *"debug"* ]]; then
+  PASH_FLAGS='--width 8 --r_split -d 1'
+else
+  PASH_FLAGS='--width 8 --r_split'
+fi
 export TIMEFORMAT=%R
 source $DISH_TOP/evaluation/eval_utils.sh
 
@@ -10,32 +14,32 @@ source $DISH_TOP/evaluation/eval_utils.sh
 # for checking correctness, specify [correctness] in the args
 
 
-scripts_inputs=(
+# scripts_inputs=(
 #       "nfa-regex;1G.txt"
-#       "sort;3G.txt"
-#       "top-n;3G.txt"
-#       "wf;3G.txt"
-#       "spell;3G.txt"
-      "diff;3G.txt"
-      "bi-grams;3G.txt"
-      "set-diff;3G.txt"
-      "sort-sort;3G.txt"
-      "shortest-scripts;all_cmdsx100.txt"
-  )
+#       "sort;1G.txt"
+#       "top-n;1G.txt"
+#       "wf;1G.txt"
+#       "spell;1G.txt"
+#       "diff;1G.txt"
+#       "bi-grams;1G.txt"
+#       "set-diff;1G.txt"
+#       "sort-sort;1G.txt"
+#       "shortest-scripts;all_cmdsx100.txt"
+#   )
 
 # For debugging this automation script
-# scripts_inputs=(
-#       # "nfa-regex;1M.txt"
-#       # "sort;1M.txt"
-#       # "top-n;1M.txt"
-#       # "wf;1M.txt"
-#       # "spell;1M.txt"
-#       # "diff;1M.txt"
-#       # "bi-grams;1M.txt"
-#       # "set-diff;1M.txt"
-#       # "sort-sort;1M.txt"
-#       # "shortest-scripts;all_cmdsx100.txt"
-#   )
+scripts_inputs=(
+      "nfa-regex;1M.txt"
+      "sort;1M.txt"
+      "top-n;1M.txt"
+      "wf;1M.txt"
+      "spell;1M.txt"
+      "diff;1M.txt"
+      "bi-grams;1M.txt"
+      "set-diff;1M.txt"
+      "sort-sort;1M.txt"
+      "shortest-scripts;all_cmdsx100.txt"
+  )
 
 
 oneliners_run_bash_script() {
@@ -82,6 +86,7 @@ oneliners_run_bash_script() {
 oneliners_run_pash_script() {
   # USAGE: [flags..., prefix, outputs_dir, script_input]
   flags=${1:-$PASH_FLAGS}
+  echo $flags
   prefix=${2:-par}
   prefix=$prefix
   outputs_dir=${3:-outputs}
@@ -179,18 +184,18 @@ run() {
     IFS=";" read -r -a script_input_parsed <<< "${script_input}"
     script="${script_input_parsed[0]}"
 
-    if [[ "$@" == *"bash"*]]; then
+    if [[ "$@" == *"bash"* ]]; then
       # Run bash
       oneliners_run_bash_script "$outputs_dir" "$script_input"
     fi
 
 
-    if [[ "$@" == *"pash"*]]; then
+    if [[ "$@" == *"pash"* ]]; then
       # Run PaSh
       oneliners_run_pash_script "$PASH_FLAGS" "par" "$outputs_dir" "$script_input"
     fi
 
-    if [[ "$@" == *"correctness"* ||  "$@" == *"dish"*]]; then
+    if [[ "$@" == *"correctness"* ||  "$@" == *"dish"* ]]; then
       # Run DiSh first to set up baseline
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec" "distr" "$outputs_dir" "$script_input"
     fi
@@ -233,17 +238,25 @@ run() {
       # Inject fault on merger node (default to be "$(get_merger_worker_host)")
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_merger_worker_host)" --ft base" "ft_base_merger" "$outputs_dir" "$script_input"
       # Bring back "$(get_merger_worker_host)"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_merger.out" $@
       
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
+
       # Base ft
       # Inject fault on non-merger node (default to be "$(get_regular_worker_host)")
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_regular_worker_host)" --ft base" "ft_base_regular" "$outputs_dir" "$script_input"
       # Bring back "$(get_regular_worker_host)"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_base_regular.out" $@
+
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
     fi
 
     if [[ "$@" == *"optimized"* ]]; then
@@ -256,17 +269,25 @@ run() {
       # Inject fault on merger node (default to be "$(get_merger_worker_host)")
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_merger_worker_host)" --ft optimized" "ft_optimized_merger" "$outputs_dir" "$script_input"
       # Bring back "$(get_merger_worker_host)"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_merger_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_merger.out" $@
   
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
+
       # Optimized ft
       # Inject fault on non-merger node (default to be "$(get_regular_worker_host)")
       oneliners_run_pash_script "$PASH_FLAGS --distributed_exec --kill "$(get_regular_worker_host)" --ft optimized" "ft_optimized_regular" "$outputs_dir" "$script_input"
       # Bring back "$(get_regular_worker_host)"
-      python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
+      # python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect "$(get_regular_worker_host)"
       # Check output correctness and removing outputs file accordingly
       handle_outputs "$script" "$outputs_dir/$script.distr.out" "$outputs_dir/$script.ft_optimized_regular.out" $@
+    
+      # Wait for the crashed datanode image to exit and hdfs restarts a new image
+      wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+      old_datanodes=($(get_active_nodes))
     fi
   done
 
@@ -292,8 +313,10 @@ if [[ "$@" == *"clean"* ]]; then
   fi
   rm *.res *.d
   rm -rf "$outputs_dir"
-
-
+fi
+if [ ! -f "$timefile" ]; then
+  touch "$timefile"
+fi
 
 if [[ "$@" == *"sanity"* ]]; then
   # Run bash as groundtruth and also DiSh
@@ -309,7 +332,7 @@ if [[ "$@" == *"sanity"* ]]; then
   exit 0
 fi
 
-if [[ "$@" == *"hadoop-streaming"*]]; then
+if [[ "$@" == *"hadoop-streaming"* ]]; then
   # Run hadoop streaming
   oneliners_hadoopstreaming
 fi
@@ -322,3 +345,6 @@ run "$@"
 # $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 | wc -l
 # $PASH_TOP/pa.sh spell.sh --width 8 --r_split --distributed_exec --ft naive -d 1 --kill "$(get_merger_worker_host)" | wc -l
 # python3 $DISH_TOP/evaluation/notify_worker.py resurrect "$(get_merger_worker_host)"
+
+
+# tmux new-session -s test "./run.distr.ft.sh clean bash correctness naive | tee test_log"

@@ -120,15 +120,21 @@ handle_outputs() {
   if [[ "$@" == *"correctness"* ]]; then
     check_correctness "$script_name" "$out_baseline" "$out_target"
     if [[ "$?" == 1 ]]; then
-      echo "    Output file "$out_baseline" is not removed for debugging"
+      echo "    Output file "$out_target" is not removed for debugging"
       # Return on the first diff
-      exit 1
+      # exit 1
     else
+      rm $out_target
       echo "    Output file "$out_target" is removed"
     fi
   else
-    echo "Output file "$out_target" is removed"
-  fi
+    if [[ "$@" == *"debug"* ]]; then
+        echo "    Output file "$out_target" is not removed for debugging"
+    else
+        rm $out_target
+        echo "Output file "$out_target" is removed"
+    fi
+  fi   
 }
 
 # Function to check if an IP address has a valid PTR record
@@ -168,9 +174,6 @@ wait_for_update_config() {
         echo "Finished re-configuring cluster with active nodes: $active_nodes"
 
         # Even when num_active_nodes=expected, it can still be 2/3 in datanode replicas
-        # TODO: seems like docker service ls's datanode replica view is the most accurate indication
-        #       need to find out a way to query it
-        # maybe use dig -x host to see if it becomes noerror?
 
         # Loop until a valid PTR record is found
         active_nodes=($(get_active_nodes))
@@ -194,16 +197,3 @@ wait_for_update_config() {
     fi
   done
 }
-
-query="Hadoop:service=NameNode,name=NameNodeInfo"
-
-# Construct the URL for the HTTP GET request
-url="http://${host}:${port}/jmx?qry=${query}"
-
-# Send the HTTP GET request and capture the response
-response=$(curl -s "${url}") | jq
-
-
-
-
-
