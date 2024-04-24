@@ -5,4 +5,4 @@
 [submodule "docker-hadoop"]
 	path = docker-hadoop
 	url = https://github.com/binpash/docker-hadoop
-	branch = swarm-kill-test
+	branch = ft-orig-optimized
