@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -101,6 +102,24 @@ func (s *DiscoveryServer) GetAddrOptimized(ctx context.Context, msg *pb.AddrReq)
 	}
 
 	return &pb.GetAddrReply{Success: true, Addr: addr}, nil
+}
+
+func (s *DiscoveryServer) RemoveAddrOptimized(ctx context.Context, msg *pb.RMessage) (*pb.RMessageReply, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var reply []string
+
+	for id, merged := range s.addrs {
+		host := strings.Split(merged, ",")[0]
+		if host == msg.Addr {
+			delete(s.addrs, id)
+		} else if msg.Reply {
+			reply = append(reply, id)
+		}
+	}
+
+	return &pb.RMessageReply{Uuids: reply}, nil
 }
 
 func (s *DiscoveryServer) ReadStream(req *pb.AddrReq, stream pb.Discovery_ReadStreamServer) error {

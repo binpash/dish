@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Discovery_PutAddr_FullMethodName          = "/Discovery/PutAddr"
-	Discovery_GetAddr_FullMethodName          = "/Discovery/GetAddr"
-	Discovery_RemoveAddr_FullMethodName       = "/Discovery/RemoveAddr"
-	Discovery_ReadStream_FullMethodName       = "/Discovery/readStream"
-	Discovery_WriteStream_FullMethodName      = "/Discovery/writeStream"
-	Discovery_PutAddrOptimized_FullMethodName = "/Discovery/PutAddrOptimized"
-	Discovery_GetAddrOptimized_FullMethodName = "/Discovery/GetAddrOptimized"
+	Discovery_PutAddr_FullMethodName             = "/Discovery/PutAddr"
+	Discovery_GetAddr_FullMethodName             = "/Discovery/GetAddr"
+	Discovery_RemoveAddr_FullMethodName          = "/Discovery/RemoveAddr"
+	Discovery_ReadStream_FullMethodName          = "/Discovery/readStream"
+	Discovery_WriteStream_FullMethodName         = "/Discovery/writeStream"
+	Discovery_PutAddrOptimized_FullMethodName    = "/Discovery/PutAddrOptimized"
+	Discovery_GetAddrOptimized_FullMethodName    = "/Discovery/GetAddrOptimized"
+	Discovery_RemoveAddrOptimized_FullMethodName = "/Discovery/RemoveAddrOptimized"
 )
 
 // DiscoveryClient is the client API for Discovery service.
@@ -39,6 +40,7 @@ type DiscoveryClient interface {
 	WriteStream(ctx context.Context, opts ...grpc.CallOption) (Discovery_WriteStreamClient, error)
 	PutAddrOptimized(ctx context.Context, in *PutAddrMsg, opts ...grpc.CallOption) (*Status, error)
 	GetAddrOptimized(ctx context.Context, in *AddrReq, opts ...grpc.CallOption) (*GetAddrReply, error)
+	RemoveAddrOptimized(ctx context.Context, in *RMessage, opts ...grpc.CallOption) (*RMessageReply, error)
 }
 
 type discoveryClient struct {
@@ -160,6 +162,15 @@ func (c *discoveryClient) GetAddrOptimized(ctx context.Context, in *AddrReq, opt
 	return out, nil
 }
 
+func (c *discoveryClient) RemoveAddrOptimized(ctx context.Context, in *RMessage, opts ...grpc.CallOption) (*RMessageReply, error) {
+	out := new(RMessageReply)
+	err := c.cc.Invoke(ctx, Discovery_RemoveAddrOptimized_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiscoveryServer is the server API for Discovery service.
 // All implementations must embed UnimplementedDiscoveryServer
 // for forward compatibility
@@ -171,6 +182,7 @@ type DiscoveryServer interface {
 	WriteStream(Discovery_WriteStreamServer) error
 	PutAddrOptimized(context.Context, *PutAddrMsg) (*Status, error)
 	GetAddrOptimized(context.Context, *AddrReq) (*GetAddrReply, error)
+	RemoveAddrOptimized(context.Context, *RMessage) (*RMessageReply, error)
 	mustEmbedUnimplementedDiscoveryServer()
 }
 
@@ -198,6 +210,9 @@ func (UnimplementedDiscoveryServer) PutAddrOptimized(context.Context, *PutAddrMs
 }
 func (UnimplementedDiscoveryServer) GetAddrOptimized(context.Context, *AddrReq) (*GetAddrReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddrOptimized not implemented")
+}
+func (UnimplementedDiscoveryServer) RemoveAddrOptimized(context.Context, *RMessage) (*RMessageReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveAddrOptimized not implemented")
 }
 func (UnimplementedDiscoveryServer) mustEmbedUnimplementedDiscoveryServer() {}
 
@@ -349,6 +364,24 @@ func _Discovery_GetAddrOptimized_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Discovery_RemoveAddrOptimized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServer).RemoveAddrOptimized(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Discovery_RemoveAddrOptimized_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServer).RemoveAddrOptimized(ctx, req.(*RMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Discovery_ServiceDesc is the grpc.ServiceDesc for Discovery service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -375,6 +408,10 @@ var Discovery_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAddrOptimized",
 			Handler:    _Discovery_GetAddrOptimized_Handler,
+		},
+		{
+			MethodName: "RemoveAddrOptimized",
+			Handler:    _Discovery_RemoveAddrOptimized_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
