@@ -67,19 +67,19 @@ func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err
 		if ft == "optimized" {
 			nn, err = readOptimized(client)
 		} else {
-			nn, err = read(client, n)
+			nn, err = read(client, n, ft == "disabled")
 		}
 		n += nn
 		if err == nil {
 			break
 		}
 		log.Println("read failed because:", err, "retrying:", i+1, "will skip:", n)
-		time.Sleep(time.Second / 10)
+		time.Sleep(100 * time.Millisecond)
 	}
 	return
 }
 
-func read(client pb.DiscoveryClient, skip int) (int, error) {
+func read(client pb.DiscoveryClient, skip int, skipEof bool) (int, error) {
 	addr, err := getAddr(client, false)
 	if err != nil {
 		return 0, err
@@ -91,6 +91,12 @@ func read(client pb.DiscoveryClient, skip int) (int, error) {
 	}
 	defer conn.Close()
 	log.Printf("successfuly dialed to %v\n", addr)
+
+	if skipEof {
+		reader := bufio.NewReader(conn)
+		n, err := reader.WriteTo(os.Stdout)
+		return int(n), err
+	}
 
 	buf := make([]byte, *chunkSize)
 	writer := bufio.NewWriter(os.Stdout)
@@ -179,7 +185,7 @@ func readOptimized(client pb.DiscoveryClient) (int, error) {
 	return n, err
 }
 
-func write(client pb.DiscoveryClient) (int, error) {
+func write(client pb.DiscoveryClient, skipEof bool) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -226,7 +232,9 @@ func write(client pb.DiscoveryClient) (int, error) {
 		return int(n), err
 	}
 
-	err = binary.Write(writer, binary.BigEndian, eof)
+	if !skipEof {
+		err = binary.Write(writer, binary.BigEndian, eof)
+	}
 
 	return int(n), err
 }
@@ -321,7 +329,7 @@ func main() {
 		if *ft == "optimized" {
 			n, reqerr = writeOpimized(client)
 		} else {
-			n, reqerr = write(client)
+			n, reqerr = write(client, *ft == "disabled")
 		}
 	} else {
 		flag.Usage()
