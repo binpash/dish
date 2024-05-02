@@ -74,7 +74,7 @@ func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err
 			break
 		}
 		log.Println("read failed because:", err, "retrying:", i+1, "will skip:", n)
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second / 10)
 	}
 	return
 }
@@ -315,7 +315,7 @@ func main() {
 	var n int
 	if *streamType == "read" {
 		b[0] = 0
-		n, reqerr = readWrapper(client, 30, *ft)
+		n, reqerr = readWrapper(client, 300, *ft)
 	} else if *streamType == "write" {
 		b[0] = 1
 		if *ft == "optimized" {
