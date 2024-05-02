@@ -70,3 +70,6 @@ runtime/dspash/file_reader/filereader_server
 
 # graphviz files
 graphviz
+
+# sample.sh outputs
+wwwc*
