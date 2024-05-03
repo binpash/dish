@@ -211,7 +211,7 @@ func readLogicalSplitOptimized(
 		if err != nil {
 			return err
 		}
-	} else {
+	} else if nextBlockPath != "" {
 		for _, host := range strings.Split(nextBlockHosts, ",") {
 			addr := fmt.Sprintf("%s:%d", host, *serverPort)
 			conn, err := grpc.Dial(addr, grpc.WithInsecure())
@@ -244,10 +244,10 @@ func serialize_conf(p string) DFSConfig {
 	conf := DFSConfig{}
 	byt, err := os.ReadFile(p)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("dfs exit2", err)
 	}
 	if err := json.Unmarshal(byt, &conf); err != nil {
-		log.Fatalln(err)
+		log.Fatalln("dfs exit3", err)
 	}
 	return conf
 }
@@ -261,7 +261,7 @@ func main() {
 		*config = flag.Arg(0)
 	}
 
-	// Print all flags
+	// // Print all flags
 	// flag.VisitAll(func(f *flag.Flag) {
 	// 	log.Printf("Flag %s: %v\n", f.Name, f.Value)
 	// })
@@ -275,6 +275,6 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("dfs exit1", err)
 	}
 }

@@ -59,13 +59,13 @@ func (s *fileReaderServer) ReadFile(req *pb.FileRequest, stream pb.FileReader_Re
 func (s *fileReaderServer) ReadNewLine(ctx context.Context, req *pb.FileRequest) (*pb.ReadReply, error) {
 	filename, err := pb.GetAbsPath(req.Path)
 	if err != nil {
-		log.Println(err)
+		log.Println("fr exit3", err)
 		return &pb.ReadReply{}, err
 	}
 
 	file, err := os.Open(filename)
 	if err != nil {
-		log.Println(err)
+		log.Println("fr exit4", req.Path, filename, err)
 		return &pb.ReadReply{}, err
 	}
 	defer file.Close()
@@ -73,7 +73,7 @@ func (s *fileReaderServer) ReadNewLine(ctx context.Context, req *pb.FileRequest)
 	reader := bufio.NewReader(file)
 	line, err := reader.ReadBytes('\n')
 	if err != nil {
-		log.Println(err)
+		log.Println("fr exit5", err)
 		return &pb.ReadReply{}, err
 	}
 
@@ -84,14 +84,14 @@ func (s *fileReaderServer) ReadFileFull(ctx context.Context, req *pb.FileRequest
 	filepath := req.Path
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Println(err)
+		log.Println("fr exit1", err)
 		return &pb.ReadReply{}, err
 	}
 	defer file.Close()
 
 	data, err := io.ReadAll(file)
 	if err != nil {
-		log.Println(err)
+		log.Println("fr exit1", err)
 		return &pb.ReadReply{}, err
 	}
 

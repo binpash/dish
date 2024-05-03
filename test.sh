@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# ./test.sh 3 --ft optimized --split 8 --pool 8
+
 # Check if the first argument is a number
 if ! [[ "$1" =~ ^[0-9]+$ ]]; then
     echo "The first argument must be a numeric value indicating the number of iterations."
