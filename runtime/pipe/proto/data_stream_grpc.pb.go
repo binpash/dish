@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Discovery_PutAddr_FullMethodName             = "/Discovery/PutAddr"
-	Discovery_GetAddr_FullMethodName             = "/Discovery/GetAddr"
-	Discovery_RemoveAddr_FullMethodName          = "/Discovery/RemoveAddr"
-	Discovery_ReadStream_FullMethodName          = "/Discovery/readStream"
-	Discovery_WriteStream_FullMethodName         = "/Discovery/writeStream"
-	Discovery_PutAddrOptimized_FullMethodName    = "/Discovery/PutAddrOptimized"
-	Discovery_GetAddrOptimized_FullMethodName    = "/Discovery/GetAddrOptimized"
-	Discovery_RemoveAddrOptimized_FullMethodName = "/Discovery/RemoveAddrOptimized"
+	Discovery_PutAddr_FullMethodName                  = "/Discovery/PutAddr"
+	Discovery_GetAddr_FullMethodName                  = "/Discovery/GetAddr"
+	Discovery_RemoveAddr_FullMethodName               = "/Discovery/RemoveAddr"
+	Discovery_ReadStream_FullMethodName               = "/Discovery/readStream"
+	Discovery_WriteStream_FullMethodName              = "/Discovery/writeStream"
+	Discovery_PutAddrOptimized_FullMethodName         = "/Discovery/PutAddrOptimized"
+	Discovery_GetAddrOptimized_FullMethodName         = "/Discovery/GetAddrOptimized"
+	Discovery_FindPersistedOptimized_FullMethodName   = "/Discovery/FindPersistedOptimized"
+	Discovery_RemovePersistedOptimized_FullMethodName = "/Discovery/RemovePersistedOptimized"
 )
 
 // DiscoveryClient is the client API for Discovery service.
@@ -40,7 +41,8 @@ type DiscoveryClient interface {
 	WriteStream(ctx context.Context, opts ...grpc.CallOption) (Discovery_WriteStreamClient, error)
 	PutAddrOptimized(ctx context.Context, in *PutAddrMsg, opts ...grpc.CallOption) (*Status, error)
 	GetAddrOptimized(ctx context.Context, in *AddrReq, opts ...grpc.CallOption) (*GetAddrReply, error)
-	RemoveAddrOptimized(ctx context.Context, in *RMessage, opts ...grpc.CallOption) (*RMessageReply, error)
+	FindPersistedOptimized(ctx context.Context, in *FPMessage, opts ...grpc.CallOption) (*FPMessageReply, error)
+	RemovePersistedOptimized(ctx context.Context, in *RPMessage, opts ...grpc.CallOption) (*Status, error)
 }
 
 type discoveryClient struct {
@@ -162,9 +164,18 @@ func (c *discoveryClient) GetAddrOptimized(ctx context.Context, in *AddrReq, opt
 	return out, nil
 }
 
-func (c *discoveryClient) RemoveAddrOptimized(ctx context.Context, in *RMessage, opts ...grpc.CallOption) (*RMessageReply, error) {
-	out := new(RMessageReply)
-	err := c.cc.Invoke(ctx, Discovery_RemoveAddrOptimized_FullMethodName, in, out, opts...)
+func (c *discoveryClient) FindPersistedOptimized(ctx context.Context, in *FPMessage, opts ...grpc.CallOption) (*FPMessageReply, error) {
+	out := new(FPMessageReply)
+	err := c.cc.Invoke(ctx, Discovery_FindPersistedOptimized_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *discoveryClient) RemovePersistedOptimized(ctx context.Context, in *RPMessage, opts ...grpc.CallOption) (*Status, error) {
+	out := new(Status)
+	err := c.cc.Invoke(ctx, Discovery_RemovePersistedOptimized_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +193,8 @@ type DiscoveryServer interface {
 	WriteStream(Discovery_WriteStreamServer) error
 	PutAddrOptimized(context.Context, *PutAddrMsg) (*Status, error)
 	GetAddrOptimized(context.Context, *AddrReq) (*GetAddrReply, error)
-	RemoveAddrOptimized(context.Context, *RMessage) (*RMessageReply, error)
+	FindPersistedOptimized(context.Context, *FPMessage) (*FPMessageReply, error)
+	RemovePersistedOptimized(context.Context, *RPMessage) (*Status, error)
 	mustEmbedUnimplementedDiscoveryServer()
 }
 
@@ -211,8 +223,11 @@ func (UnimplementedDiscoveryServer) PutAddrOptimized(context.Context, *PutAddrMs
 func (UnimplementedDiscoveryServer) GetAddrOptimized(context.Context, *AddrReq) (*GetAddrReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAddrOptimized not implemented")
 }
-func (UnimplementedDiscoveryServer) RemoveAddrOptimized(context.Context, *RMessage) (*RMessageReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveAddrOptimized not implemented")
+func (UnimplementedDiscoveryServer) FindPersistedOptimized(context.Context, *FPMessage) (*FPMessageReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FindPersistedOptimized not implemented")
+}
+func (UnimplementedDiscoveryServer) RemovePersistedOptimized(context.Context, *RPMessage) (*Status, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemovePersistedOptimized not implemented")
 }
 func (UnimplementedDiscoveryServer) mustEmbedUnimplementedDiscoveryServer() {}
 
@@ -364,20 +379,38 @@ func _Discovery_GetAddrOptimized_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Discovery_RemoveAddrOptimized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RMessage)
+func _Discovery_FindPersistedOptimized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FPMessage)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(DiscoveryServer).RemoveAddrOptimized(ctx, in)
+		return srv.(DiscoveryServer).FindPersistedOptimized(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Discovery_RemoveAddrOptimized_FullMethodName,
+		FullMethod: Discovery_FindPersistedOptimized_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiscoveryServer).RemoveAddrOptimized(ctx, req.(*RMessage))
+		return srv.(DiscoveryServer).FindPersistedOptimized(ctx, req.(*FPMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Discovery_RemovePersistedOptimized_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RPMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServer).RemovePersistedOptimized(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Discovery_RemovePersistedOptimized_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServer).RemovePersistedOptimized(ctx, req.(*RPMessage))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -410,8 +443,12 @@ var Discovery_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Discovery_GetAddrOptimized_Handler,
 		},
 		{
-			MethodName: "RemoveAddrOptimized",
-			Handler:    _Discovery_RemoveAddrOptimized_Handler,
+			MethodName: "FindPersistedOptimized",
+			Handler:    _Discovery_FindPersistedOptimized_Handler,
+		},
+		{
+			MethodName: "RemovePersistedOptimized",
+			Handler:    _Discovery_RemovePersistedOptimized_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

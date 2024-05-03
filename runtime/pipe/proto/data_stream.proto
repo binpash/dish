@@ -10,7 +10,8 @@ service Discovery {
     rpc writeStream(stream Data) returns (Status) {}
     rpc PutAddrOptimized(PutAddrMsg) returns (Status) {}
     rpc GetAddrOptimized(AddrReq) returns(GetAddrReply) {}
-    rpc RemoveAddrOptimized(RMessage) returns(RMessageReply) {}
+    rpc FindPersistedOptimized(FPMessage) returns(FPMessageReply) {}
+    rpc RemovePersistedOptimized(RPMessage) returns(Status) {}
 }
 
 message PutAddrMsg {
@@ -36,11 +37,15 @@ message Data {
     string Id = 2; // only sent with first message
 }
 
-message RMessage {
-    string addr = 1;
-    bool reply = 2;
+message FPMessage {
+    repeated string uuids = 1;
+    string addr = 2;
 }
 
-message RMessageReply {
+message FPMessageReply {
+    repeated int32 indexes = 1;
+}
+
+message RPMessage {
     repeated string uuids = 1;
 }

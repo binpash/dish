@@ -19,7 +19,7 @@ import (
 
 var (
 	port          = flag.Int("port", 50052, "The server port")
-	chunkSize     = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
+	_             = flag.Int("chunk_size", 4*1024, "The chunk size for the rpc stream")
 	streamTimeout = flag.Int("t", 10, "Wait period in seconds before we give up")
 )
 
@@ -63,7 +63,7 @@ func (s *DiscoveryServer) RemoveAddr(ctx context.Context, msg *pb.AddrReq) (*pb.
 
 	_, ok := s.addrs[msg.Id]
 	if !ok {
-		return &pb.Status{Success: false}, errors.New("RemoveAddr: id not found\n")
+		return &pb.Status{Success: false}, errors.New("RemoveAddr: id not found")
 	}
 
 	delete(s.addrs, msg.Id)
@@ -104,22 +104,37 @@ func (s *DiscoveryServer) GetAddrOptimized(ctx context.Context, msg *pb.AddrReq)
 	return &pb.GetAddrReply{Success: true, Addr: addr}, nil
 }
 
-func (s *DiscoveryServer) RemoveAddrOptimized(ctx context.Context, msg *pb.RMessage) (*pb.RMessageReply, error) {
+func (s *DiscoveryServer) FindPersistedOptimized(ctx context.Context, msg *pb.FPMessage) (*pb.FPMessageReply, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	var reply []string
+	var reply []int32
 
-	for id, merged := range s.addrs {
-		host := strings.Split(merged, ",")[0]
-		if host == msg.Addr {
-			delete(s.addrs, id)
-		} else if msg.Reply {
-			reply = append(reply, id)
+	for i, u := range msg.Uuids {
+		if merged, ok := s.addrs[u]; ok {
+			host := strings.Split(merged, ",")[0]
+			if host != msg.Addr {
+				reply = append(reply, int32(i))
+			}
 		}
 	}
 
-	return &pb.RMessageReply{Uuids: reply}, nil
+	return &pb.FPMessageReply{Indexes: reply}, nil
+}
+
+func (s *DiscoveryServer) RemovePersistedOptimized(ctx context.Context, msg *pb.RPMessage) (*pb.Status, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, u := range msg.Uuids {
+		delete(s.addrs, u)
+		if c, ok := s.chans[u]; ok {
+			c <- "error"
+			delete(s.chans, u)
+		}
+	}
+
+	return &pb.Status{Success: true}, nil
 }
 
 func (s *DiscoveryServer) ReadStream(req *pb.AddrReq, stream pb.Discovery_ReadStreamServer) error {
@@ -138,7 +153,7 @@ func (s *DiscoveryServer) ReadStream(req *pb.AddrReq, stream pb.Discovery_ReadSt
 		case <-time.After(time.Millisecond * 100):
 			continue
 		case <-totimer.C:
-			return errors.New("No writer subscribed in timeout period")
+			return errors.New("no writer subscribed in timeout period")
 		}
 	}
 
