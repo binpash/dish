@@ -18,6 +18,8 @@ hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc17.txt
 hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc18.txt
 hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc19.txt
 hdfs dfs -cat /words-repeated.txt | grep AA | wc > wwwc20.txt
-#  time (./di.sh sample.sh --parallel_pipelines --parallel_pipelines_limit 24 -d 1 2> err.log)
+# time (./di.sh sample.sh --parallel_pipelines --parallel_pipelines_limit 24 -d 1 2> err.log)
+# md5sum wwwc* | cut -d ' ' -f1 | sort | uniq -c | if read -r count hash && [ "$count" -eq 20 ]; then cat wwwc1.txt; else echo "Files are not identical"; fi
+
 # /opt/dish/runtime/scripts/killall.sh; sleep 2; pkill -f worker; sleep 2; /opt/dish/docker-hadoop/datanode/run.sh
 # pkill -f worker; pkill -f discovery; pkill -f filereader; sleep 2; bash /opt/dish/pash/compiler/dspash/worker.sh &> /worker.log &
