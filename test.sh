@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # ./test.sh 3 --ft optimized --split 8 --pool 8
+# /opt/dish/runtime/scripts/killall.sh; sleep 2; pkill -f worker; sleep 2; /opt/dish/docker-hadoop/datanode/run.sh
+# pkill -f worker; pkill -f discovery; pkill -f filereader; sleep 2; bash /opt/dish/pash/compiler/dspash/worker.sh &> /worker.log &
 
 # Check if the first argument is a number
 if ! [[ "$1" =~ ^[0-9]+$ ]]; then
