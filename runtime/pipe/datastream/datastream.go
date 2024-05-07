@@ -243,7 +243,15 @@ func writeOpimized(client pb.DiscoveryClient) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	file, err := os.CreateTemp("", "datastream-")
+	// Retrieve the FISH_OUT_PREFIX environment variable
+	fishOutPrefix := os.Getenv("FISH_OUT_PREFIX")
+
+	// Check if the variable is set
+	if fishOutPrefix == "" {
+		return 0, errors.New("FISH_OUT_PREFIX environment variable is not set")
+	}
+
+	file, err := os.CreateTemp(fishOutPrefix, "datastream-")
 	if err != nil {
 		return 0, err
 	}
