@@ -41,8 +41,8 @@ func (s *fileReaderServer) ReadFile(req *pb.FileRequest, stream pb.FileReader_Re
 	reader := bufio.NewReader(file)
 	buffer := make([]byte, *chunkSize)
 	for {
-		_, err := reader.Read(buffer)
-		stream.Send(&pb.ReadReply{Buffer: buffer})
+		n, err := reader.Read(buffer)
+		stream.Send(&pb.ReadReply{Buffer: buffer[:n]})
 
 		if err == io.EOF {
 			break

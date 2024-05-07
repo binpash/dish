@@ -171,11 +171,38 @@ func readOptimized(client pb.DiscoveryClient) (int, error) {
 	defer conn.Close()
 
 	fileReader := fr.NewFileReaderClient(conn)
-	reply, err := fileReader.ReadFileFull(context.Background(), &fr.FileRequest{Path: path})
+	stream, err := fileReader.ReadFile(context.Background(), &fr.FileRequest{Path: path})
 	if err != nil {
 		return 0, err
 	}
-	file := reply.Buffer
+
+	// Initialize a buffer to hold the combined data
+	var buffer []byte
+
+	// Continuously receive data from the stream
+	for {
+		reply, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				// End of stream (success)
+				break
+			}
+			// An error occurred during the stream
+			return 0, errors.New("error receiving from stream: " + err.Error())
+		}
+		// Append the current message's data to the buffer
+		buffer = append(buffer, reply.Buffer...)
+	}
+	file := buffer
+
+	// maybe just increase the limits?
+	// reply, err := fileReader.ReadFileFull(context.Background(), &fr.FileRequest{Path: path})
+	// if err != nil {
+	// 	return 0, err
+	// }
+	// file := reply.Buffer
+
+	// skip files coming from client/manager
 
 	if binary.BigEndian.Uint64(file[len(file)-8:]) != eof {
 		return 0, errors.New("read eof failure: token doesn't match")
