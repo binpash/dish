@@ -17,6 +17,8 @@ PASH_TOP = os.environ['PASH_TOP']
 
 sys.path.append(f"{PASH_TOP}/compiler/dspash")  # Add the directory to sys.path
 from socket_utils import SocketManager, encode_request, decode_request, send_msg, recv_msg
+KILL_WITNESS_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../pash/compiler/dspash/kill_witness.log')
+
 
 class WorkerConnection:
     def __init__(self, name, host, port):
@@ -106,8 +108,13 @@ if __name__ == "__main__":
     # Handle request
     type = sys.argv[1]
     if type == "resurrect":
-        resurrect_target = sys.argv[2]
-        messenger.send_resurrect_request(resurrect_target)
+        try:
+            with open(KILL_WITNESS_PATH, 'r') as file:
+                resurrect_target = file.read()
+                print(f"Resurrecting worker node at address {resurrect_target}")
+                messenger.send_resurrect_request(resurrect_target)
+        except FileNotFoundError:
+            print(f"Error: The file '{KILL_WITNESS_PATH}' does not exist.")
     else:
         print("Unsupported type of request")
         sys.exit(1)

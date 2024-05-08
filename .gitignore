@@ -18,6 +18,8 @@ revision.tex
 **/.idea
 *~
 *.dump
+*--ignore-installed*
+*.hash
 
 ## Ocaml
 *.cmi

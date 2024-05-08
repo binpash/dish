@@ -66,76 +66,20 @@ update_config() {
     echo "$worker_json" > "$output_file"
 }
 
-config_path="$PASH_TOP/cluster.json"
-get_merger_worker_host() {
-  merger_worker_host=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
-  echo "$merger_worker_host"
-}
+# Now merger/regular node to crash is determined during run-time!
 
-get_regular_worker_host() {
-  regular_worker_host=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
-  echo "$regular_worker_host"
-}
+# config_path="$PASH_TOP/cluster.json"
+# get_merger_worker_host() {
+#   merger_worker_host=$(awk -F'"' '/host/ && NR==4 {print $4}' $config_path)
+#   echo "$merger_worker_host"
+# }
+
+# get_regular_worker_host() {
+#   regular_worker_host=$(awk -F'"' '/host/ && NR==8 {print $4}' $config_path)
+#   echo "$regular_worker_host"
+# }
 
 
-check_correctness() {
-  script_name="$1"
-  out_baseline="$2"
-  out_target="$3"
-  echo "📝  Checking output for $script_name: $out_baseline and $out_target"
-
-  # Check if out files exist
-  if [ ! -f "$out_baseline" ]; then
-      echo "    Error: $out_baseline not found"
-      exit 1
-  fi
-  if [ ! -f "$out_target" ]; then
-      echo "    Error: $out_target not found"
-      exit 1
-  fi
-
-  
-  # Perform diff between current configuration file and seq.out
-  diff_result=$(diff "$out_baseline" "$out_target")
-  
-  # Check if there are differences
-  if [ -n "$diff_result" ]; then
-    #   echo "$diff_result"
-      echo "    ❌ Differences found:"
-      return 1
-  else
-      echo "    ✅ No differences found"
-      return 0
-  fi
-}
-
-# If option "correctness" is specified, check for out_baseline vs out_target
-#       if no diff, removing out_target
-#       if diff, don't remove out_target for debugging
-# else, remove out_target to save SSD
-handle_outputs() {
-  script_name="$1"
-  out_baseline="$2"
-  out_target="$3"
-  if [[ "$@" == *"correctness"* ]]; then
-    check_correctness "$script_name" "$out_baseline" "$out_target"
-    if [[ "$?" == 1 ]]; then
-      echo "    Output file "$out_target" is not removed for debugging"
-      # Return on the first diff
-      # exit 1
-    else
-      rm $out_target
-      echo "    Output file "$out_target" is removed"
-    fi
-  else
-    if [[ "$@" == *"debug"* ]]; then
-        echo "    Output file "$out_target" is not removed for debugging"
-    else
-        rm $out_target
-        echo "Output file "$out_target" is removed"
-    fi
-  fi   
-}
 
 # Function to check if an IP address has a valid PTR record
 has_ptr_record() {
@@ -196,4 +140,179 @@ wait_for_update_config() {
       sleep 10
     fi
   done
+}
+
+
+
+###################################
+#              Run                #
+###################################
+run_bash_script() {
+  prefix="seq"
+  outputs_dir=${1:-outputs}
+  script_input=${2:-"N/A"}
+  suite_name=${3:-"N/A"}
+
+  times_file="$prefix.res"
+  outputs_suffix="$prefix.out"
+  time_suffix="$prefix.time"
+
+  if [ ! -d "$outputs_dir" ]; then
+    mkdir -p "$outputs_dir"
+  fi
+
+  touch "$times_file"
+  cat $times_file >> $times_file.d
+  echo executing "$suite_name" with bash with data $(date) | tee -a "$times_file" "$timefile"
+  echo '' >> "$times_file"
+
+
+  IFS=";" read -r -a script_input_parsed <<< "${script_input}"
+  script="${script_input_parsed[0]}"
+  input="${script_input_parsed[1]}"
+  echo "$script" >> "$timefile"
+
+  export IN="/$suite_name/$input"
+  export dict=
+
+  printf -v pad %30s
+  padded_script="${script}.sh:${pad}"
+  padded_script=${padded_script:0:30}
+
+  outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
+  single_time_file="${outputs_dir}/${script}.${time_suffix}"
+
+  echo -n "${padded_script}" | tee -a "$times_file"
+  { time "bash" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
+  cat "${single_time_file}" | tee -a "$times_file" "$timefile"
+  echo '' >> "$timefile"
+}
+
+
+run_pash_script() {
+  # USAGE: [flags..., prefix, outputs_dir, script_input, suite_name]
+  flags=${1:-$PASH_FLAGS}
+  echo $flags
+  prefix=${2:-par}
+  prefix=$prefix
+  outputs_dir=${3:-outputs}
+  script_input=${4:-"N/A"}
+  suite_name=${5:-"N/A"}
+
+  times_file="$prefix.res"
+  outputs_suffix="$prefix.out"
+  time_suffix="$prefix.time"
+  pash_logs_dir="pash_logs_$prefix"
+
+  if [ ! -d "$outputs_dir" ]; then
+    mkdir -p "$outputs_dir"
+  fi
+  if [ ! -d "$pash_logs_dir" ]; then
+    mkdir -p "$pash_logs_dir"
+  fi
+
+  touch "$times_file"
+  cat $times_file >> $times_file.d
+  echo executing "$suite_name" with $prefix pash with data $(date) | tee -a "$times_file" "$timefile"
+  echo '' >> "$times_file"
+  # echo '' >> "$timefile"
+
+  IFS=";" read -r -a script_input_parsed <<< "${script_input}"
+  script="${script_input_parsed[0]}"
+  input="${script_input_parsed[1]}"
+  echo "$script" >> "$timefile"
+
+  export IN="/$suite_name/$input"
+  export dict=
+
+  printf -v pad %30s
+  padded_script="${script}.sh:${pad}"
+  padded_script=${padded_script:0:30}
+
+  outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
+  pash_log="${pash_logs_dir}/${script}.pash.log"
+  single_time_file="${outputs_dir}/${script}.${time_suffix}"
+
+  echo -n "${padded_script}" | tee -a "$times_file"
+  { time "$PASH_TOP/pa.sh" $flags --log_file "${pash_log}" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
+  cat "${single_time_file}" | tee -a "$times_file" "$timefile"
+  echo '' >> "$timefile"
+
+  # TODO: get time input to one file instead of .d
+  # cat $times_file >> $times_file.d
+
+}
+
+
+
+###################################
+#    Related to Outputs           #
+###################################
+get_output_hash() {
+  output_file=$1
+  # get the SHA-256 hash and extract just the hash string
+  hash_value=$(sha256sum "$output_file" | awk '{print $1}')
+  echo "$hash_value"
+}
+
+check_correctness() {
+  script_name="$1"
+  hash_baseline="$2"
+  out_target="$3"
+  
+  echo "📝  Checking hashed output of $out_target for script $script_name"
+
+  # Check if out files exist
+  if [ ! -f "$hash_baseline" ]; then
+      echo "    Error: $hash_baseline not found"
+      exit 1
+  fi
+  if [ ! -f "$out_target" ]; then
+      echo "    Error: $out_target not found"
+      exit 1
+  fi
+
+  
+  # Perform diff between current configuration file and seq.out
+  echo "$(get_output_hash $out_target)" > $out_target
+  # Now out_target contains the hashed output
+  diff_result=$(diff "$hash_baseline" "$out_target")
+  
+  # Check if there are differences
+  if [ -n "$diff_result" ]; then
+    #   echo "$diff_result"
+      echo "    ❌ Differences found:"
+      return 1
+  else
+      echo "    ✅ No differences found"
+      return 0
+  fi
+}
+
+# If option "correctness" is specified, compare the hash of out_target against hash_baseline
+#       if no diff, removing out_target
+#       if diff, don't remove out_target for debugging
+# else, remove out_target to save SSD
+handle_outputs() {
+  script_name="$1"
+  hash_baseline="$2"
+  out_target="$3"
+  if [[ "$@" == *"correctness"* ]]; then
+    check_correctness "$script_name" "$hash_baseline" "$out_target"
+    if [[ "$?" == 1 ]]; then
+      echo "    Output file "$out_target" is not removed for debugging"
+      # Return on the first diff
+      # exit 1
+    else
+      rm $out_target
+      echo "    Output file "$out_target" is removed"
+    fi
+  else
+    if [[ "$@" == *"debug"* ]]; then
+        echo "    Output file "$out_target" is not removed for debugging"
+    else
+        rm $out_target
+        echo "Output file "$out_target" is removed"
+    fi
+  fi   
 }
