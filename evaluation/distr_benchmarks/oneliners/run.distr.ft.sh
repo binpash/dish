@@ -1,3 +1,39 @@
+################
+# Common Usage #
+################
+# Updates output hash. Will need to run this if you want to run small input because
+#     by default the hash is from the large inputs
+# ./run.distr.ft.sh local bash update_hash
+# 
+# Debug mode (assuming debug server is started) + also check for correctness of dish
+#     Note that when debug flag is used the output file is not removed
+# ./run.distr.ft.sh local dish correctness --debug 1
+# 
+# Run locally with small inputs, check correctness for both naive and base
+# ./run.distr.ft.sh local small naive base correctness
+#
+# Optionally can pass in "clean" to clean outputs folder
+# ./run.distr.ft.sh local small naive base correctness clean
+#
+# If you just want to run faultless of optimized ft to see perf
+#     By default it runs faultless, merger crash, regular crash
+#     a fault_only flag is not supported because to inject time-based fault it needs to 
+#           run faultless first anyways
+# ./run.distr.ft.sh local small optimized faultless_only clean
+#
+# Do the same thing for large inputs (it's large input by default)
+# ./run.distr.ft.sh local optimized faultless_only clean
+#
+# Do the same thing on cloudlab (just remove "local" flag!)
+# ./run.distr.ft.sh optimized faultless_only clean
+
+# To run a subset of scripts, comment the ones you don't want to run below and everything else is the same
+#
+#
+
+# USAGE: see readme under oneliners for details
+# for checking correctness, specify [correctness] in the args
+
 if [[ "$@" == *"debug"* ]]; then
   PASH_FLAGS='--width 8 --r_split -d 1'
 else
@@ -10,16 +46,13 @@ source $DISH_TOP/evaluation/eval_utils.sh
 # export dict="$PASH_TOP/evaluation/distr_benchmarks/oneliners/input/dict.txt"
 # curl -sf 'http://ndr.md/data/dummy/dict.txt' | sort > $dict
 
-# USAGE: see readme under oneliners
-# for checking correctness, specify [correctness] in the args
-
 
 # Adjust input sizes
 if [[ "$@" == *"small"* ]]; then
   scripts_inputs=(
       "nfa-regex;1M.txt"
       "sort;1M.txt"
-      # "top-n;1M.txt"
+      "top-n;1M.txt"
       "wf;1M.txt"
       "spell;1M.txt"
       "diff;1M.txt"
@@ -30,12 +63,12 @@ if [[ "$@" == *"small"* ]]; then
   )
 else
   scripts_inputs=(
-        "nfa-regex;1G.txt"
-        "sort;3G.txt"
-        "top-n;3G.txt"
-        "wf;3G.txt"
-        "spell;3G.txt"
-        "diff;3G.txt"
+        # "nfa-regex;1G.txt"
+        # "sort;3G.txt"
+        # "top-n;3G.txt"
+        # "wf;3G.txt"
+        # "spell;3G.txt"
+        # "diff;3G.txt"
         "bi-grams;3G.txt"
         "set-diff;3G.txt"
         "sort-sort;3G.txt"
@@ -79,7 +112,6 @@ oneliners_hadoopstreaming(){
 run() {
   outputs_dir="outputs"
   hashed_outputs_dir="hashed_outputs"
-
   if [ ! -d "$outputs_dir" ]; then
     mkdir -p "$outputs_dir"
   fi
@@ -92,7 +124,6 @@ run() {
   do
     IFS=";" read -r -a script_input_parsed <<< "${script_input}"
     script="${script_input_parsed[0]}"
-
     if [[ "$@" == *"bash"* ]]; then
       # Run bash
       echo "$outputs_dir" "$script_input"
@@ -102,17 +133,24 @@ run() {
         hashed_output_file="$hashed_outputs_dir/$script.hash"
         get_output_hash $output_file > $hashed_output_file
       fi
+      # Check output correctness and removing outputs file accordingly
+      handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.seq.out" $@
     fi
 
 
     if [[ "$@" == *"pash"* ]]; then
       # Run PaSh
       run_pash_script "$PASH_FLAGS" "par" "$outputs_dir" "$script_input" "oneliners"
+      # Check output correctness and removing outputs file accordingly
+      handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.par.out" $@
     fi
 
-    if [[ "$@" == *"correctness"* ||  "$@" == *"dish"* ]]; then
-      # Run DiSh first to set up baseline
+    if [[ "$@" == *"dish"* ]]; then
+      # Run DiSh
       run_pash_script "$PASH_FLAGS --distributed_exec" "distr" "$outputs_dir" "$script_input" "oneliners"
+      sleep 3
+      # Check output correctness and removing outputs file accordingly
+      handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.distr.out" $@
     fi
 
     ft_configs=("naive" "base" "optimized")
@@ -122,40 +160,45 @@ run() {
         #                             No Fault                                    #
         ###########################################################################        
         run_pash_script "$PASH_FLAGS --distributed_exec --ft $ft_config" "ft_${ft_config}_faultless" "$outputs_dir" "$script_input" "oneliners"
+        sleep 5
         # Check output correctness and removing outputs file accordingly
         handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.ft_${ft_config}_faultless.out" $@
         
-        ###########################################################################
-        # Inject fault on merger node (determined during run-time now!)           #
-        ###########################################################################
-        run_pash_script "$PASH_FLAGS --distributed_exec --kill merger --ft $ft_config" "ft_${ft_config}_merger" "$outputs_dir" "$script_input" "oneliners"
-        # Check output correctness and removing outputs file accordingly
-        handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.ft_${ft_config}_merger.out" $@
-        # Restore worker
-        if [[ "$@" == *"local"* ]]; then
-          # Run locally
-          python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
-        else
-          # Run on cloudlab
-          # Wait for the crashed datanode image to exit and hdfs restarts a new image
-          wait_for_update_config $num_datanodes "${old_datanodes[@]}"
-          old_datanodes=($(get_active_nodes))
-        fi
-        
-        ###########################################################################
-        # Inject fault on merger node (determined during run-time now!)           #
-        ###########################################################################
-        run_pash_script "$PASH_FLAGS --distributed_exec --kill regular --ft $ft_config" "ft_${ft_config}_regular" "$outputs_dir" "$script_input" "oneliners"
-        # Check output correctness and removing outputs file accordingly
-        handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.ft_${ft_config}_regular.out" $@
-        if [[ "$@" == *"local"* ]]; then
-          # Run locally
-          python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
-        else
-          # Run on cloudlab
-          # Wait for the crashed datanode image to exit and hdfs restarts a new image
-          wait_for_update_config $num_datanodes "${old_datanodes[@]}"
-          old_datanodes=($(get_active_nodes))
+
+        if [[ "$@" != *"faultless_only"* ]]; then
+          ###########################################################################
+          # Inject fault on merger node (determined during run-time now!)           #
+          ###########################################################################
+          run_pash_script "$PASH_FLAGS --distributed_exec --kill merger --ft $ft_config" "ft_${ft_config}_merger" "$outputs_dir" "$script_input" "oneliners"
+          sleep 5
+          # Check output correctness and removing outputs file accordingly
+          handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.ft_${ft_config}_merger.out" $@
+          # Restore worker
+          if [[ "$@" == *"local"* ]]; then
+            # Run locally
+            python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
+          else
+            # Run on cloudlab
+            # Wait for the crashed datanode image to exit and hdfs restarts a new image
+            wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+            old_datanodes=($(get_active_nodes))
+          fi
+          ###########################################################################
+          # Inject fault on merger node (determined during run-time now!)           #
+          ###########################################################################
+          run_pash_script "$PASH_FLAGS --distributed_exec --kill regular --ft $ft_config" "ft_${ft_config}_regular" "$outputs_dir" "$script_input" "oneliners"
+          sleep 5
+          # Check output correctness and removing outputs file accordingly
+          handle_outputs "$script" "$hashed_outputs_dir/$script.hash" "$outputs_dir/$script.ft_${ft_config}_regular.out" $@
+          if [[ "$@" == *"local"* ]]; then
+            # Run locally
+            python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
+          else
+            # Run on cloudlab
+            # Wait for the crashed datanode image to exit and hdfs restarts a new image
+            wait_for_update_config $num_datanodes "${old_datanodes[@]}"
+            old_datanodes=($(get_active_nodes))
+          fi
         fi
       fi
     done

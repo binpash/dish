@@ -274,9 +274,10 @@ check_correctness() {
 
   
   # Perform diff between current configuration file and seq.out
-  echo "$(get_output_hash $out_target)" > $out_target
-  # Now out_target contains the hashed output
-  diff_result=$(diff "$hash_baseline" "$out_target")
+  tmp_file="target.hash"
+  echo "$(get_output_hash $out_target)" > $tmp_file
+  diff_result=$(diff "$hash_baseline" "$tmp_file")
+  rm $tmp_file
   
   # Check if there are differences
   if [ -n "$diff_result" ]; then
