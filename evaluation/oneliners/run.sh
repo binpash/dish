@@ -1,9 +1,9 @@
 #!/bin/bash
 
-export DISH_TOP=$(realpath $(dirname "$0")/../../..)
+export DISH_TOP=$(realpath $(dirname "$0")/../..)
 export PASH_TOP=$(realpath $DISH_TOP/pash)
 export TIMEFORMAT=%R
-cd "$(dirname "$0")"
+cd "$(realpath $(dirname "$0"))"
 
 if [[ "$@" == *"--small"* ]]; then
     scripts_inputs=(
@@ -36,7 +36,7 @@ fi
 mkdir -p "outputs"
 
 oneliners_bash() {
-    echo executing oneliners $(date)
+    echo executing oneliners bash $(date)
 
     mkdir -p "outputs/bash"
 
@@ -47,7 +47,6 @@ oneliners_bash() {
         input_file="/oneliners/${parsed[1]}.txt"
         output_file="./outputs/bash/${parsed[0]}.out"
         time_file="./outputs/bash/${parsed[0]}.time"
-        log_file="./outputs/bash/${parsed[0]}.log"
 
         (time $script_file $input_file > $output_file) 2> $time_file
 
@@ -55,47 +54,23 @@ oneliners_bash() {
     done
 }
 
-PASH_FLAGS='--width 8 --r_split'
-
 oneliners_pash(){
-    flags=${1:-$PASH_FLAGS}
-    prefix=${2:-par}
-    prefix=$prefix
+    echo executing oneliners $1 $(date)
 
-    times_file="$prefix.res"
-    outputs_suffix="$prefix.out"
-    time_suffix="$prefix.time"
-    outputs_dir="outputs"
-    pash_logs_dir="pash_logs_$prefix"
-
-    mkdir -p "$outputs_dir"
-    mkdir -p "$pash_logs_dir"
-
-    touch "$times_file"
-    cat $times_file >> $times_file.d
-    echo executing one-liners with $prefix pash with data $(date) | tee "$times_file"
-    echo '' >> "$times_file"
+    mkdir -p "outputs/$1"
 
     for script_input in ${scripts_inputs[@]}
     do
-        IFS=";" read -r -a script_input_parsed <<< "${script_input}"
-        script="${script_input_parsed[0]}"
-        input="${script_input_parsed[1]}"
+        IFS=";" read -r -a parsed <<< "${script_input}"
+        script_file="./scripts/${parsed[0]}.sh"
+        input_file="/oneliners/${parsed[1]}.txt"
+        output_file="./outputs/$1/${parsed[0]}.out"
+        time_file="./outputs/$1/${parsed[0]}.time"
+        log_file="./outputs/$1/${parsed[0]}.log"
 
-        export IN="/oneliners/$input"
-        export dict=
+        (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
 
-        printf -v pad %30s
-        padded_script="${script}.sh:${pad}"
-        padded_script=${padded_script:0:30}
-
-        outputs_file="${outputs_dir}/${script}.${outputs_suffix}"
-        pash_log="${pash_logs_dir}/${script}.pash.log"
-        single_time_file="${outputs_dir}/${script}.${time_suffix}"
-
-        echo -n "${padded_script}" | tee -a "$times_file"
-        { time "$PASH_TOP/pa.sh" $flags --log_file "${pash_log}" ${script}.sh > "$outputs_file"; } 2> "${single_time_file}"
-        cat "${single_time_file}" | tee -a "$times_file"
+        echo "$script_file $(cat "$time_file")" 
     done
 }
 
@@ -132,9 +107,9 @@ oneliners_hadoopstreaming(){
     mv "hadoop-streaming/$times_file" .
 }
 
-oneliners_bash
+# oneliners_bash
 
-# oneliners_pash "$PASH_FLAGS" "par"
+oneliners_pash "pash" "--width 8 --r_split --distributed_exec -d 2"
 
 # oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
 

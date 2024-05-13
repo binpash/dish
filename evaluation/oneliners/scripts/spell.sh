@@ -2,6 +2,8 @@
 # Calculate mispelled words in an input
 # https://dl.acm.org/doi/10.1145/3532.315102
 
+dict=$DISH_TOP/evaluation/oneliners/inputs/dict.txt
+
 hdfs dfs -cat -ignoreCrc $1 |
     iconv -f utf-8 -t ascii//translit | # remove non utf8 characters
     # groff -t -e -mandoc -Tascii |  # remove formatting commands
@@ -11,4 +13,4 @@ hdfs dfs -cat -ignoreCrc $1 |
     tr -d '[:punct:]' |            # remove punctuation
     sort |                         # put words in alphabetical order
     uniq |                         # remove duplicate words
-    comm -23 - ./inputs/dict.txt   # report words not in dictionary 
+    comm -23 - $dict               # report words not in dictionary 
