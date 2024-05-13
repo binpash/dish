@@ -184,7 +184,7 @@ run() {
             old_datanodes=($(get_active_nodes))
           fi
           ###########################################################################
-          # Inject fault on merger node (determined during run-time now!)           #
+          # Inject fault on regular node (determined during run-time now!)           #
           ###########################################################################
           run_pash_script "$PASH_FLAGS --distributed_exec --kill regular --ft $ft_config" "ft_${ft_config}_regular" "$outputs_dir" "$script_input" "oneliners"
           sleep 5
