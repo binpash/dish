@@ -35,7 +35,7 @@ fi
 
 mkdir -p "outputs"
 
-oneliners(){
+oneliners() {
     echo executing oneliners $1 $(date)
 
     mkdir -p "outputs/$1"
@@ -53,6 +53,12 @@ oneliners(){
             (time $script_file $input_file > $output_file) 2> $time_file
         else
             (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
+            diff $output_file "./outputs/bash/${parsed[0]}.out"
+
+            if [[ $2 == *"--kill"* ]]; then
+                python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
+                sleep 10
+            fi
         fi
 
         echo "$script_file $(cat "$time_file")" 
@@ -92,12 +98,16 @@ oneliners_hadoopstreaming(){
     mv "hadoop-streaming/$times_file" .
 }
 
-oneliners "bash"
+# oneliners "bash"
 
-oneliners "pash" "--width 8 --r_split"
+# oneliners "pash" "--width 8 --r_split"
 
-oneliners "dish" "--width 8 --r_split --distributed_exec"
+# oneliners "dish" "--width 8 --r_split --distributed_exec"
 
-# oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
+# oneliners "fish" "--width 8 --r_split --ft optimized --distributed_exec"
+
+# oneliners "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+
+oneliners "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
 
 # oneliners_hadoopstreaming
