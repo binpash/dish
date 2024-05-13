@@ -35,26 +35,7 @@ fi
 
 mkdir -p "outputs"
 
-oneliners_bash() {
-    echo executing oneliners bash $(date)
-
-    mkdir -p "outputs/bash"
-
-    for script_input in ${scripts_inputs[@]}
-    do
-        IFS=";" read -r -a parsed <<< "${script_input}"
-        script_file="./scripts/${parsed[0]}.sh"
-        input_file="/oneliners/${parsed[1]}.txt"
-        output_file="./outputs/bash/${parsed[0]}.out"
-        time_file="./outputs/bash/${parsed[0]}.time"
-
-        (time $script_file $input_file > $output_file) 2> $time_file
-
-        echo "$script_file $(cat "$time_file")" 
-    done
-}
-
-oneliners_pash(){
+oneliners(){
     echo executing oneliners $1 $(date)
 
     mkdir -p "outputs/$1"
@@ -68,7 +49,11 @@ oneliners_pash(){
         time_file="./outputs/$1/${parsed[0]}.time"
         log_file="./outputs/$1/${parsed[0]}.log"
 
-        (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
+        if [[ "$1" == "bash" ]]; then
+            (time $script_file $input_file > $output_file) 2> $time_file
+        else
+            (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
+        fi
 
         echo "$script_file $(cat "$time_file")" 
     done
@@ -107,9 +92,11 @@ oneliners_hadoopstreaming(){
     mv "hadoop-streaming/$times_file" .
 }
 
-# oneliners_bash
+oneliners "bash"
 
-oneliners_pash "pash" "--width 8 --r_split --distributed_exec -d 2"
+oneliners "pash" "--width 8 --r_split"
+
+oneliners "dish" "--width 8 --r_split --distributed_exec"
 
 # oneliners_pash "$PASH_FLAGS --distributed_exec" "distr"
 
