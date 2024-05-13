@@ -1,7 +1,7 @@
 #!/bin/bash
 # Find all 2-grams in a piece of text
 
-. bi-gram.aux.sh
+. ./scripts/bi-gram.aux.sh
 
 hdfs dfs -cat -ignoreCrc $1 |
   tr -c 'A-Za-z' '[\n*]' | 
@@ -10,5 +10,3 @@ hdfs dfs -cat -ignoreCrc $1 |
   bigrams_aux |
   sort |
   uniq
-
-
