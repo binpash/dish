@@ -19,7 +19,6 @@ revision.tex
 *~
 *.dump
 *--ignore-installed*
-*.hash
 
 ## Ocaml
 *.cmi
