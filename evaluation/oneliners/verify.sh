@@ -8,9 +8,9 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p hashes/small
 
 if [[ "$@" == *"--small"* ]]; then
-    hash_folder="hashes/small/"
+    hash_folder="hashes/small"
 else
-    hash_folder="hashes/"
+    hash_folder="hashes"
 fi
 
 if [[ "$@" == *"--generate"* ]]; then
@@ -27,15 +27,15 @@ if [[ "$@" == *"--generate"* ]]; then
         hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
 
         # Save the hash to a file
-        echo "$hash" > "$hash_folder$filename.hash"
+        echo "$hash" > "$hash_folder/$filename.hash"
 
         # Print the filename and hash
-        echo "File: $hash_folder$filename.hash | SHA-256 Hash: $hash"
+        echo "File: $hash_folder/$filename.hash | SHA-256 Hash: $hash"
     done
 fi
 
 # Loop through all directories in the parent directory
-for folder in "outputs"/*/
+for folder in "outputs"/*
 do
     echo "Verifying folder: $folder"
 
@@ -49,12 +49,12 @@ do
         hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
 
         # Save the hash to a file
-        echo "$hash" > "$folder$filename.hash"
+        echo "$hash" > "$folder/$filename.hash"
 
         # Compare the hash with the hash in the hashes directory
-        diff "$hash_folder$filename.hash" "$folder$filename.hash"
+        diff "$hash_folder/$filename.hash" "$folder/$filename.hash"
 
         # Print the filename and hash
-        echo "File: $folder$filename | SHA-256 Hash: $hash"
+        echo "File: $folder/$filename | SHA-256 Hash: $hash"
     done
 done

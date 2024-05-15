@@ -98,7 +98,7 @@ oneliners_hadoopstreaming(){
     mv "hadoop-streaming/$times_file" .
 }
 
-# oneliners "bash"
+oneliners "bash"
 
 # oneliners "pash" "--width 8 --r_split"
 
@@ -108,6 +108,6 @@ oneliners_hadoopstreaming(){
 
 # oneliners "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
 
-oneliners "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+# oneliners "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
 
 # oneliners_hadoopstreaming
