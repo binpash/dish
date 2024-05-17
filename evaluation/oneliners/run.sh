@@ -70,37 +70,34 @@ oneliners() {
     done
 }
 
-# For testing purposes
-# hdfs dfs -rm -r "/outputs/hadoop-streaming/oneliners"
-# hadoop jar "/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" -files nfa-regex.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input "/oneliners/1G.txt" -output "/outputs/hadoop-streaming/oneliners/nfa-regex" -mapper nfa-regex.sh # nfa-regex
-oneliners_hadoopstreaming(){
-    jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" # Adjust as required
-    basepath="/oneliners" # Adjust as required
-    times_file="hadoopstreaming.res"
-    outputs_suffix="hadoopstreaming.out"
+oneliners_hadoopstreaming() {
+    # used by run_all.sh, adjust as required
+    jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
+    basepath="/oneliners"
     outputs_dir="/outputs/hadoop-streaming/oneliners"
-    . bi-gram.aux.sh
-
-    cd "hadoop-streaming/"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
+    mkdir -p "outputs/hadoop"
 
-    touch "$times_file"
-    cat "$times_file" >> "$times_file".d
-    echo executing oneliners $(date) | tee "$times_file"
-    echo '' >> "$times_file"
+    source ./scripts/bi-gram.aux.sh
+    cd scripts/hadoop-streaming
 
+    echo executing oneliners hadoop $(date)
     while IFS= read -r line; do
-        printf -v pad %20s
         name=$(cut -d "#" -f2- <<< "$line")
         name=$(sed "s/ //g" <<< $name)
-        padded_script="${name}.sh:${pad}"
-        padded_script=${padded_script:0:20} 
-        echo "${padded_script}" $({ time { eval $line &> /dev/null; } } 2>&1) | tee -a "$times_file"
+
+        # output_file="../../outputs/hadoop/$name.out"
+        time_file="../../outputs/hadoop/$name.time"
+        log_file="../../outputs/hadoop/$name.log"
+
+        (time eval $line &> $log_file) 2> $time_file
+
+        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" 
     done <"run_all.sh"
-    cd ".."
-    mv "hadoop-streaming/$times_file" .
+
+    cd "../.."
 }
 
 oneliners "bash"
