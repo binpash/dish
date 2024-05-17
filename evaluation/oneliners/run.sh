@@ -52,7 +52,12 @@ oneliners() {
         if [[ "$1" == "bash" ]]; then
             (time $script_file $input_file > $output_file) 2> $time_file
         else
-            (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
+            params="$2"
+            if [[ $2 == *"--ft optimized"* ]]; then
+                params="$2 --script_name $script_file"
+            fi
+
+            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
             # diff $output_file "./outputs/bash/${parsed[0]}.out"
 
             if [[ $2 == *"--kill"* ]]; then
