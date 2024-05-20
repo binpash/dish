@@ -6,19 +6,14 @@
 cd "$(realpath $(dirname "$0"))"
 
 mkdir -p hashes/small
+mkdir -p hashes/full
 if [[ "$@" == *"--small"* ]]; then
     hash_folder="hashes/small"
-else
-    hash_folder="hashes"
-fi
-
-mkdir -p hashes/full
-if [[ "$@" == *"--full"* ]]; then
+elif [[ "$@" == *"--full"* ]]; then
     hash_folder="hashes/full"
 else
     hash_folder="hashes"
 fi
-
 
 if [[ "$@" == *"--generate"* ]]; then
     # Directory to iterate over

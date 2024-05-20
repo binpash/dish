@@ -8,8 +8,11 @@ cd "$(realpath $(dirname "$0"))"
 if [[ "$1" == "--full" ]]; then
    echo "Using full input"
   export ENTRIES=1060
-else
+elif [[ "$1" == "--small" ]]; then
   echo "Using small input"
+  export ENTRIES=10
+else
+  echo "Using default input"
   export ENTRIES=120
 fi
 
@@ -31,7 +34,7 @@ names_scripts=(
     "sort_words_by_folding;3_2"
     "sort_words_by_num_of_syllables;8_1"
     "sort_words_by_rhyming;3_3"
-    # "trigram_rec;6_1"
+    "trigram_rec;6_1" # was initially commented out
     "uppercase_by_token;6_1_1"
     "uppercase_by_type;6_1_2"
     "verses_2om_3om_2instances;6_7"
@@ -85,16 +88,16 @@ nlp() {
 # a factor of ten on average. (source: nsdi 2023 DiSh paper)
 
 
-# nlp "bash"
+nlp "bash"
 
-# nlp "pash" "--width 8 --r_split"
+nlp "pash" "--width 8 --r_split"
 
-# nlp "dish" "--width 8 --r_split --distributed_exec"
+nlp "dish" "--width 8 --r_split --distributed_exec"
 
 nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-#nlp "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+nlp "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
 
-#nlp "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+nlp "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
 
-# nlp_hadoopstreaming
+# tmux new-session -s test "./run.sh | tee test_log"

@@ -9,7 +9,7 @@ BOOKS_URL="https://atlas-group.cs.brown.edu/data/gutenberg/books.txt"
 BASE_URL="https://atlas-group.cs.brown.edu/data/gutenberg/"
 
 if [ ! -f ./book_links.txt ]; then
-    wget -q -O book_links.txt "$BOOKS_URL"
+    wget -O book_links.txt "$BOOKS_URL"
     if [ ! -f book_links.txt ]; then
         echo "Failed to download book_links.txt"
         exit 1

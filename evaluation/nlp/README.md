@@ -8,8 +8,12 @@ Run `./input.sh`. Default book count will be 120. Use the `--small` flag to down
 
 ## Running NLP
 
-Run `./run.sh` to run all scripts.
+Run `./run.sh` to run all scripts. Use `--small` flag to run with the small input
+
+## Verify NLP
+
+Run `./verify.sh` to compare output hashes to the bash output hashes
 Each script reads the following environment variables:
 
-- `IN`: Where to find downloaded texts
-- `ENTRIES`: Number of books to process 
+- `--generate`: generate the hash
+- `--small --generate`: generate the hash for small input
