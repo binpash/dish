@@ -1,0 +1,6 @@
+intermediary/*
+test_intermediary/*
+results/test_results/*
+inputs/*
+outputs/*
+*.csv
