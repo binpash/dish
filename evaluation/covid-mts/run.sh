@@ -8,10 +8,10 @@ cd "$(realpath $(dirname "$0"))"
 
 if [[ "$1" == "--small" ]]; then
     echo "Using small input"
-    export IN="/covid-mts/in_small.csv"
+    input_file="/covid-mts/in_small.csv"
 else
     echo "Using default input"
-    export IN="/covid-mts/in.csv"
+    input_file="/covid-mts/in.csv"
 fi
 
 mkdir -p "outputs"
@@ -32,9 +32,9 @@ covid-mts() {
         log_file="./outputs/$1/$script.log"
 
         if [[ "$1" == "bash" ]]; then
-            (time bash $script_file $output_dir > $output_file ) 2> $time_file
+            (time bash $script_file $input_file > $output_file ) 2> $time_file
         else
-            (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $output_dir > $output_file) 2> $time_file
+            (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
@@ -89,4 +89,4 @@ covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_del
 
 covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
 
-# tmux new-session -s test "./run.sh | tee test_log"
+# tmux new-session -s covid_mts "./run.sh | tee covid_mts_log"
