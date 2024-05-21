@@ -160,8 +160,8 @@ unix50 "bash"
 
 # unix50 "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-# unix50 "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+# unix50 "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec"
 
-# unix50 "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+# unix50 "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec"
 
 # unix50_hadoopstreaming
