@@ -1,6 +1,4 @@
 #!/bin/bash
-export IN_PRE=${IN_PRE:-/unix50}
-IN10=$IN_PRE/10.txt
-# 10.2: list Turing award recipients while working at Bell Labs
-hdfs dfs -cat -ignoreCrc $IN10 | sed 1d | grep 'Bell' | cut -f 2
 
+# 10.2: list Turing award recipients while working at Bell Labs
+hdfs dfs -cat -ignoreCrc $1 | sed 1d | grep 'Bell' | cut -f 2

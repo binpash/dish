@@ -31,8 +31,8 @@ done
 
 
 hdfs dfs -mkdir -p /unix50
-for file in "${input_files[@]}"; do
-    hdfs dfs -put $file "/unix50/${file}_1M.txt"
-    hdfs dfs -put $file "/unix50/${file}_3G.txt"
+for file in "${inputs[@]}"; do
+    hdfs dfs -put "${file}_1M.txt" "/unix50/${file}_1M.txt"
+    hdfs dfs -put "${file}_3G.txt" "/unix50/${file}_3G.txt"
     echo "Put $file to hdfs"
 done
