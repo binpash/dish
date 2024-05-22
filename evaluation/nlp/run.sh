@@ -17,29 +17,29 @@ else
 fi
 
 names_scripts=(
-    # "1syllable_words;6_4"
-    # "2syllable_words;6_5"
-    # "4letter_words;6_2"
-    # "bigrams_appear_twice;8.2_2"
-    # "bigrams;4_3"
-    # "compare_exodus_genesis;8.3_3"
-    # "count_consonant_seq;7_2"
-    # "count_morphs;7_1"
-    # "count_trigrams;4_3b"
-    # "count_vowel_seq;2_2"
-    # "count_words;1_1"
-    # "find_anagrams;8.3_2"
-    # "merge_upper;2_1"
-    # "sort;3_1"
-    # "sort_words_by_folding;3_2"
-    # "sort_words_by_num_of_syllables;8_1"
-    # "sort_words_by_rhyming;3_3"
+    "1syllable_words;6_4"
+    "2syllable_words;6_5"
+    "4letter_words;6_2"
+    "bigrams_appear_twice;8.2_2"
+    "bigrams;4_3"
+    "compare_exodus_genesis;8.3_3"
+    "count_consonant_seq;7_2"
+    "count_morphs;7_1"
+    "count_trigrams;4_3b"
+    "count_vowel_seq;2_2"
+    "count_words;1_1"
+    "find_anagrams;8.3_2"
+    "merge_upper;2_1"
+    "sort;3_1"
+    "sort_words_by_folding;3_2"
+    "sort_words_by_num_of_syllables;8_1"
+    "sort_words_by_rhyming;3_3"
     "trigram_rec;6_1" # was initially commented out
-    # "uppercase_by_token;6_1_1"
-    # "uppercase_by_type;6_1_2"
-    # "verses_2om_3om_2instances;6_7"
-    # "vowel_sequencies_gr_1K;8.2_1"
-    # "words_no_vowels;6_3"
+    "uppercase_by_token;6_1_1"
+    "uppercase_by_type;6_1_2"
+    "verses_2om_3om_2instances;6_7"
+    "vowel_sequencies_gr_1K;8.2_1"
+    "words_no_vowels;6_3"
   )
 
 mkdir -p "outputs"
@@ -65,7 +65,12 @@ nlp() {
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $output_dir > $output_file ) 2> $time_file
         else
-            (time $PASH_TOP/pa.sh $2 --log_file $log_file $script_file $output_dir > $output_file) 2> $time_file
+            params="$2"
+            if [[ $2 == *"--ft optimized"* ]]; then
+                params="$2 --script_name $script_file"
+            fi
+
+            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $output_dir > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
@@ -102,4 +107,4 @@ nlp "fish-r-du" "--width 8 --r_split --ft optimized --kill regular --kill_delay 
 
 nlp "fish-m-du" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
 
-# tmux new-session -s test "./run.sh | tee test_log"
+# tmux new-session -s nlp_du "./run.sh | tee nlp_du_log"
