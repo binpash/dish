@@ -90,8 +90,8 @@ covid-mts "dish" "--width 8 --r_split --distributed_exec"
 
 covid-mts "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec"
 
-covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec"
 
 # tmux new-session -s covid_mts "./run.sh | tee covid_mts_log"
