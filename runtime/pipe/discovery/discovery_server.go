@@ -115,6 +115,12 @@ func (s *DiscoveryServer) FindPersistedOptimized(ctx context.Context, msg *pb.FP
 			host := strings.Split(merged, ",")[0]
 			if host != msg.Addr {
 				reply = append(reply, int32(i))
+			} else {
+				delete(s.addrs, u)
+				if c, ok := s.chans[u]; ok {
+					c <- "error"
+					delete(s.chans, u)
+				}
 			}
 		}
 	}
