@@ -95,16 +95,18 @@ nlp() {
 
 # nlp "bash"
 
-# nlp "pash" "--width 8 --r_split"
+# nlp "pash" "--width 8 --r_split --parallel_pipelines_limit 24"
 
 # nlp "dish" "--width 8 --r_split --distributed_exec"
 
-nlp "dish-du" "--width 8 --r_split --distributed_exec" "--parallel_pipelines_limit 24"
+nlp "dish-du" "--width 8 --r_split --distributed_exec --parallel_pipelines_limit 24"
 
-nlp "fish-du" "--width 8 --r_split --ft optimized --distributed_exec"
+nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-nlp "fish-r-du" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+nlp "fish-du" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines_limit 24"
 
-nlp "fish-m-du" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+nlp "fish-r-du" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec --parallel_pipelines_limit 24"
+
+nlp "fish-m-du" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec --parallel_pipelines_limit 24"
 
 # tmux new-session -s nlp_du "./run.sh | tee nlp_du_log"

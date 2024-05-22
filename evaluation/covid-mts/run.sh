@@ -39,7 +39,7 @@ covid-mts() {
                 params="$2 --script_name $script_file"
             fi
 
-            (time $PASH_TOP/pa.sh $params --log_file $log_file -d 1 $script_file $input_file > $output_file) 2> $time_file
+            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
@@ -82,16 +82,16 @@ covid-mts() {
 # }
 
 
-# covid-mts "bash"
+covid-mts "bash"
 
-# covid-mts "pash" "--width 8 --r_split"
+covid-mts "pash" "--width 8 --r_split"
 
 covid-mts "dish" "--width 8 --r_split --distributed_exec"
 
-# covid-mts "fish" "--width 8 --r_split --ft optimized --distributed_exec"
+covid-mts "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-# covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
+covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --kill_delay 100 --distributed_exec"
 
-# covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
+covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --kill_delay 100 --distributed_exec"
 
 # tmux new-session -s covid_mts "./run.sh | tee covid_mts_log"
