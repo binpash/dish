@@ -114,8 +114,9 @@ unix50() {
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
-                sleep 10
             fi
+
+            sleep 10
         fi
 
         echo "$script_file $(cat "$time_file")" 
