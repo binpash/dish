@@ -43,12 +43,18 @@ names_scripts=(
   )
 
 mkdir -p "outputs"
+time_file_all="./outputs/nlp.res"
+> $time_file_all
 
-
+# time_file is to store script_name and time for each script
+# time_file_mode is to store a list of script_name and time for all scripts under a running mode (i.e. bash/pash)
+# time_file_all is to store just the mode and time, making it easy to copy and paste into the spreadsheet
 nlp() {
-    echo executing nlp $1 $(date)
-
     mkdir -p "outputs/$1"
+    time_file_mode="./outputs/$1/nlp.res"
+    > $time_file_mode
+
+    echo executing nlp $1 $(date) | tee -a $time_file_mode $time_file_all
 
     for name_script in ${names_scripts[@]}
     do
@@ -77,8 +83,10 @@ nlp() {
                 sleep 10
             fi
         fi
-
-        echo "$name $script_file $(cat "$time_file")" 
+        time=$(grep -Eo '[0-9]+\.[0-9]+' "$time_file")
+        echo "${time}" >> $time_file_all
+        echo "$name_script $time" | tee -a $time_file_mode
+        echo "$name_script $(cat "$time_file")" # do include all stderr in stdout to visualize
     done
 
 }
@@ -95,18 +103,25 @@ nlp() {
 
 nlp "bash"
 
-nlp "pash-du" "--width 8 --r_split --parallel_pipelines --parallel_pipelines_limit 24"
+nlp "pash" "--width 8 --r_split"
 
-nlp "dish" "--width 8 --r_split --distributed_exec"
+nlp "dish" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-nlp "dish-du" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 
-nlp "fish-du" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+# nlp "pash-du" "--width 8 --r_split --parallel_pipelines --parallel_pipelines_limit 24"
 
-nlp "fish-r-du" "--width 8 --r_split --ft optimized --kill regular --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+# nlp "dish" "--width 8 --r_split --distributed_exec"
 
-nlp "fish-m-du" "--width 8 --r_split --ft optimized --kill merger --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+# nlp "dish-du" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+
+# nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec"
+
+# nlp "fish-du" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+
+nlp "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+
+nlp "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
 # tmux new-session -s nlp_du "./run.sh | tee nlp_du_log"

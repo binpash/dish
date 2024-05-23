@@ -15,12 +15,18 @@ else
 fi
 
 mkdir -p "outputs"
+time_file_all="./outputs/covid-mts.res"
+> $time_file_all
 
-
+# time_file is to store script_name and time for each script
+# time_file_mode is to store a list of script_name and time for all scripts under a running mode (i.e. bash/pash)
+# time_file_all is to store just the mode and time, making it easy to copy and paste into the spreadsheet
 covid-mts() {
-    echo executing covid-mts $1 $(date)
-
     mkdir -p "outputs/$1"
+    time_file_mode="./outputs/$1/covid-mts.res"
+    > $time_file_mode
+
+    echo executing covid-mts $1 $(date) | tee -a $time_file_mode $time_file_all
 
     for number in `seq 4` ## initial: FIXME 5.sh is not working yet
     do
@@ -46,8 +52,8 @@ covid-mts() {
                 sleep 10
             fi
         fi
-
-        echo "$name $script_file $(cat "$time_file")" 
+        cat "${time_file}" >> $time_file_all
+        echo "$script_file $(cat "$time_file")" | tee -a $time_file_mode
     done
 }
 
