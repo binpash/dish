@@ -57,6 +57,6 @@ do
         diff "$hash_folder/$filename.hash" "$folder/$filename.hash"
 
         # Print the filename and hash
-        echo "File: $folder/$filename | SHA-256 Hash: $hash"
+        echo "File: $folder/$filename | SHA-256 Hash: $(cat "$folder/$filename.hash")"
     done
 done
