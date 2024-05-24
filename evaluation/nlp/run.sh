@@ -8,9 +8,11 @@ cd "$(realpath $(dirname "$0"))"
 if [[ "$1" == "--small" ]]; then
     echo "Using small input"
     export ENTRIES=10
+    export IN="/nlp/pg-small"
 else
     echo "Using default input"
     export ENTRIES=120
+    export IN="/nlp/pg"
 fi
 
 names_scripts=(

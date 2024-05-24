@@ -35,8 +35,24 @@ if [ ! -e ./pg ]; then
     cd ..
 fi
 
+if [ ! -e ./pg-small ]; then
+    mkdir pg-small
+    cd pg-small
+    book_count=10
+
+    head -n $book_count ../book_links.txt | while IFS= read -r line
+    do
+        full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
+        echo "Downloading $full_url"
+        wget -q "$full_url"
+    done
+
+    cd ..
+fi
+
 # Put files in hdfs
 hdfs dfs -mkdir /nlp
 hdfs dfs -put exodus /nlp/exodus
 hdfs dfs -put genesis /nlp/genesis
 hdfs dfs -put pg /nlp/pg
+hdfs dfs -put pg-small /nlp/pg-small
