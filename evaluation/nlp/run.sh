@@ -33,7 +33,7 @@ names_scripts=(
     "sort_words_by_folding;3_2"
     "sort_words_by_num_of_syllables;8_1"
     "sort_words_by_rhyming;3_3"
-    "trigram_rec;6_1" # was initially commented out
+    # "trigram_rec;6_1" # was initially commented out
     "uppercase_by_token;6_1_1"
     "uppercase_by_type;6_1_2"
     "verses_2om_3om_2instances;6_7"
@@ -102,9 +102,14 @@ nlp "bash"
 
 nlp "pash" "--width 8 --r_split"
 
+nlp "dish-no-du" "--width 8 --r_split --distributed_exec"
+
 nlp "dish" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
+nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec"
+
 nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+
 
 # nlp "pash-du" "--width 8 --r_split --parallel_pipelines --parallel_pipelines_limit 24"
 
