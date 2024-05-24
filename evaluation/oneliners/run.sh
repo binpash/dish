@@ -34,11 +34,15 @@ else
 fi
 
 mkdir -p "outputs"
+all_res_file="./outputs/oneliners.res"
+> $all_res_file
 
 oneliners() {
-    echo executing oneliners $1 $(date)
-
     mkdir -p "outputs/$1"
+    mode_res_file="./outputs/$1/oneliners.res"
+    > $mode_res_file
+
+    echo executing oneliners $1 $(date) | tee -a $mode_res_file $all_res_file
 
     for script_input in ${scripts_inputs[@]}
     do
@@ -67,7 +71,8 @@ oneliners() {
             sleep 10
         fi
 
-        echo "$script_file $(cat "$time_file")" 
+        cat "${time_file}" >> $all_res_file
+        echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
     done
 }
 

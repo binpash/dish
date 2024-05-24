@@ -86,11 +86,15 @@ else
 fi
 
 mkdir -p "outputs"
+all_res_file="./outputs/unix50.res"
+> $all_res_file
 
 unix50() {
-    echo executing unix50 $1 $(date)
-
     mkdir -p "outputs/$1"
+    mode_res_file="./outputs/$1/unix50.res"
+    > $mode_res_file
+
+    echo executing unix50 $1 $(date) | tee -a $mode_res_file $all_res_file
 
     for script_input in ${scripts_inputs[@]}
     do
@@ -119,7 +123,8 @@ unix50() {
             sleep 10
         fi
 
-        echo "$script_file $(cat "$time_file")" 
+        cat "${time_file}" >> $all_res_file
+        echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
     done
 }
 
