@@ -82,10 +82,8 @@ nlp() {
             sleep 10
         fi
 
-        time=$(grep -Eo '[0-9]+\.[0-9]+' "$time_file")
-        echo "${time}" >> $all_res_file
-        echo "$name_script $time" | tee -a $mode_res_file
-        echo "$name_script $(cat "$time_file")" # do include all stderr in stdout to visualize
+        cat "${time_file}" >> $all_res_file
+        echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
     done
 }
 
