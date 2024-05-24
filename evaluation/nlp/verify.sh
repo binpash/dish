@@ -6,11 +6,9 @@
 cd "$(realpath $(dirname "$0"))"
 
 mkdir -p hashes/small
-mkdir -p hashes/full
+
 if [[ "$@" == *"--small"* ]]; then
     hash_folder="hashes/small"
-elif [[ "$@" == *"--full"* ]]; then
-    hash_folder="hashes/full"
 else
     hash_folder="hashes"
 fi
@@ -52,16 +50,18 @@ do
         filename=$(basename "$file" .out)
         dirname=$(basename "$(dirname "$file")") # is the script_name
 
-        # Generate SHA-256 hash
-        hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
+        if [ ! -f "$folder/$dirname/$filename.hash" ]; then
+            # Generate SHA-256 hash
+            hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
 
-        # Save the hash to a file
-        echo "$hash" > "$folder/$dirname/$filename.hash"
+            # Save the hash to a file
+            echo "$hash" > "$folder/$dirname/$filename.hash"
+        fi
 
         # Compare the hash with the hash in the hashes directory
         diff "$hash_folder/$dirname/$filename.hash" "$folder/$dirname/$filename.hash"
 
         # Print the filename and hash
-        echo "File: $dirname/$filename | SHA-256 Hash: $hash"
+        echo "File: $dirname/$filename | SHA-256 Hash: $(cat "$folder/$dirname/$filename.hash")"
     done
 done

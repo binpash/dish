@@ -5,15 +5,12 @@ export PASH_TOP=$(realpath $DISH_TOP/pash)
 export TIMEFORMAT=%R
 cd "$(realpath $(dirname "$0"))"
 
-if [[ "$1" == "--full" ]]; then
-   echo "Using full input"
-  export ENTRIES=1060
-elif [[ "$1" == "--small" ]]; then
-  echo "Using small input"
-  export ENTRIES=10
+if [[ "$1" == "--small" ]]; then
+    echo "Using small input"
+    export ENTRIES=10
 else
-  echo "Using default input"
-  export ENTRIES=120
+    echo "Using default input"
+    export ENTRIES=120
 fi
 
 names_scripts=(
@@ -40,21 +37,21 @@ names_scripts=(
     "verses_2om_3om_2instances;6_7"
     "vowel_sequencies_gr_1K;8.2_1"
     "words_no_vowels;6_3"
-  )
+)
 
 mkdir -p "outputs"
-time_file_all="./outputs/nlp.res"
-> $time_file_all
+all_res_file="./outputs/nlp.res"
+> $all_res_file
 
-# time_file is to store script_name and time for each script
-# time_file_mode is to store a list of script_name and time for all scripts under a running mode (i.e. bash/pash)
-# time_file_all is to store just the mode and time, making it easy to copy and paste into the spreadsheet
+# time_file stores the time taken for each script
+# mode_res_file stores the time taken and the script name for every script in a mode (e.g. bash, pash, dish, fish)
+# all_res_file stores the time taken for each script for every script run, making it easy to copy and paste into the spreadsheet
 nlp() {
     mkdir -p "outputs/$1"
-    time_file_mode="./outputs/$1/nlp.res"
-    > $time_file_mode
+    mode_res_file="./outputs/$1/nlp.res"
+    > $mode_res_file
 
-    echo executing nlp $1 $(date) | tee -a $time_file_mode $time_file_all
+    echo executing nlp $1 $(date) | tee -a $mode_res_file $all_res_file
 
     for name_script in ${names_scripts[@]}
     do
@@ -80,15 +77,16 @@ nlp() {
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
-                sleep 10
             fi
+
+            sleep 10
         fi
+
         time=$(grep -Eo '[0-9]+\.[0-9]+' "$time_file")
-        echo "${time}" >> $time_file_all
-        echo "$name_script $time" | tee -a $time_file_mode
+        echo "${time}" >> $all_res_file
+        echo "$name_script $time" | tee -a $mode_res_file
         echo "$name_script $(cat "$time_file")" # do include all stderr in stdout to visualize
     done
-
 }
 
 # None of the scripts in NLP,
@@ -100,7 +98,6 @@ nlp() {
 # the startup overhead ended up dwarfing the execution time by
 # a factor of ten on average. (source: nsdi 2023 DiSh paper)
 
-
 nlp "bash"
 
 nlp "pash" "--width 8 --r_split"
@@ -108,7 +105,6 @@ nlp "pash" "--width 8 --r_split"
 nlp "dish" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
 nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
 
 # nlp "pash-du" "--width 8 --r_split --parallel_pipelines --parallel_pipelines_limit 24"
 
