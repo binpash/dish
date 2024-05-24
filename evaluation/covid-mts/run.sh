@@ -5,7 +5,6 @@ export PASH_TOP=$(realpath $DISH_TOP/pash)
 export TIMEFORMAT=%R
 cd "$(realpath $(dirname "$0"))"
 
-
 if [[ "$1" == "--small" ]]; then
     echo "Using small input"
     input_file="/covid-mts/in_small.csv"
@@ -15,18 +14,18 @@ else
 fi
 
 mkdir -p "outputs"
-time_file_all="./outputs/covid-mts.res"
-> $time_file_all
+all_res_file="./outputs/covid-mts.res"
+> $all_res_file
 
-# time_file is to store script_name and time for each script
-# time_file_mode is to store a list of script_name and time for all scripts under a running mode (i.e. bash/pash)
-# time_file_all is to store just the mode and time, making it easy to copy and paste into the spreadsheet
+# time_file stores the time taken for each script
+# mode_res_file stores the time taken and the script name for every script in a mode (e.g. bash, pash, dish, fish)
+# all_res_file stores the time taken for each script for every script run, making it easy to copy and paste into the spreadsheet
 covid-mts() {
     mkdir -p "outputs/$1"
-    time_file_mode="./outputs/$1/covid-mts.res"
-    > $time_file_mode
+    mode_res_file="./outputs/$1/covid-mts.res"
+    > $mode_res_file
 
-    echo executing covid-mts $1 $(date) | tee -a $time_file_mode $time_file_all
+    echo executing covid-mts $1 $(date) | tee -a $mode_res_file $all_res_file
 
     for number in `seq 4` ## initial: FIXME 5.sh is not working yet
     do
@@ -49,43 +48,48 @@ covid-mts() {
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
-                sleep 10
             fi
+
+            sleep 10
         fi
-        cat "${time_file}" >> $time_file_all
-        echo "$script_file $(cat "$time_file")" | tee -a $time_file_mode
+
+        cat "${time_file}" >> $all_res_file
+        echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
     done
 }
 
-# Havn't tried this yet
-# covid-mts_hadoopstreaming(){
-#   jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar" # Adjust as required
-#   times_file="hadoopstreaming.res"
-#   outputs_suffix="hadoopstreaming.out"
-#   outputs_dir="/outputs/hadoop-streaming/analytics-mts"
+covid-mts_hadoopstreaming() {
+    # used by run_all.sh, adjust as required
+    jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
+    outputs_dir="/outputs/hadoop-streaming/covid-mts"
 
-#   cd "hadoop-streaming/"
+    hdfs dfs -rm -r "$outputs_dir"
+    hdfs dfs -mkdir -p "$outputs_dir"
+    mkdir -p "outputs/hadoop"
+    mode_res_file="./outputs/hadoop/covid-mts.res"
+    > $mode_res_file
 
-#   hdfs dfs -rm -r "$outputs_dir"
-#   hdfs dfs -mkdir -p "$outputs_dir"
+    source ./scripts/bi-gram.aux.sh
+    cd scripts/hadoop-streaming
 
-#   touch "$times_file"
-#   cat "$times_file" >> "$times_file".d
-#   echo executing covid-mts $(date) | tee "$times_file"
-#   echo '' >> "$times_file"
+    echo executing covid-mts hadoop $(date) | tee -a $mode_res_file $all_res_file
+    while IFS= read -r line; do
+        name=$(cut -d "#" -f2- <<< "$line")
+        name=$(sed "s/ //g" <<< $name)
 
-#   COUNTER=1
-#   while IFS= read -r line; do
-#       printf -v pad %20s
-#       padded_script="${COUNTER}.sh:${pad}"
-#       padded_script=${padded_script:0:20}
+        # output_file="../../outputs/hadoop/$name.out"
+        time_file="../../outputs/hadoop/$name.time"
+        log_file="../../outputs/hadoop/$name.log"
 
-#       echo "${padded_script}" $({ time { eval $line &> /dev/null; } } 2>&1) | tee -a "$times_file"
-#       COUNTER=$(( COUNTER + 1 ))
-#   done <"run_all.sh"
-#   cd ".."
-#   mv "hadoop-streaming/$times_file" .
-# }
+        (time eval $line &> $log_file) 2> $time_file
+
+        cat "${time_file}" >> $all_res_file
+        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
+
+    done <"run_all.sh"
+
+    cd "../.."
+}
 
 
 covid-mts "bash"
@@ -99,5 +103,7 @@ covid-mts "fish" "--width 8 --r_split --ft optimized --distributed_exec"
 covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec"
 
 covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec"
+
+# covid-mts_hadoopstreaming
 
 # tmux new-session -s covid_mts "./run.sh | tee covid_mts_log"
