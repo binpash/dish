@@ -18,7 +18,7 @@ pure_func() {
 }
 export -f pure_func
 
-for input in $(hdfs dfs -ls -C ${IN} | head -n ${ENTRIES} | xargs -n 1 -I arg1 basename arg1)
+for input in $(hdfs dfs -ls -C ${IN} | head -n ${ENTRIES} | xargs -I arg1 basename arg1)
 do
     hdfs dfs -cat -ignoreCrc -ignoreCrc $IN/$input | grep 'the land of' | pure_func ${input} | sort -nr | sed 5q > ${OUT}/${input}.0.out
     hdfs dfs -cat -ignoreCrc -ignoreCrc $IN/$input | grep 'And he said' | pure_func ${input} | sort -nr | sed 5q > ${OUT}/${input}.1.out
