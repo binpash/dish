@@ -35,8 +35,11 @@ if [[ "$@" == *"--generate"* ]]; then
 fi
 
 # Loop through all directories in the parent directory
-for folder in "outputs"/*
+for folder in "outputs"/*/
 do
+    # Remove trailing slash
+    folder=${folder%/}
+
     echo "Verifying folder: $folder"
 
     # Loop through all .out files in the current directory
