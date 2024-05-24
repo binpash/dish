@@ -5,7 +5,7 @@
 # Calculate the bigrams (based on 4_3.sh script)
 IN=${IN:-/nlp/pg/}
 OUT=${1:-$PASH_TOP/evaluation/nlp/outputs/8.2_2/}
-ENTRIES=${ENTRIES:-1060}
+ENTRIES=${ENTRIES:-1000}
 mkdir -p "$OUT"
 
 pure_func() {
