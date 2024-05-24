@@ -37,6 +37,9 @@ mkdir -p "outputs"
 all_res_file="./outputs/oneliners.res"
 > $all_res_file
 
+# time_file stores the time taken for each script
+# mode_res_file stores the time taken and the script name for every script in a mode (e.g. bash, pash, dish, fish)
+# all_res_file stores the time taken for each script for every script run, making it easy to copy and paste into the spreadsheet
 oneliners() {
     mkdir -p "outputs/$1"
     mode_res_file="./outputs/$1/oneliners.res"
