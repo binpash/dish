@@ -65,7 +65,6 @@ oneliners() {
             fi
 
             (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
-            # diff $output_file "./outputs/bash/${parsed[0]}.out"
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
@@ -109,16 +108,23 @@ oneliners_hadoopstreaming() {
     cd "../.."
 }
 
+# adjust the debug flag as required
+d=0
+
 oneliners "bash"
+# oneliners "pash"        "--width 8 --r_split -d $d"
+# oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-# oneliners "pash" "--width 8 --r_split"
+# oneliners "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
+# oneliners "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
+# oneliners "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-# oneliners "dish" "--width 8 --r_split --distributed_exec"
+# oneliners "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+# oneliners "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+# oneliners "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
-# oneliners "fish" "--width 8 --r_split --ft optimized --distributed_exec"
-
-# oneliners "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec"
-
-# oneliners "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec"
+# oneliners "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
+# oneliners "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
+# oneliners "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
 
 # oneliners_hadoopstreaming
