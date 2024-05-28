@@ -40,7 +40,7 @@ covid-mts() {
             (time bash $script_file $input_file > $output_file ) 2> $time_file
         else
             params="$2"
-            if [[ $2 == *"--ft optimized"* ]]; then
+            if [[ $2 == *"--ft optimized"*  || $2 == *"--ft naive"* || $2 == *"--ft base"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 

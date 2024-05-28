@@ -71,7 +71,7 @@ nlp() {
             (time bash $script_file $output_dir > $output_file ) 2> $time_file
         else
             params="$2"
-            if [[ $2 == *"--ft optimized"* ]]; then
+            if [[ $2 == *"--ft optimized"*  || $2 == *"--ft naive"* || $2 == *"--ft base"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 
@@ -100,29 +100,22 @@ nlp() {
 
 nlp "bash"
 
-nlp "pash" "--width 8 --r_split"
+nlp "pash" "--width 8 --r_split --parallel_pipelines"
 
-nlp "dish-no-du" "--width 8 --r_split --distributed_exec"
+# nlp "dish-no-du" "--width 8 --r_split --distributed_exec"
 
 nlp "dish" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec"
+# nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec"
 
 nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
+nlp "fish-naive" "--width 8 --r_split --ft naive --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-# nlp "pash-du" "--width 8 --r_split --parallel_pipelines --parallel_pipelines_limit 24"
-
-# nlp "dish" "--width 8 --r_split --distributed_exec"
-
-# nlp "dish-du" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
-# nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec"
-
-# nlp "fish-du" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+nlp "fish-base" "--width 8 --r_split --ft base --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
 nlp "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
 nlp "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-# tmux new-session -s nlp_du "./run.sh | tee nlp_du_log"
+# tmux new-session -s nlp_run "./run.sh | tee nlp_log"
