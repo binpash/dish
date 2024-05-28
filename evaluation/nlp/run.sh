@@ -101,14 +101,14 @@ nlp() {
 d=0
 
 nlp "bash"
-nlp "pash"        "--width 8 --r_split --parallel_pipelines -d $d"
+nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
 nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
 
 nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
 nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
 nlp "naive-r"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill regular"
 
-nlp "base"        "---width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
+nlp "base"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
 nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill merger"
 nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
 
@@ -116,7 +116,6 @@ nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines -
 nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill merger"
 nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill regular"
 
-# nlp "pash" "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
 # nlp "dish-no-du" "--width 8 --r_split --distributed_exec -d $d"
 # nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec -d $d"
 
