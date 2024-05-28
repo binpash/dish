@@ -97,25 +97,27 @@ nlp() {
 # to replace the body of the loop with an AHS invocation but
 # the startup overhead ended up dwarfing the execution time by
 # a factor of ten on average. (source: nsdi 2023 DiSh paper)
+# adjust the debug flag as required
+d=0
 
 nlp "bash"
+nlp "pash"        "--width 8 --r_split --parallel_pipelines -d $d"
+nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
 
-nlp "pash" "--width 8 --r_split --parallel_pipelines"
+nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
+nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
+nlp "naive-r"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill regular"
 
-# nlp "dish-no-du" "--width 8 --r_split --distributed_exec"
+nlp "base"        "---width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
+nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill merger"
+nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
 
-nlp "dish" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized"
+nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill merger"
+nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill regular"
 
-# nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec"
-
-nlp "fish" "--width 8 --r_split --ft optimized --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
-nlp "fish-naive" "--width 8 --r_split --ft naive --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
-nlp "fish-base" "--width 8 --r_split --ft base --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
-nlp "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
-
-nlp "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+# nlp "pash" "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
+# nlp "dish-no-du" "--width 8 --r_split --distributed_exec -d $d"
+# nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec -d $d"
 
 # tmux new-session -s nlp_run "./run.sh | tee nlp_log"

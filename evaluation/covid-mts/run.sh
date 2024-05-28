@@ -91,18 +91,24 @@ covid-mts_hadoopstreaming() {
     cd "../.."
 }
 
+# adjust the debug flag as required
+d=0
 
 covid-mts "bash"
+covid-mts "pash"        "--width 8 --r_split -d $d"
+covid-mts "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-covid-mts "pash" "--width 8 --r_split"
+covid-mts "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
+covid-mts "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
+covid-mts "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-covid-mts "dish" "--width 8 --r_split --distributed_exec"
+covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
-covid-mts "fish" "--width 8 --r_split --ft optimized --distributed_exec"
-
-covid-mts "fish-r" "--width 8 --r_split --ft optimized --kill regular --distributed_exec"
-
-covid-mts "fish-m" "--width 8 --r_split --ft optimized --kill merger --distributed_exec"
+covid-mts "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
+covid-mts "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
+covid-mts "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
 
 # covid-mts_hadoopstreaming
 
