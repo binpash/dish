@@ -163,20 +163,20 @@ unix50_hadoopstreaming() {
 # adjust the debug flag as required
 d=0
 
-oneliners "bash"
-# oneliners "pash"        "--width 8 --r_split -d $d"
-# oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
+unix50 "bash"
+# unix50 "pash"        "--width 8 --r_split -d $d"
+# unix50 "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-# oneliners "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-# oneliners "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-# oneliners "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
+# unix50 "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
+# unix50 "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
+# unix50 "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-# oneliners "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-# oneliners "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-# oneliners "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+# unix50 "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+# unix50 "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+# unix50 "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
-# oneliners "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-# oneliners "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-# oneliners "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
+# unix50 "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
+# unix50 "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
+# unix50 "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
 
-# oneliners_hadoopstreaming
+# unix50_hadoopstreaming
