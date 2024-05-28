@@ -71,7 +71,7 @@ nlp() {
             (time bash $script_file $output_dir > $output_file ) 2> $time_file
         else
             params="$2"
-            if [[ $2 == *"--ft optimized"*  || $2 == *"--ft naive"* || $2 == *"--ft base"* ]]; then
+            if [[ $2 == *"--ft"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 
