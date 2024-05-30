@@ -69,7 +69,6 @@ covid-mts_hadoopstreaming() {
     mode_res_file="./outputs/hadoop/covid-mts.res"
     > $mode_res_file
 
-    source ./scripts/bi-gram.aux.sh
     cd scripts/hadoop-streaming
 
     echo executing covid-mts hadoop $(date) | tee -a $mode_res_file $all_res_file

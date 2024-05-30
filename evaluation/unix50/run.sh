@@ -140,11 +140,14 @@ unix50_hadoopstreaming() {
     hdfs dfs -mkdir -p "$outputs_dir"
     mkdir -p "outputs/hadoop"
 
-    source ./scripts/bi-gram.aux.sh
     cd scripts/hadoop-streaming
 
     echo executing unix50 hadoop $(date)
     while IFS= read -r line; do
+        if [[ ! $line =~ ^hadoop ]]; then
+            continue
+        fi
+
         name=$(cut -d "#" -f2- <<< "$line")
         name=$(sed "s/ //g" <<< $name)
 
