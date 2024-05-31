@@ -13,6 +13,9 @@ fi
 
 # TODO: install any extra needed python deps
 pip3 install flask
+pip3 install matplotlib
+pip3 install pandas
+pip3 install seaborn
 pip3 install requests --target "$PASH_TOP/python_pkgs/"
 
 # Install Go
