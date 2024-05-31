@@ -6,9 +6,10 @@ def install_and_import(package):
     try:
         __import__(package)
     except ImportError:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', package])
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', package])
         __import__(package)
 # Set libraries
+print("Setting up dependencies...")
 install_and_import('matplotlib')
 install_and_import('pandas')
 install_and_import('seaborn')
@@ -37,6 +38,7 @@ def set_style():
     sns.set_theme(style="ticks", palette="pastel")
     
 def parse_res(file, benchmark="not_provided"):
+    file = os.path.join(os.path.dirname(os.path.abspath(__file__)), file)
     try:
         with open(file, 'r') as f:
             lines = f.read().split("\n")
@@ -145,11 +147,9 @@ def print_stats():
 
     with open(stats_file, 'w') as file:
         file.write(f"Printing stats:\n")
-    print_mode_stats(summary_per_mode, "bash", "pash")
-    print_mode_stats(summary_per_mode, "bash", "dish")
-    # print_mode_stats(summary_per_mode, "bash", "naive")
-    # print_mode_stats(summary_per_mode, "bash", "base")
-    # print_mode_stats(summary_per_mode, "bash", "optimized")
+    for mode in modes:
+        print_mode_stats(summary_per_mode, "bash", mode)
+
 
 def print_speedup_boxplot():
     def boxplot(df, x, y, savefig=None, ax=None):
@@ -172,14 +172,13 @@ def print_speedup_boxplot():
             "bash",
             "pash", 
             "dish", 
-            # "naive",
-            # "base",
-            # "optimized"
+            "naive",
+            "base",
+            "optimized"
     ]
     summary_per_mode = get_summary_per_mode(benchmarks, modes)
     df1 = get_speedup_df(summary_per_mode)
-    print(df1)
-    boxplot(df1, x='benchmark', y='speedup', savefig=f"${PLOT_DIR}/distr_boxplot.pdf")
+    boxplot(df1, x='benchmark', y='speedup', savefig=f"{PLOT_DIR}/distr_boxplot.pdf")
 
 
 def print_speedup_barplot():
@@ -205,9 +204,9 @@ def print_speedup_barplot():
             "bash",
             "pash", 
             "dish", 
-            # "naive",
-            # "base",
-            # "optimized"
+            "naive",
+            "base",
+            "optimized"
     ]
     summary_per_mode = get_summary_per_mode(benchmarks, modes)
     df2 = get_speedup_df(summary_per_mode)
@@ -224,7 +223,7 @@ set_style()
 
 print_stats()
 
-# print_speedup_boxplot()
+print_speedup_boxplot()
 
 print_speedup_barplot()
 
