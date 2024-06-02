@@ -140,10 +140,12 @@ unix50_hadoopstreaming() {
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
     mkdir -p "outputs/hadoop"
+    mode_res_file="./outputs/hadoop/unix50.res"
+    > $mode_res_file
 
     cd scripts/hadoop-streaming
 
-    echo executing unix50 hadoop $(date)
+    echo executing unix50 hadoop $(date) | tee -a $mode_res_file $all_res_file
     while IFS= read -r line; do
         if [[ ! $line =~ ^hadoop ]]; then
             continue
@@ -158,7 +160,8 @@ unix50_hadoopstreaming() {
 
         (time eval $line &> $log_file) 2> $time_file
 
-        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" 
+        cat "${time_file}" >> $all_res_file
+        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
     done <"run_all.sh"
 
     cd "../.."

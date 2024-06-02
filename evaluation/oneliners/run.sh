@@ -87,11 +87,13 @@ oneliners_hadoopstreaming() {
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
     mkdir -p "outputs/hadoop"
+    mode_res_file="./outputs/hadoop/oneliners.res"
+    > $mode_res_file
 
     source ./scripts/bi-gram.aux.sh
     cd scripts/hadoop-streaming
 
-    echo executing oneliners hadoop $(date)
+    echo executing oneliners hadoop $(date) | tee -a $mode_res_file $all_res_file
     while IFS= read -r line; do
         name=$(cut -d "#" -f2- <<< "$line")
         name=$(sed "s/ //g" <<< $name)
@@ -102,7 +104,8 @@ oneliners_hadoopstreaming() {
 
         (time eval $line &> $log_file) 2> $time_file
 
-        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" 
+        cat "${time_file}" >> $all_res_file
+        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
     done <"run_all.sh"
 
     cd "../.."
