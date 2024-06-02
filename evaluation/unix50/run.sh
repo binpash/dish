@@ -135,6 +135,7 @@ unix50_hadoopstreaming() {
     jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
     basepath="/unix50"
     outputs_dir="/outputs/hadoop-streaming/unix50"
+    size="3G"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
