@@ -63,17 +63,23 @@ max-temp() {
 max-temp_hadoopstreaming() {
     # used by run_all.sh, adjust as required
     jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
-    basepath="/max-temp"
+    infile="/max-temp/temperatures.txt"
     outputs_dir="/outputs/hadoop-streaming/max-temp"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
     mkdir -p "outputs/hadoop"
-
     cd scripts/hadoop-streaming
+    mode_res_file="../../outputs/hadoop/max-temp.res"
+    > $mode_res_file
+    all_res_file="../../outputs/max-temp.res"
 
-    echo executing max-temp hadoop $(date)
+    echo executing max-temp hadoop $(date) | tee -a $mode_res_file $all_res_file
     while IFS= read -r line; do
+        if [[ ! $line =~ ^hadoop ]]; then
+            continue
+        fi
+
         name=$(cut -d "#" -f2- <<< "$line")
         name=$(sed "s/ //g" <<< $name)
 
@@ -83,7 +89,8 @@ max-temp_hadoopstreaming() {
 
         (time eval $line &> $log_file) 2> $time_file
 
-        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" 
+        cat "${time_file}" >> $all_res_file
+        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
     done <"run_all.sh"
 
     cd "../.."
