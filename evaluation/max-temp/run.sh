@@ -37,16 +37,17 @@ max-temp() {
         output_file="./outputs/$1/${parsed[0]}.out"
         time_file="./outputs/$1/${parsed[0]}.time"
         log_file="./outputs/$1/${parsed[0]}.log"
+        output_dir="./outputs/$1"
 
         if [[ "$1" == "bash" ]]; then
-            (time $script_file $input_file > $output_file) 2> $time_file
+            (time $script_file $input_file $output_dir > $output_file) 2> $time_file
         else
             params="$2"
             if [[ $2 == *"--ft"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 
-            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
+            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file $output_dir > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
