@@ -76,23 +76,15 @@ max-temp_hadoopstreaming() {
     all_res_file="../../outputs/max-temp.res"
 
     echo executing max-temp hadoop $(date) | tee -a $mode_res_file $all_res_file
-    while IFS= read -r line; do
-        if [[ ! $line =~ ^hadoop ]]; then
-            continue
-        fi
 
-        name=$(cut -d "#" -f2- <<< "$line")
-        name=$(sed "s/ //g" <<< $name)
+    # output_file="../../outputs/hadoop/$name.out"
+    time_file="../../outputs/hadoop/$name.time"
+    log_file="../../outputs/hadoop/$name.log"
 
-        # output_file="../../outputs/hadoop/$name.out"
-        time_file="../../outputs/hadoop/$name.time"
-        log_file="../../outputs/hadoop/$name.log"
+    (time eval "./run_all.sh" &> $log_file) 2> $time_file
 
-        (time eval $line &> $log_file) 2> $time_file
-
-        cat "${time_file}" >> $all_res_file
-        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
-    done <"run_all.sh"
+    cat "${time_file}" >> $all_res_file
+    echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
 
     cd "../.."
 }
