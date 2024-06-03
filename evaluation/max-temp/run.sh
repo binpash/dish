@@ -63,9 +63,9 @@ max-temp() {
 
 max-temp_hadoopstreaming() {
     # used by run_all.sh, adjust as required
-    jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
-    infile="/max-temp/temperatures.txt"
-    outputs_dir="/outputs/hadoop-streaming/max-temp"
+    export jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
+    export infile="/max-temp/temperatures.txt"
+    export outputs_dir="/outputs/hadoop-streaming/max-temp"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
