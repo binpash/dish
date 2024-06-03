@@ -77,14 +77,14 @@ max-temp_hadoopstreaming() {
 
     echo executing max-temp hadoop $(date) | tee -a $mode_res_file $all_res_file
 
-    # output_file="../../outputs/hadoop/$name.out"
-    time_file="../../outputs/hadoop/$name.time"
-    log_file="../../outputs/hadoop/$name.log"
+    # output_file="../../outputs/hadoop/temp-analytics.out"
+    time_file="../../outputs/hadoop/temp-analytics.time"
+    log_file="../../outputs/hadoop/temp-analytics.log"
 
     (time eval "./run_all.sh" &> $log_file) 2> $time_file
 
     cat "${time_file}" >> $all_res_file
-    echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
+    echo "./scripts/hadoop-streaming/temp-analytics.sh $(cat "$time_file")" | tee -a $mode_res_file
 
     cd "../.."
 }
