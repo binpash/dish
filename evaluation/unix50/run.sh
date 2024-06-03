@@ -119,6 +119,7 @@ unix50() {
             (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
+                sleep 10
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
