@@ -59,9 +59,10 @@ do
         fi
 
         # Compare the hash with the hash in the hashes directory
-        diff "$hash_folder/$dirname/$filename.hash" "$folder/$dirname/$filename.hash"
-
-        # Print the filename and hash
-        echo "File: $dirname/$filename | SHA-256 Hash: $(cat "$folder/$dirname/$filename.hash")"
+        if ! diff "$hash_folder/$dirname/$filename.hash" "$folder/$dirname/$filename.hash";
+        then
+            # Print the filename and hash if they don't match
+            echo "File: $dirname/$filename hash diff failed!"
+        fi
     done
 done
