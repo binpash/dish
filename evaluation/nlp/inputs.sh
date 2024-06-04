@@ -14,10 +14,14 @@ fi
 
 if [ ! -f ./genesis ]; then
     curl -sf https://atlas-group.cs.brown.edu/data/gutenberg/8/0/0/8001/8001.txt > genesis
+    # Add newline to the original file
+    echo >> genesis
 fi 
 
 if [ ! -f ./exodus ]; then
     curl -sf https://atlas-group.cs.brown.edu/data/gutenberg/3/3/4/2/33420/33420-0.txt > exodus
+    # Add newline to the original file
+    echo >> exodus 
 fi
 
 if [ ! -e ./pg ]; then
@@ -30,6 +34,10 @@ if [ ! -e ./pg ]; then
         full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
         echo "Downloading $full_url"
         wget -q "$full_url"
+    done
+    # Add newline to the original file
+    for f in *.txt; do
+        echo >> $f
     done
 
     cd ..
@@ -45,6 +53,10 @@ if [ ! -e ./pg-small ]; then
         full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
         echo "Downloading $full_url"
         wget -q "$full_url"
+    done
+    # Add newline to the original file
+    for f in *.txt; do
+        echo >> $f
     done
 
     cd ..
