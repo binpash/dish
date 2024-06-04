@@ -50,6 +50,7 @@ max-temp() {
             (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file $output_dir > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
+                sleep 10
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
@@ -63,9 +64,9 @@ max-temp() {
 
 max-temp_hadoopstreaming() {
     # used by run_all.sh, adjust as required
-    jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
-    infile="/max-temp/temperatures.txt"
-    outputs_dir="/outputs/hadoop-streaming/max-temp"
+    export jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
+    export infile="/max-temp/temperatures.txt"
+    export outputs_dir="/outputs/hadoop-streaming/max-temp"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
@@ -76,23 +77,15 @@ max-temp_hadoopstreaming() {
     all_res_file="../../outputs/max-temp.res"
 
     echo executing max-temp hadoop $(date) | tee -a $mode_res_file $all_res_file
-    while IFS= read -r line; do
-        if [[ ! $line =~ ^hadoop ]]; then
-            continue
-        fi
 
-        name=$(cut -d "#" -f2- <<< "$line")
-        name=$(sed "s/ //g" <<< $name)
+    # output_file="../../outputs/hadoop/temp-analytics.out"
+    time_file="../../outputs/hadoop/temp-analytics.time"
+    log_file="../../outputs/hadoop/temp-analytics.log"
 
-        # output_file="../../outputs/hadoop/$name.out"
-        time_file="../../outputs/hadoop/$name.time"
-        log_file="../../outputs/hadoop/$name.log"
+    (time eval "./run_all.sh" &> $log_file) 2> $time_file
 
-        (time eval $line &> $log_file) 2> $time_file
-
-        cat "${time_file}" >> $all_res_file
-        echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
-    done <"run_all.sh"
+    cat "${time_file}" >> $all_res_file
+    echo "./scripts/hadoop-streaming/temp-analytics.sh $(cat "$time_file")" | tee -a $mode_res_file
 
     cd "../.."
 }
@@ -101,19 +94,19 @@ max-temp_hadoopstreaming() {
 d=0
 
 max-temp "bash"
-# max-temp "pash"        "--width 8 --r_split -d $d"
-# max-temp "dish"        "--width 8 --r_split -d $d --distributed_exec"
+# max-temp "pash"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24"
+# max-temp "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
 
-# max-temp "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-# max-temp "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-# max-temp "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
+# max-temp "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
+# max-temp "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
+# max-temp "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
 
-# max-temp "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-# max-temp "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-# max-temp "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+# max-temp "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
+# max-temp "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
+# max-temp "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
 
-# max-temp "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-# max-temp "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-# max-temp "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
+# max-temp "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
+# max-temp "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
+# max-temp "optimized-r" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill regular"
 
 # max-temp_hadoopstreaming
