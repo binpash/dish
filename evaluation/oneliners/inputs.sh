@@ -53,4 +53,4 @@ for file in "${input_files[@]}"; do
 done
 
 # Delete everything inisde inputs except dict.txt
-find inputs -type f ! -name 'dict.txt' -delete
+find . -type f ! -name 'dict.txt' -delete
