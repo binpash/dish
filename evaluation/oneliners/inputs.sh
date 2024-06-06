@@ -4,7 +4,7 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
 
-input_files=("1M.txt" "3G.txt" "all_cmds.txt" "all_cmds_3G.txt" "dict.txt")
+input_files=("1M.txt" "3G.txt" "all_cmds_1M" "all_cmds_3G.txt" "dict.txt")
 
 if [ ! -f ./1M.txt ]; then
     wget https://atlas-group.cs.brown.edu/data/dummy/1M.txt
@@ -29,13 +29,20 @@ if [ ! -f ./all_cmds.txt ]; then
     ls /usr/bin/* > all_cmds.txt
 fi
 
-if [ ! -f ./all_cmds_3G.txt ]; then
-    touch all_cmds_3G.txt
+if [ ! -f ./all_cmds_1M.txt ]; then
+    touch all_cmds_1M.txt
     size_of_all_cmds=$(du -b all_cmds.txt | cut -f1)
-    iterations=$((3000*1024*1024 / size_of_all_cmds))
+    iterations=$((1024*1024 / size_of_all_cmds))
 
     for ((i=0; i<$iterations; i++)); do
-        cat all_cmds.txt >> all_cmds_3G.txt
+        cat all_cmds.txt >> all_cmds_1M.txt
+    done
+fi
+
+if [ ! -f ./all_cmds_3G.txt ]; then
+    touch all_cmds_3G.txt
+    for (( i = 0; i < 3000; i++ )); do
+        cat all_cmds_1M.txt >> all_cmds_3G.txt
     done
 fi
 
@@ -45,6 +52,5 @@ for file in "${input_files[@]}"; do
     hdfs dfs -put $file /oneliners/$file
 done
 
-# Clean up inputs
-cd ..
-rm -rf inputs
+# Delete everything inisde inputs except dict.txt
+find inputs -type f ! -name 'dict.txt' -delete
