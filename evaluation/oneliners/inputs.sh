@@ -4,7 +4,7 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
 
-input_files=("1M.txt" "3G.txt" "all_cmds_1M" "all_cmds_3G.txt" "dict.txt")
+input_files=("1M.txt" "3G.txt" "all_cmds_1M.txt" "all_cmds_3G.txt" "dict.txt")
 
 if [ ! -f ./1M.txt ]; then
     wget https://atlas-group.cs.brown.edu/data/dummy/1M.txt
