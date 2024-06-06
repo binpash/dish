@@ -15,7 +15,11 @@ fi
 
 if [[ "$@" == *"--generate"* ]]; then
     # Directory to iterate over
-    directory="outputs/bash"
+    if [[ "$@" == *"--dish"* ]]; then
+        directory="outputs/dish"
+    else
+        directory="outputs/bash"
+    fi
 
     # Loop through all .out files in the directory
     for file in "$directory"/*.hash
