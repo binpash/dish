@@ -41,10 +41,10 @@ do
     for file in "$folder"/*.hash
     do
         # Extract the filename without the directory path and extension
-        filename=$(basename "$file" .out)
+        filename=$(basename $file)
 
         # Compare the hash with the hash in the hashes directory
-        if ! diff "$hash_folder/$filename.hash" "$folder/$filename.hash";
+        if ! diff "$hash_folder/$filename" "$folder/$filename";
         then
             # Print the filename and hash if they don't match
             echo "File: $folder/$filename hash diff failed!"
