@@ -1,4 +1,4 @@
-# DiSh: Dynamic Shell-Script Distribution 
+# DiSh: Dynamic Shell-Script Distribution
 
 > _A system for scaling out POSIX shell scripts on distributed file systems._
 > _DiSh is part of the PaSh project, which is hosted by the [Linux Foundation](https://linuxfoundation.org/press-release/linux-foundation-to-host-the-pash-project-accelerating-shell-scripting-with-automated-parallelization-for-industrial-use-cases/)._
@@ -56,7 +56,7 @@ cd $DISH_TOP
 
 ## Repo Structure
 
-This repo hosts most of the components of the `dish` development. Some of them are incorporated in [PaSh](https://github.com/binpash/pash) The structure is as follows:
+This repo hosts most of the components of the `dish` development. Some of them are incorporated in [PaSh](https://github.com/binpash/pash). The structure is as follows:
 
 * [pash](./pash): Contains the complete PaSh repo as a submodule. DiSh uses and extends its annotations, compiler, and JIT orchestration infrastructure.
 * [evaluation](./evaluation): Shell scripts used for evaluation.
