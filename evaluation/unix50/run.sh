@@ -112,7 +112,7 @@ unix50() {
             (time $script_file $input_file > $output_file) 2> $time_file
         else
             params="$2"
-            if [[ $2 == *"--ft"* ]]; then
+            if [[ $2 == *"--distributed_exec"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 
