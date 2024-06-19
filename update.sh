@@ -5,6 +5,8 @@ cd "$(realpath $(dirname "$0"))"
 git pull
 git submodule update
 
+/opt/dish/runtime/scripts/build.sh
+
 if [[ "$@" == *"--main"* ]]; then
     pkill -f worker
     pkill -f discovery
