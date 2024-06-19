@@ -361,7 +361,7 @@ func main() {
 		n, reqerr = readWrapper(client, 300, *ft)
 	} else if *streamType == "write" {
 		b[0] = 1
-		if *ft == "optimized" {
+		if *ft == "optimized-disabled-temporarily" {
 			n, reqerr = writeOpimized(client)
 		} else {
 			n, reqerr = write(client, *ft == "disabled")
