@@ -63,7 +63,7 @@ func removeAddr(client pb.DiscoveryClient) {
 func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err error) {
 	for i := 0; i < numRetry; i++ {
 		var nn int
-		if ft == "optimized-disabled-temporarily" {
+		if ft == "optimized" {
 			nn, err = readOptimized(client, n)
 		} else {
 			nn, err = read(client, n, ft == "disabled")
@@ -438,7 +438,7 @@ func main() {
 		n, reqerr = readWrapper(client, 300, *ft)
 	} else if *streamType == "write" {
 		b[0] = 1
-		if *ft == "optimized-disabled-temporarily" {
+		if *ft == "optimized" {
 			n, reqerr = writeOpimized(client)
 		} else {
 			n, reqerr = write(client, *ft == "disabled")
