@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	fr "runtime/dfs/proto"
 	pb "runtime/pipe/proto"
 
 	"google.golang.org/grpc"
@@ -65,7 +64,7 @@ func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err
 	for i := 0; i < numRetry; i++ {
 		var nn int
 		if ft == "optimized-disabled-temporarily" {
-			nn, err = readOptimized(client)
+			nn, err = readOptimized(client, n)
 		} else {
 			nn, err = read(client, n, ft == "disabled")
 		}
@@ -153,7 +152,7 @@ func read(client pb.DiscoveryClient, skip int, skipEof bool) (int, error) {
 	}
 }
 
-func readOptimized(client pb.DiscoveryClient) (int, error) {
+func readOptimized(client pb.DiscoveryClient, skip int) (int, error) {
 	addr, err := getAddr(client, true)
 	if err != nil {
 		return 0, err
@@ -163,54 +162,132 @@ func readOptimized(client pb.DiscoveryClient) (int, error) {
 	host := parts[0]
 	path := parts[1]
 
-	addr = fmt.Sprintf("%s:%d", host, 50051)
-	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	addr = fmt.Sprintf("%s:%d", host, 50053)
+	conn, err := net.Dial("tcp4", addr)
 	if err != nil {
 		return 0, err
 	}
 	defer conn.Close()
 
-	fileReader := fr.NewFileReaderClient(conn)
-	stream, err := fileReader.ReadFile(context.Background(), &fr.FileRequest{Path: path})
+	message := fmt.Sprintf("%s:%d", path, skip)
+	_, err = conn.Write([]byte(message))
 	if err != nil {
 		return 0, err
 	}
 
-	// Initialize a buffer to hold the combined data
-	var buffer []byte
+	buf := make([]byte, *chunkSize)
+	writer := bufio.NewWriter(os.Stdout)
+	defer writer.Flush()
+	written := 0
+	exit := false
 
-	// Continuously receive data from the stream
+	// read first 8 bytes
+	_, err = io.ReadFull(conn, buf[:8])
+	if err != nil {
+		return 0, errors.New("read eof failure: too few bytes read" + err.Error())
+	}
+
 	for {
-		reply, err := stream.Recv()
+		// read to after 8th byte in buffer
+		n, err := conn.Read(buf[8:])
 		if err != nil {
 			if err == io.EOF {
-				// End of stream (success)
-				break
+				exit = true
+			} else {
+				return written, err
 			}
-			// An error occurred during the stream
-			return 0, errors.New("error receiving from stream: " + err.Error())
 		}
-		// Append the current message's data to the buffer
-		buffer = append(buffer, reply.Buffer...)
+
+		var nn int
+		if skip == 0 {
+			// write except for the last 8 bytes
+			nn, err = writer.Write(buf[:n])
+		} else if skip < n {
+			// write except for the last 8 bytes, skip first skip bytes
+			nn, err = writer.Write(buf[skip:n])
+			skip = 0
+		} else {
+			// write nothing, reduce skip by n
+			nn = 0
+			skip -= n
+		}
+
+		written += nn
+		if err != nil {
+			return written, err
+		}
+
+		if exit {
+			if binary.BigEndian.Uint64(buf[n:n+8]) != eof {
+				return written, errors.New("read eof failure: token doesn't match")
+			}
+			return written, nil
+		}
+
+		// copy last 8 bytes to the beginning of the buffer
+		// we start from
+		copy(buf, buf[n:n+8])
 	}
-	file := buffer
-
-	// maybe just increase the limits?
-	// reply, err := fileReader.ReadFileFull(context.Background(), &fr.FileRequest{Path: path})
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// file := reply.Buffer
-
-	// skip files coming from client/manager
-
-	if binary.BigEndian.Uint64(file[len(file)-8:]) != eof {
-		return 0, errors.New("read eof failure: token doesn't match")
-	}
-
-	n, err := os.Stdout.Write(file[:len(file)-8])
-	return n, err
 }
+
+// func readOptimized(client pb.DiscoveryClient) (int, error) {
+// 	addr, err := getAddr(client, true)
+// 	if err != nil {
+// 		return 0, err
+// 	}
+
+// 	parts := strings.Split(addr, ",")
+// 	host := parts[0]
+// 	path := parts[1]
+
+// 	addr = fmt.Sprintf("%s:%d", host, 50051)
+// 	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	defer conn.Close()
+
+// 	fileReader := fr.NewFileReaderClient(conn)
+// 	stream, err := fileReader.ReadFile(context.Background(), &fr.FileRequest{Path: path})
+// 	if err != nil {
+// 		return 0, err
+// 	}
+
+// 	// Initialize a buffer to hold the combined data
+// 	var buffer []byte
+
+// 	// Continuously receive data from the stream
+// 	for {
+// 		reply, err := stream.Recv()
+// 		if err != nil {
+// 			if err == io.EOF {
+// 				// End of stream (success)
+// 				break
+// 			}
+// 			// An error occurred during the stream
+// 			return 0, errors.New("error receiving from stream: " + err.Error())
+// 		}
+// 		// Append the current message's data to the buffer
+// 		buffer = append(buffer, reply.Buffer...)
+// 	}
+// 	file := buffer
+
+// 	// maybe just increase the limits?
+// 	// reply, err := fileReader.ReadFileFull(context.Background(), &fr.FileRequest{Path: path})
+// 	// if err != nil {
+// 	// 	return 0, err
+// 	// }
+// 	// file := reply.Buffer
+
+// 	// skip files coming from client/manager
+
+// 	if binary.BigEndian.Uint64(file[len(file)-8:]) != eof {
+// 		return 0, errors.New("read eof failure: token doesn't match")
+// 	}
+
+// 	n, err := os.Stdout.Write(file[:len(file)-8])
+// 	return n, err
+// }
 
 func write(client pb.DiscoveryClient, skipEof bool) (int, error) {
 	ctx, cancel := context.WithCancel(context.Background())
