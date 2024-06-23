@@ -199,18 +199,9 @@ func readOptimized(client pb.DiscoveryClient, skip int) (int, error) {
 		}
 
 		var nn int
-		if skip == 0 {
-			// write except for the last 8 bytes
-			nn, err = writer.Write(buf[:n])
-		} else if skip < n {
-			// write except for the last 8 bytes, skip first skip bytes
-			nn, err = writer.Write(buf[skip:n])
-			skip = 0
-		} else {
-			// write nothing, reduce skip by n
-			nn = 0
-			skip -= n
-		}
+		// write except for the last 8 bytes
+		// we treat skip here as 0 because we already seeked the position in filereder
+		nn, err = writer.Write(buf[:n])
 
 		written += nn
 		if err != nil {
