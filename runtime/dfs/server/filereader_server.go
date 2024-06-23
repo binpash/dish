@@ -151,6 +151,8 @@ func handleConnection(conn net.Conn) {
 			return
 		}
 
+		log.Println("FR: Process exists:", processExists, pattern)
+
 		if !processExists {
 			break
 		}
