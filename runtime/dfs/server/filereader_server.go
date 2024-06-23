@@ -163,7 +163,7 @@ func handleConnection(conn net.Conn) {
 
 func processExists(pattern string) (bool, error) {
 	// Execute the pgrep command with the given pattern
-	cmd := exec.Command("pgrep", pattern)
+	cmd := exec.Command("pgrep", "-f", pattern)
 	output, err := cmd.CombinedOutput()
 
 	// Check if the command ran successfully
