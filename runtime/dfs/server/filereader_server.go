@@ -9,8 +9,10 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -114,7 +116,7 @@ func handleConnection(conn net.Conn) {
 
 	message := string(buffer[:n])
 
-	// Split message into filepath and seek by ":"
+	// Split message into filepath, seek and id by ":"
 	parts := strings.Split(message, ":")
 	filepath := parts[0]
 	seek, err := strconv.ParseInt(parts[1], 10, 64)
@@ -122,6 +124,7 @@ func handleConnection(conn net.Conn) {
 		log.Println("FR: Invalid seek value:", err)
 		return
 	}
+	pattern := "remote_write.sh --id " + parts[2]
 
 	// Open the file
 	file, err := os.Open(filepath)
@@ -135,11 +138,50 @@ func handleConnection(conn net.Conn) {
 	file.Seek(seek, 0)
 
 	// Transfer the file content to the socket using io.Copy
-	_, err = io.Copy(conn, file)
-	if err != nil {
-		log.Println("FR: Error transferring file:", err)
-		return
+	for {
+		_, err = io.Copy(conn, file)
+		if err != nil {
+			log.Println("FR: Error transferring file:", err)
+			return
+		}
+
+		processExists, err := processExists(pattern)
+		if err != nil {
+			log.Println("FR: Error checking if process exists:", err)
+			return
+		}
+
+		if !processExists {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
 	}
+}
+
+func processExists(pattern string) (bool, error) {
+	// Execute the pgrep command with the given pattern
+	cmd := exec.Command("pgrep", pattern)
+	output, err := cmd.CombinedOutput()
+
+	// Check if the command ran successfully
+	if err != nil {
+		// If there is an error, check if it's because no process matched the pattern
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
+			// Exit code 1 means no process matched the pattern
+			return false, nil
+		}
+		// If it's another error, return it
+		return false, err
+	}
+
+	// Check if the output is empty
+	if strings.TrimSpace(string(output)) == "" {
+		return false, nil
+	}
+
+	// If there is output, it means a process was found
+	return true, nil
 }
 
 func fileTransmitter() {
