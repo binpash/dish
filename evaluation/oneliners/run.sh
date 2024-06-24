@@ -58,7 +58,7 @@ oneliners() {
         hash_file="./outputs/$1/${parsed[0]}.hash"
 
         if [[ "$1" == "bash" ]]; then
-            (time $script_file $input_file > $output_file) 2> $time_file
+            (time bash $script_file $input_file > $output_file) 2> $time_file
         else
             params="$2"
             if [[ $2 == *"--distributed_exec"* ]]; then
