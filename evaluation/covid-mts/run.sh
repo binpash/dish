@@ -37,7 +37,7 @@ covid-mts() {
         log_file="./outputs/$1/$script.log"
 
         if [[ "$1" == "bash" ]]; then
-            (time bash $script_file $input_file > $output_file ) 2> $time_file
+            (time bash $script_file $input_file > $output_file) 2> $time_file
         else
             params="$2"
             if [[ $2 == *"--distributed_exec"* ]]; then
@@ -53,6 +53,10 @@ covid-mts() {
 
             sleep 10
         fi
+
+        # Generate SHA-256 hash and delete output file
+        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
+        rm "$output_file"
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
@@ -85,7 +89,6 @@ covid-mts_hadoopstreaming() {
 
         cat "${time_file}" >> $all_res_file
         echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
-
     done <"run_all.sh"
 
     cd "../.."
