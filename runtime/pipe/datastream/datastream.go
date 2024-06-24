@@ -303,17 +303,17 @@ func writeOpimized(client pb.DiscoveryClient) (int, error) {
 	}
 	host = ips[0].String()
 
-	_, err = client.PutAddrOptimized(ctx, &pb.PutAddrMsg{Id: *streamId, Addr: fmt.Sprintf("%s,%s", host, file.Name())})
-	if err != nil {
-		return 0, err
-	}
-
 	n, err := io.Copy(file, os.Stdin)
 	if err != nil {
 		return 0, err
 	}
 
 	err = binary.Write(file, binary.BigEndian, eof)
+	if err != nil {
+		return 0, err
+	}
+
+	_, err = client.PutAddrOptimized(ctx, &pb.PutAddrMsg{Id: *streamId, Addr: fmt.Sprintf("%s,%s", host, file.Name())})
 	if err != nil {
 		return 0, err
 	}
