@@ -86,11 +86,11 @@ nlp() {
             sleep 10
         fi
 
-        # For every .out in output_dir, generate a hash and delete the file
-        for file in "$output_dir"/*.out
+        # For every file in output_dir, generate a hash and delete the file
+        for file in "$output_dir"/*
         do
-            # Extract the filename without the directory path and extension
-            filename=$(basename "$file" .out)
+            # Extract the filename without the directory
+            filename=$(basename "$file")
 
             # Generate SHA-256 hash and delete output file
             shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
