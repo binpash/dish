@@ -169,7 +169,8 @@ func readOptimized(client pb.DiscoveryClient, skip int) (int, error) {
 	}
 	defer conn.Close()
 
-	message := fmt.Sprintf("%s:%d:%s", path, skip, *streamId)
+	// message := fmt.Sprintf("%s:%d:%s", path, skip, *streamId)
+	message := fmt.Sprintf("%s:%d", path, skip)
 	_, err = conn.Write([]byte(message))
 	if err != nil {
 		return 0, err

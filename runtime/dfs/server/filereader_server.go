@@ -123,7 +123,7 @@ func handleConnection(conn net.Conn) {
 		log.Println("FR: Invalid seek value:", err)
 		return
 	}
-	pattern := "datastream --type write --id " + parts[2]
+	// pattern := "datastream --type write --id " + parts[2]
 
 	// Open the file
 	file, err := os.Open(filepath)
