@@ -35,6 +35,7 @@ covid-mts() {
         output_file="./outputs/$1/$script.out"
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
+        hash_file="./outputs/$1/$script.hash"
 
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $input_file > $output_file) 2> $time_file
