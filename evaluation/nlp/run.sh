@@ -62,11 +62,12 @@ nlp() {
         script="${name_script_parsed[1]}"
         script_file="./scripts/$script.sh"
         # input for all nlp scripts is ./inputs/pg, which is already default for each script
+        # output_file contains "done" when run successfully. The real outputs are under output_dir/
         output_dir="./outputs/$1/$script/"
         output_file="./outputs/$1/$script.out"
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
-        # output_file contains "done" when run successfully. The real outputs are under output_dir/
+        hash_file="./outputs/$1/$script.hash"
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $output_dir > $output_file ) 2> $time_file
         else
@@ -84,6 +85,20 @@ nlp() {
 
             sleep 10
         fi
+
+        # For every .out in output_dir, generate a hash and delete the file
+        for file in "$output_dir"/*.out
+        do
+            # Extract the filename without the directory path and extension
+            filename=$(basename "$file" .out)
+
+            # Generate SHA-256 hash and delete output file
+            shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
+            rm "$file"
+        done
+
+        # Generate SHA-256 hash and no need to delete output file as it should only contain "done"
+        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
