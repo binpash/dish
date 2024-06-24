@@ -11,7 +11,7 @@ if [[ "$1" == "--small" ]]; then
     export IN="/nlp/pg-small"
 else
     echo "Using default input"
-    export ENTRIES=120
+    export ENTRIES=1000
     export IN="/nlp/pg"
 fi
 
