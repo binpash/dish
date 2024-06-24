@@ -27,6 +27,9 @@ if [[ "$@" == *"--generate"* ]]; then
         # Extract the dirname
         dirname=$(dirname "${file#$directory/}")
 
+        # Create the directory in the hash folder
+        mkdir -p "$hash_folder/$dirname"
+
         # Copy hash to the hash folder
         cp "$file" "$hash_folder/$dirname"
     done
