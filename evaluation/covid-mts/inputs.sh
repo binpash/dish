@@ -9,6 +9,14 @@ if [ ! -f ./in.csv ]; then
     gzip -d in.csv.gz
     # Add newline to the original file
     echo >> in.csv
+
+    # repeat in.csv 10 times
+    for i in {1..10}; do
+        cat in.csv >> in.csv.tmp
+    done
+
+    rm in.csv
+    mv in.csv.tmp in.csv
 fi
 
 if [ ! -f ./in_small.csv ]; then
