@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -137,33 +138,27 @@ func handleConnection(conn net.Conn) {
 	file.Seek(seek, 0)
 
 	// Transfer the file content to the socket using io.Copy
-	_, err = io.Copy(conn, file)
-	if err != nil {
-		log.Println("FR: Error transferring file:", err)
-		return
+	for {
+		_, err = io.Copy(conn, file)
+		if err != nil {
+			log.Println("FR: Error transferring file:", err)
+			return
+		}
+
+		processExists, err := processExists(pattern)
+		if err != nil {
+			log.Println("FR: Error checking if process exists:", err)
+			return
+		}
+
+		// log.Println("FR: Process exists:", processExists, pattern)
+
+		if !processExists {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
 	}
-
-	// for {
-	// 	_, err = io.Copy(conn, file)
-	// 	if err != nil {
-	// 		log.Println("FR: Error transferring file:", err)
-	// 		return
-	// 	}
-
-	// 	processExists, err := processExists(pattern)
-	// 	if err != nil {
-	// 		log.Println("FR: Error checking if process exists:", err)
-	// 		return
-	// 	}
-
-	// 	// log.Println("FR: Process exists:", processExists, pattern)
-
-	// 	if !processExists {
-	// 		break
-	// 	}
-
-	// 	time.Sleep(1 * time.Second)
-	// }
 }
 
 func processExists(pattern string) (bool, error) {
