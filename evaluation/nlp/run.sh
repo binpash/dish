@@ -129,8 +129,8 @@ nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines -
 nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
 
 nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized"
-nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill merger"
-nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --kill regular"
+nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill merger"
+nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill regular"
 
 # nlp "dish-no-du" "--width 8 --r_split --distributed_exec -d $d"
 # nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec -d $d"
