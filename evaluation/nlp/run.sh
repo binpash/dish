@@ -118,6 +118,8 @@ d=0
 
 nlp "bash"
 nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
+# Two dish runs for caching purposes
+nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
 nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
 
 nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
