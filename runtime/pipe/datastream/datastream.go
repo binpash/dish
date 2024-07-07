@@ -386,22 +386,22 @@ func main() {
 
 	log.Printf("Success %s %d bytes\n", *streamType, n)
 
-	// if *ft != "disabled" {
-	// 	// Create addr TCP connection
-	// 	addr := strings.Split(*serverAddr, ":")[0] + ":65425"
-	// 	log.Printf("Connecting to Worker Manager at %v\n", addr)
-	// 	c, err := net.Dial("tcp", addr)
-	// 	if err != nil {
-	// 		log.Fatalf("Failed to connect to Worker Manager: %v\n", err)
-	// 	}
-	// 	defer c.Close()
+	if *ft != "disabled" {
+		// Create addr TCP connection
+		addr := strings.Split(*serverAddr, ":")[0] + ":65425"
+		log.Printf("Connecting to Worker Manager at %v\n", addr)
+		c, err := net.Dial("tcp", addr)
+		if err != nil {
+			log.Fatalf("Failed to connect to Worker Manager: %v\n", err)
+		}
+		defer c.Close()
 
-	// 	// Send the request
-	// 	n, err = c.Write(b)
-	// 	if err != nil {
-	// 		log.Fatalf("Failed to send request to Worker Manager: %v\n", err)
-	// 	}
+		// Send the request
+		n, err = c.Write(b)
+		if err != nil {
+			log.Fatalf("Failed to send request to Worker Manager: %v\n", err)
+		}
 
-	// 	log.Printf("Success %s %d bytes to Worker Manager\n", *streamType, n)
-	// }
+		log.Printf("Success %s %d bytes to Worker Manager\n", *streamType, n)
+	}
 }
