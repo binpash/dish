@@ -66,7 +66,7 @@ func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err
 		if ft == "optimized" {
 			nn, err = readOptimized(client, n)
 		} else {
-			nn, err = read(client, n, ft == "disabled")
+			nn, err = read(client, n, true)
 		}
 		n += nn
 		if err == nil {
@@ -373,7 +373,7 @@ func main() {
 		if *ft == "optimized" {
 			n, reqerr = writeOpimized(client)
 		} else {
-			n, reqerr = write(client, *ft == "disabled")
+			n, reqerr = write(client, true)
 		}
 	} else {
 		flag.Usage()
