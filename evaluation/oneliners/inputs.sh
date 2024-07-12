@@ -4,7 +4,7 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
 
-input_files=("1M.txt" "3G.txt" "all_cmds_1M.txt" "all_cmds_3G.txt" "dict.txt")
+input_files=("1M.txt" "1G.txt" "3G.txt" "all_cmds.txt" "all_cmdsx1000.txt" "dict.txt")
 
 if [ ! -f ./1M.txt ]; then
     wget https://atlas-group.cs.brown.edu/data/dummy/1M.txt
@@ -12,10 +12,17 @@ if [ ! -f ./1M.txt ]; then
     echo >> 1M.txt
 fi
 
+if [ ! -f ./1G.txt ]; then
+    touch 1G.txt
+    for (( i = 0; i < 1000; i++ )); do
+        cat 1M.txt >> 1G.txt
+    done
+fi
+
 if [ ! -f ./3G.txt ]; then
     touch 3G.txt
-    for (( i = 0; i < 3000; i++ )); do
-        cat 1M.txt >> 3G.txt
+    for (( i = 0; i < 3; i++ )); do
+        cat 1G.txt >> 3G.txt
     done
 fi
 
@@ -29,20 +36,10 @@ if [ ! -f ./all_cmds.txt ]; then
     ls /usr/bin/* > all_cmds.txt
 fi
 
-if [ ! -f ./all_cmds_1M.txt ]; then
-    touch all_cmds_1M.txt
-    size_of_all_cmds=$(du -b all_cmds.txt | cut -f1)
-    iterations=$((1024*1024 / size_of_all_cmds))
-
-    for ((i=0; i<$iterations; i++)); do
-        cat all_cmds.txt >> all_cmds_1M.txt
-    done
-fi
-
-if [ ! -f ./all_cmds_3G.txt ]; then
-    touch all_cmds_3G.txt
-    for (( i = 0; i < 3000; i++ )); do
-        cat all_cmds_1M.txt >> all_cmds_3G.txt
+if [ ! -f ./all_cmdsx1000.txt ]; then
+    touch all_cmdsx1000.txt
+    for (( i = 0; i < 100; i++ )); do
+        cat all_cmds.txt >> all_cmdsx1000.txt
     done
 fi
 
