@@ -38,7 +38,7 @@ fi
 
 if [ ! -f ./all_cmdsx1000.txt ]; then
     touch all_cmdsx1000.txt
-    for (( i = 0; i < 100; i++ )); do
+    for (( i = 0; i < 1000; i++ )); do
         cat all_cmds.txt >> all_cmdsx1000.txt
     done
 fi
