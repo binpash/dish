@@ -20,7 +20,7 @@ if [ ! -d "wav" ]; then
         done
     done
     cd -
-    hdfs dfs -put wav_full/wav/ media-conv/wav
+    hdfs dfs -put wav_full/wav /media-conv/wav
     echo "WAV Generated"
 fi
 
