@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# IN=${IN:-/dependency_untangling/pcap_data}
+# OUT=${OUT:-$PASH_TOP/evaluation/distr_benchmarks/dependency_untangling/input/output/pcap-analysis}
+mkdir -p $2
 pure_func() {
     tempfile=$(mktemp)
     cat > $tempfile 
@@ -14,7 +19,8 @@ export -f pure_func
 
 for item in $(hdfs dfs -ls -C $1);
 do
-    hdfs dfs -cat -ignoreCrc $item | pure_func
+    logname=$2/$(basename $item).log;
+    hdfs dfs -cat -ignoreCrc $item | pure_func > $logname
 done
 
 echo 'done';
