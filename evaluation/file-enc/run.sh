@@ -6,10 +6,10 @@ eval_dir="./scripts"
 
 if [[ "$1" == "--small" ]]; then
     echo "Using small input"
-    input_dir="./file-enc/pcap_data_small"
+    input_dir="/file-enc/pcap_data_small"
 else
     echo "Using default input"
-    input_dir="./file-enc/pcap_data"
+    input_dir="/file-enc/pcap_data"
 fi
 
 
@@ -70,14 +70,14 @@ file-enc "bash"
 file-enc "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
 file-enc "dish"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-file-enc "naive"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive"
-file-enc "naive-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill merger"
-file-enc "naive-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill regular"
+# file-enc "naive"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive"
+# file-enc "naive-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill merger"
+# file-enc "naive-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill regular"
 
-file-enc "base"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base"
-file-enc "base-m"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill merger"
-file-enc "base-r"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill regular"
+# file-enc "base"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base"
+# file-enc "base-m"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill merger"
+# file-enc "base-r"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill regular"
 
-file-enc "optimized"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized"
-file-enc "optimized-m" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill merger"
-file-enc "optimized-r" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill regular"
+# file-enc "optimized"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized"
+# file-enc "optimized-m" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill merger"
+# file-enc "optimized-r" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill regular"

@@ -13,7 +13,7 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
 hdfs dfs -mkdir /file-enc
-                                                                    
+                                                  
 
 # download the initial pcaps to populate the whole dataset
 if [ ! -d ${IN}/pcap_data ]; then
@@ -27,9 +27,9 @@ if [ ! -d ${IN}/pcap_data ]; then
       for j in pcaps/*;do
           n=$(basename $j)
           cat $j > pcap_data/pcap${i}_${n};
-          hdfs dfs -put pcap_data/pcap${i}_${n} /file-enc/pcap_data/pcap${i}_${n}
       done
   done
+  hdfs dfs -put pcap_data/ /file-enc/pcap_data
   echo "Pcaps Generated"
 
   # generates small inputs
@@ -39,8 +39,8 @@ if [ ! -d ${IN}/pcap_data ]; then
       for j in pcaps/*;do
           n=$(basename $j)
           cat $j > pcap_data_small/pcap${i}_${n}; 
-          hdfs dfs -put pcap_data_small/pcap${i}_${n} /file-enc/pcap_data_small/pcap${i}_${n}
       done
   done
+  hdfs dfs -put pcap_data_small/ /file-enc/pcap_data_small
   echo "Pcaps_small Generated"
 fi

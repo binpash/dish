@@ -3,6 +3,7 @@
 cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
+hdfs dfs -mkdir /log-analysis
 
 # download the input for the nginx logs and populate the dataset
 if [ ! -d log_data ]; then
@@ -35,7 +36,7 @@ if [ ! -d log_data ]; then
 fi
 
 
-if [ ! -d ${IN}/pcap_data ]; then
+if [ ! -d pcap_data ]; then
   wget https://atlas-group.cs.brown.edu/data/pcaps.zip
   unzip pcaps.zip
   rm pcaps.zip
@@ -46,9 +47,9 @@ if [ ! -d ${IN}/pcap_data ]; then
       for j in pcaps/*;do
           n=$(basename $j)
           cat $j > pcap_data/pcap${i}_${n};
-          hdfs dfs -put pcap_data/pcap${i}_${n} /log-analysis/pcap_data/pcap${i}_${n}
       done
   done
+  hdfs dfs -put pcap_data/ /log-analysis/pcap_data
   echo "Pcaps Generated"
 
   # generates small inputs
@@ -58,8 +59,8 @@ if [ ! -d ${IN}/pcap_data ]; then
       for j in pcaps/*;do
           n=$(basename $j)
           cat $j > pcap_data_small/pcap${i}_${n}; 
-          hdfs dfs -put pcap_data_small/pcap${i}_${n} /log-analysis/pcap_data_small/pcap${i}_${n}
       done
   done
+  hdfs dfs -put pcap_data_small/ /log-analysis/pcap_data_small
   echo "Pcaps_small Generated"
 fi
