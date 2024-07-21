@@ -1,55 +1,65 @@
 #!/bin/bash
 
 cd "$(realpath $(dirname "$0"))"
+IN="inputs"
 mkdir -p inputs
 cd inputs
 
 hdfs dfs -mkdir /media-conv
 
-if [ ! -d ${IN}/wav ]; then
+if [ ! -d "wav" ]; then
     WAV_DATA_FILES=120
-    wget https://atlas-group.cs.brown.edu/data/wav.zip
-    unzip wav.zip && cd wav/
+    mkdir wav_full
+    wget https://atlas-group.cs.brown.edu/data/wav.zip -O wav.zip
+    unzip wav.zip -d wav_full
+    cd wav_full/wav
     for f in *.wav; do
-        FILE=$(basename "$f")
-        for (( i = 0; i <= $WAV_DATA_FILES; i++)) do
+        for (( i = 0; i <= $WAV_DATA_FILES; i++ )); do
             echo copying to $f$i.wav
-            cp $f $f$i.wav
+            cp "$f" "$f$i.wav"
         done
     done
-    cd ..
-    hdfs dfs -put wav /media-conv/wav
+    cd -
+    hdfs dfs -put wav_full/wav/ media-conv/wav
     echo "WAV Generated"
 fi
-if [ ! -d ${IN}/wav_small ]; then
+
+# Check if the wav_small directory does not exist
+if [ ! -d "wav_small" ]; then
     WAV_DATA_FILES=20
-    wget -O wav_small.zip https://atlas-group.cs.brown.edu/data/wav.zip
-    unzip wav_small.zip && cd wav_small/
+    wget https://atlas-group.cs.brown.edu/data/wav.zip -O wav_small.zip
+    mkdir wav_small
+    unzip wav_small.zip -d wav_small
+    cd wav_small/wav
     for f in *.wav; do
-        FILE=$(basename "$f")
-        for (( i = 0; i <= $WAV_DATA_FILES; i++)) do
+        for (( i = 0; i <= $WAV_DATA_FILES; i++ )); do
             echo copying to $f$i.wav
-            cp $f $f$i.wav
+            cp "$f" "$f$i.wav"
         done
     done
-    cd ..
-    hdfs dfs -put wav_small /media-conv/wav_small
+    cd -
+    hdfs dfs -put wav_small/wav /media-conv/wav_small
     echo "WAV_small Generated"
 fi
 
-if [ ! -d ${IN}/jpg ]; then
+
+
+# Check if the directories don't exist and handle full/jpg.zip
+if [ ! -d "jpg" ]; then
     JPG_DATA_LINK=https://atlas-group.cs.brown.edu/data/full/jpg.zip
-    wget $JPG_DATA_LINK
-    unzip jpg.zip
-    hdfs dfs -put jpg /media-conv/jpg
+    wget $JPG_DATA_LINK -O jpg_full.zip
+    unzip jpg_full.zip -d jpg_full
+    hdfs dfs -put jpg_full/jpg /media-conv/jpg
     echo "JPG Generated"
-    rm -rf ${IN}/jpg.zip
+    rm -rf jpg_full.zip
 fi
-if [ ! -d ${IN}/jpg_small ]; then
+
+# Check if the small/jpg directory doesn't exist and handle small/jpg.zip
+if [ ! -d "jpg_small" ]; then
     JPG_DATA_LINK=https://atlas-group.cs.brown.edu/data/small/jpg.zip
-    wget -O jpg_small.zip $JPG_DATA_LINK
-    unzip jpg_small.zip
-    hdfs dfs -put jpg_small /media-conv/jpg_small
+    wget $JPG_DATA_LINK -O jpg_small.zip
+    unzip jpg_small.zip -d jpg_small
+    hdfs dfs -put jpg_small/jpg /media-conv/jpg_small
     echo "JPG_small Generated"
-    rm -rf ${IN}/jpg_small.zip
+    rm -rf jpg_small.zip
 fi

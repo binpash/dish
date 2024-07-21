@@ -12,13 +12,35 @@ names_scripts=(
 
 if [[ "$@" == *"--small"* ]]; then
     scripts_inputs=(
-        "temp-analytics;temperatures_small"
+        "img_convert;/media-conv/jpg_small"
+        "to_mp3;/media-conv/wav_small"
+    )
+    scripts_outputs=(
+        "img_convert;outputs/jpg_small"
+        "to_mp3;outputs/mp3_small"
     )
 else
     scripts_inputs=(
-        "temp-analytics;temperatures"
+        "img_convert;/media-conv/jpg"
+        "to_mp3;/media-conv/wav"
+    )
+    scripts_outputs=(
+        "img_convert;outputs/jpg"
+        "to_mp3;outputs/mp3"
     )
 fi
+
+parse_directories() {
+    local script_name=$1
+    local scripts_array=("${!2}")
+    for entry in "${scripts_array[@]}"; do
+        IFS=";" read -r -a parsed <<< "${entry}"
+        if [[ "${parsed[0]}" == "${script_name}" ]]; then
+            echo "${parsed[1]}"
+            return
+        fi
+    done
+}
 
 mkdir -p "outputs"
 all_res_file="./outputs/media-conv.res"
@@ -39,7 +61,8 @@ media-conv() {
         name="${name_script_parsed[0]}"
         script="${name_script_parsed[1]}"
         script_file="./scripts/$script.sh"
-        output_dir="./outputs/$1/$script/"
+        input_dir=$(parse_directories "$script" scripts_inputs[@])
+        output_dir=$(parse_directories "$script" scripts_outputs[@])
         output_file="./outputs/$1/$script.out"
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
@@ -47,14 +70,14 @@ media-conv() {
 
 
         if [[ "$1" == "bash" ]]; then
-            (time $script_file $input_file $output_dir > $output_file) 2> $time_file
+            (time $script_file $input_dir $output_dir > $output_file) 2> $time_file
         else
             params="$2"
             if [[ $2 == *"--distributed_exec"* ]]; then
                 params="$2 --script_name $script_file"
             fi
 
-            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_file $output_dir > $output_file) 2> $time_file
+            (time $PASH_TOP/pa.sh $params --log_file $log_file $script_file $input_dir $output_dir > $output_file) 2> $time_file
 
             if [[ $2 == *"--kill"* ]]; then
                 sleep 10
