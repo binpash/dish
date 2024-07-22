@@ -20,19 +20,27 @@ do
         done
     fi
 
-    if [ ! -f "${input}_3G.txt" ]; then
-        for (( i = 0; i < 3000; i++ )); do
-            cat "${input}_1M.txt" >> "${input}_3G.txt"
+    if [ ! -f "${input}_20G.txt" ]; then
+        for (( i = 0; i < 20000; i++ )); do
+            cat "${input}_1M.txt" >> "${input}_20G.txt"
         done
     fi
 
     echo "Finished processing ${input}.txt"
-done
 
-
-hdfs dfs -mkdir -p /unix50
-for file in "${inputs[@]}"; do
-    hdfs dfs -put "${file}_1M.txt" "/unix50/${file}_1M.txt"
-    hdfs dfs -put "${file}_3G.txt" "/unix50/${file}_3G.txt"
+    hdfs dfs -mkdir -p /unix50
+    hdfs dfs -put "${input}_1M.txt" "/unix50/${input}_1M.txt"
+    hdfs dfs -put "${input}_20G.txt" "/unix50/${input}_20G.txt"
     echo "Put $file to hdfs"
+
+    rm *.txt
+    echo "Removed all txt files"
 done
+
+
+# hdfs dfs -mkdir -p /unix50
+# for file in "${inputs[@]}"; do
+#     hdfs dfs -put "${file}_1M.txt" "/unix50/${file}_1M.txt"
+#     hdfs dfs -put "${file}_20G.txt" "/unix50/${file}_20G.txt"
+#     echo "Put $file to hdfs"
+# done
