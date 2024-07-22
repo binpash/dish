@@ -7,26 +7,26 @@ cd "$(realpath $(dirname "$0"))"
 
 names_scripts=(
     "LogAnalysis1;nginx"
-    "LogAnalysis2;pcap"
+    "LogAnalysis2;pcaps"
   )
 
 if [[ "$@" == *"--small"* ]]; then
     scripts_inputs=(
         "nginx;/log-analysis/log_data_small"
-        "pcap;/log-analysis/pcap_data_small"
+        "pcaps;/log-analysis/pcap_data_small"
     )
     scripts_outputs=(
         "nginx;/log-analysis/nginx_analysis_small"
-        "pcap;/log-analysis/pcap_analysis_small"
+        "pcaps;/log-analysis/pcap_analysis_small"
     )
 else
     scripts_inputs=(
         "nginx;/log-analysis/log_data"
-        "pcap;/log-analysis/pcap_data"
+        "pcaps;/log-analysis/pcap_data"
     )
     scripts_outputs=(
         "nginx;/log-analysis/nginx_analysis"
-        "pcap;/log-analysis/pcap_analysis"
+        "pcaps;/log-analysis/pcap_analysis"
     )
 fi
 
@@ -86,6 +86,10 @@ log-analysis() {
 
             sleep 10
         fi
+
+        # Generate SHA-256 hash and delete output file
+        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
+        rm "$output_file"
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
