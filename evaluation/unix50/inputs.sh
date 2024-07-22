@@ -33,7 +33,7 @@ do
     hdfs dfs -put "${input}_20G.txt" "/unix50/${input}_20G.txt"
     echo "Put $file to hdfs"
 
-    rm "*.txt"
+    rm *.txt
     echo "Removed all txt files"
 done
 
