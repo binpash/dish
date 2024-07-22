@@ -28,9 +28,13 @@ do
 
     echo "Finished processing ${input}.txt"
 
+    hdfs dfs -mkdir -p /unix50
     hdfs dfs -put "${input}_1M.txt" "/unix50/${input}_1M.txt"
     hdfs dfs -put "${input}_20G.txt" "/unix50/${input}_20G.txt"
     echo "Put $file to hdfs"
+
+    rm "*.txt"
+    echo "Removed all txt files"
 done
 
 
