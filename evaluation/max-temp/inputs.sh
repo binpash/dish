@@ -26,7 +26,7 @@ download_data() {
 }
 
 download_data 1 temperatures_small.txt
-download_data 1442 temperatures.txt
+download_data 14420 temperatures.txt
 
 hdfs dfs -mkdir /max-temp
 
