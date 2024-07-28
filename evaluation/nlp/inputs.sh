@@ -27,7 +27,7 @@ fi
 if [ ! -e ./pg ]; then
     mkdir pg
     cd pg
-    book_count=1000
+    book_count=100
 
     head -n $book_count ../book_links.txt | while IFS= read -r line
     do
