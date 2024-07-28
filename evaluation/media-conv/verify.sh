@@ -2,61 +2,53 @@
 
 # Exit immediately if a command exits with a non-zero status
 # set -e
-echo "Scripts in this suite converts file format without generating meaningful outputs. Therefore correctness check is omitted."
-# cd "$(realpath $(dirname "$0"))"
 
-# mkdir -p hashes
+cd "$(realpath $(dirname "$0"))"
 
-# hash_folder="hashes"
+mkdir -p hashes/small
 
-# if [[ "$@" == *"--generate"* ]]; then
-#     # Directory to iterate over
-#     directory="outputs/bash"
+if [[ "$@" == *"--small"* ]]; then
+    hash_folder="hashes/small"
+else
+    hash_folder="hashes"
+fi
 
-#     # Loop through all .out files in the directory
-#     for file in "$directory"/*.out
-#     do
-#         # Extract the filename without the directory path and extension
-#         filename=$(basename "$file" .out)
+if [[ "$@" == *"--generate"* ]]; then
+    # Directory to iterate over
+    if [[ "$@" == *"--dish"* ]]; then
+        directory="outputs/dish"
+    else
+        directory="outputs/bash"
+    fi
 
-#         # Generate SHA-256 hash
-#         hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
+    # Loop through all .out files in the directory and subdirectories
+    find "$directory" -type f -name "*.hash" | while read -r file;
+    do
+        echo $file
+        # Copy the file to the hash folder
+        cp "$file" "$hash_folder"
+    done
+fi
 
-#         # Save the hash to a file
-#         echo "$hash" > "$hash_folder/$filename.hash"
+# Loop through all directories in the parent directory
+for folder in "outputs"/*/
+do
+    # Remove trailing slash
+    folder=${folder%/}
 
-#         # Print the filename and hash
-#         echo "File: $hash_folder/$filename.hash | SHA-256 Hash: $hash"
-#     done
-# fi
+    echo "Verifying folder: $folder"
 
-# # Loop through all directories in the parent directory
-# for folder in "outputs"/*/
-# do
-#     # Remove trailing slash
-#     folder=${folder%/}
+    # Loop through all .hash files in the current directory and subdirectories
+    find "$folder" -type f -name "*.hash" | while read -r file;
+    do
+        # Extract the filename without the directory path and extension
+        filename=$(basename $file)
 
-#     echo "Verifying folder: $folder"
-
-#     # Loop through all .out files in the current directory
-#     for file in "$folder"/*.out
-#     do
-#         # Extract the filename without the directory path and extension
-#         filename=$(basename "$file" .out)
-
-#         if [ ! -f "$folder/$filename.hash" ]; then
-#             # Generate SHA-256 hash
-#             hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
-
-#             # Save the hash to a file
-#             echo "$hash" > "$folder/$filename.hash"
-#         fi
-
-#         # Compare the hash with the hash in the hashes directory
-#         if ! diff "$hash_folder/$filename.hash" "$folder/$filename.hash";
-#         then
-#             # Print the filename and hash if they don't match
-#             echo "File: $folder/$filename hash diff failed!"
-#         fi
-#     done
-# done
+        # Compare the hash with the hash in the hashes directory
+        if ! diff "$hash_folder/$filename" "$file";
+        then
+            # Print the filename and hash if they don't match
+            echo "File: $file hash diff failed comparing to $hash_folder/$filename"
+        fi
+    done
+done

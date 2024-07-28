@@ -59,6 +59,7 @@ file-enc() {
             sleep 10
         fi
 
+        rm -rf "$output_dir"
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
     done
