@@ -103,7 +103,7 @@ unix50() {
     do
         IFS=";" read -r -a parsed <<< "${script_input}"
         script_file="./scripts/${parsed[0]}.sh"
-        input_file="/oneliners/${parsed[1]}.txt"
+        input_file="/unix50/${parsed[1]}.txt"
         output_file="./outputs/$1/${parsed[0]}.out"
         time_file="./outputs/$1/${parsed[0]}.time"
         log_file="./outputs/$1/${parsed[0]}.log"
