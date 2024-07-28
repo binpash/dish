@@ -103,10 +103,11 @@ unix50() {
     do
         IFS=";" read -r -a parsed <<< "${script_input}"
         script_file="./scripts/${parsed[0]}.sh"
-        input_file="/unix50/${parsed[1]}.txt"
+        input_file="/oneliners/${parsed[1]}.txt"
         output_file="./outputs/$1/${parsed[0]}.out"
         time_file="./outputs/$1/${parsed[0]}.time"
         log_file="./outputs/$1/${parsed[0]}.log"
+        hash_file="./outputs/$1/${parsed[0]}.hash"
 
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $input_file > $output_file) 2> $time_file
@@ -125,6 +126,10 @@ unix50() {
 
             sleep 10
         fi
+
+        # Generate SHA-256 hash and delete output file
+        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
+        rm "$output_file"
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
