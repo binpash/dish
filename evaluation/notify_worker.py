@@ -2,6 +2,8 @@ import os
 import json
 import socket
 import sys
+import argparse
+import requests
 
 
 # import ../pash/compiler/config
@@ -13,6 +15,7 @@ import sys
 # This is used in evaluation to send a datanode a message to bring itself back up after being killed
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 55555        # Port to listen on (non-privileged ports are > 1023)
+META_SERVER_PORT = 12345
 PASH_TOP = os.environ['PASH_TOP']
 
 sys.path.append(f"{PASH_TOP}/compiler/dspash")  # Add the directory to sys.path
@@ -38,9 +41,9 @@ class WorkerConnection:
         # TODO: create a ping to confirm is online
         return self._online
 
-    def send_resurrect_request(self) -> bool:
-        request_dict = { 'type': 'resurrect' }
-        request = encode_request(request_dict)
+
+    def send_payload(self, payload) -> bool:
+        request = encode_request(payload)
         send_msg(self._socket, request)
         response_data = recv_msg(self._socket)
         if not response_data or decode_request(response_data)['status'] != "OK":
@@ -82,39 +85,73 @@ class Messenger():
         workers = cluster_config["workers"]
         for name, worker in workers.items():
             host = worker['host']
-            port = worker['port']
+            port = META_SERVER_PORT #worker['port']
             self.add_worker(name, host, port)
 
         addrs = {conn.host() for conn in self.workers}
+        print(addrs)
 
-    def send_resurrect_request(self, resurrect_target):
-        resurrect_target_host = socket.gethostbyaddr(resurrect_target)[2][0]
-        socket.gethostbyaddr(resurrect_target)[2][0]
+    def send_payload_to_worker(self, payload, receiver):
+        receiver_host = socket.gethostbyaddr(receiver)[2][0]
+        socket.gethostbyaddr(receiver)[2][0]
         for worker in self.workers:
-            if worker.host() == resurrect_target_host:
-                worker.send_resurrect_request()
+            if worker.host() == receiver_host:
+                worker.send_payload(payload)
                 return
 
+# def send_payload(host, port, payload):
+#     try:
+#         # Create a socket (SOCK_STREAM means a TCP socket)
+#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+#             s.connect((host, port))  # Connect to the receiver
+#             # Convert the message to JSON and send it
+#             s.sendall(json.dumps(payload).encode('utf-8'))
+#             # Receive response from the server
+#             response = s.recv(1024)
+#             print(f"Received response: {response.decode('utf-8')}")
+#     except socket.error as e:
+#         print(f"Socket error: {e}")
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+
+def send_payload(host, port, endpoint, payload):
+    try:
+        url = f"http://{host}:{port}/{endpoint}"
+        print(url)
+        # Send the POST request with the payload as JSON
+        response = requests.post(url, json=payload)
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Received response:", response.text)
+        else:
+            print(f"Failed to send payload, status code: {response.status_code}")
+            print("Response:", response.text)
+    except requests.RequestException as e:
+        print(f"Request error: {e}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
 if __name__ == "__main__":
-    # Arity check
-    if len(sys.argv) < 2:
-        print("Usage: python3 type [optional args]")
+    parser = argparse.ArgumentParser(description='Send a message to a datanode.')
+    parser.add_argument('type', choices=['kill', 'resurrect'], help='Type of action to perform')
+    parser.add_argument('target', help='Hostname of the target datanode')
+
+    args = parser.parse_args()
+
+    try:
+        receiver_host = socket.gethostbyaddr(args.target)[2][0]
+    except socket.error as e:
+        print(f"Hostname resolution error: {e}")
         sys.exit(1)
 
-    messenger = Messenger()
-    # Load workers
-    messenger.add_workers_from_cluster_config(os.path.join(PASH_TOP, 'cluster.json'))
+    # receiver = "datanode1" # pass as arg
+    # receiver_host = socket.gethostbyaddr(receiver)[2][0]
+    receiver_port = META_SERVER_PORT
 
-    # Handle request
-    type = sys.argv[1]
-    if type == "resurrect":
-        try:
-            with open(KILL_WITNESS_PATH, 'r') as file:
-                resurrect_target = file.read()
-                print(f"Resurrecting worker node at address {resurrect_target}")
-                messenger.send_resurrect_request(resurrect_target)
-        except FileNotFoundError:
-            print(f"Error: The file '{KILL_WITNESS_PATH}' does not exist.")
-    else:
-        print("Unsupported type of request")
-        sys.exit(1)
+    payload = {
+        "type": args.type,
+    }
+
+    # Send the payload to the target
+    send_payload(receiver_host, META_SERVER_PORT, args.type, payload)
+
