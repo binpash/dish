@@ -5,6 +5,8 @@ import time
 import traceback
 import json
 from flask import Flask, jsonify
+import argparse
+from threading import Thread
 
 # Configure logging
 logging.basicConfig(filename='/meta_server.log', level=logging.INFO,
@@ -88,12 +90,16 @@ def kill():
         logging.error(f"Kill error: {e}")
         return jsonify({"error": "failed to kill"}), 500
 
+def start_server(port):
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Start the meta server.')
+    parser.add_argument('--port', type=int, default=12345, help='Port number to bind the server to')
+    args = parser.parse_args()
+    port = args.port
+
     # Run Flask app in a separate thread or process
-    from threading import Thread
-    flask_thread = Thread(target=lambda: app.run(host='0.0.0.0', port=12345))
+    flask_thread = Thread(target=lambda: start_server(port))
     flask_thread.start()
 
-    # Start the original socket server
-    # start_server()

@@ -15,7 +15,8 @@ import requests
 # This is used in evaluation to send a datanode a message to bring itself back up after being killed
 HOST = socket.gethostbyname(socket.gethostname())
 PORT = 55555        # Port to listen on (non-privileged ports are > 1023)
-META_SERVER_PORT = 12345
+DATANODE_META_SERVER_PORT = 12345
+NODEMANAGER_META_SERVER_PORT = 12340
 PASH_TOP = os.environ['PASH_TOP']
 
 sys.path.append(f"{PASH_TOP}/compiler/dspash")  # Add the directory to sys.path
@@ -24,16 +25,19 @@ KILL_WITNESS_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), '.
 
 
 class WorkerConnection:
-    def __init__(self, name, host, port):
+    def __init__(self, name, host, ports):
         self.name = name
         self._host = socket.gethostbyaddr(host)[2][0] # get ip address in case host needs resolving
-        self._port = port
+        self._ports = ports
         self._running_processes = 0
         self._online = True
         # assume client service is running, can add a way to activate later
         try:
-            self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self._socket.connect((self._host, self._port))
+            self._sockets = []
+            for _port in self._ports:
+                _socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                _socket.connect((self._host, _port))
+                self._sockets.append(_socket)
         except Exception as e:
             self._online = False
         
@@ -43,21 +47,23 @@ class WorkerConnection:
 
 
     def send_payload(self, payload) -> bool:
-        request = encode_request(payload)
-        send_msg(self._socket, request)
-        response_data = recv_msg(self._socket)
-        if not response_data or decode_request(response_data)['status'] != "OK":
-            raise Exception(f"didn't recieved ack on request {response_data}")
-        else:
-            # response = decode_request(response_data)
-            return True
+        for _socket in self._sockets:
+            request = encode_request(payload)
+            send_msg(_socket, request)
+            response_data = recv_msg(_socket)
+            if not response_data or decode_request(response_data)['status'] != "OK":
+                raise Exception(f"didn't recieved ack on request {response_data}")
+            else:
+                # response = decode_request(response_data)
+                return True
 
     def close(self):
-        self._socket.send("Done")
-        self._socket.close()
+        for _socket in self._sockets:
+            _socket.send("Done")
+            _socket.close()
 
     def __str__(self):
-        return f"Worker {self._host}:{self._port}"
+        return f"Worker {self._host}:{self._ports}"
 
     def host(self):
         return self._host
@@ -75,8 +81,8 @@ class Messenger():
         # Cleanup resources here, such as closing the socket
         self.s.close()
         
-    def add_worker(self, name, host, port):
-            self.workers.append(WorkerConnection(name, host, port))
+    def add_worker(self, name, host, ports):
+            self.workers.append(WorkerConnection(name, host, ports))
 
     def add_workers_from_cluster_config(self, config_path):
         with open(config_path, 'r') as f:
@@ -85,11 +91,9 @@ class Messenger():
         workers = cluster_config["workers"]
         for name, worker in workers.items():
             host = worker['host']
-            port = META_SERVER_PORT #worker['port']
-            self.add_worker(name, host, port)
+            self.add_worker(name, host, [DATANODE_META_SERVER_PORT, NODEMANAGER_META_SERVER_PORT])
 
         addrs = {conn.host() for conn in self.workers}
-        print(addrs)
 
     def send_payload_to_worker(self, payload, receiver):
         receiver_host = socket.gethostbyaddr(receiver)[2][0]
@@ -99,20 +103,6 @@ class Messenger():
                 worker.send_payload(payload)
                 return
 
-# def send_payload(host, port, payload):
-#     try:
-#         # Create a socket (SOCK_STREAM means a TCP socket)
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-#             s.connect((host, port))  # Connect to the receiver
-#             # Convert the message to JSON and send it
-#             s.sendall(json.dumps(payload).encode('utf-8'))
-#             # Receive response from the server
-#             response = s.recv(1024)
-#             print(f"Received response: {response.decode('utf-8')}")
-#     except socket.error as e:
-#         print(f"Socket error: {e}")
-#     except Exception as e:
-#         print(f"An error occurred: {e}")
 
 def send_payload(host, port, endpoint, payload):
     try:
@@ -146,12 +136,11 @@ if __name__ == "__main__":
 
     # receiver = "datanode1" # pass as arg
     # receiver_host = socket.gethostbyaddr(receiver)[2][0]
-    receiver_port = META_SERVER_PORT
-
     payload = {
         "type": args.type,
     }
+    for receiver_port in [DATANODE_META_SERVER_PORT, NODEMANAGER_META_SERVER_PORT]:
+        # Send the payload to the target
+        send_payload(receiver_host, receiver_port, args.type, payload)
 
-    # Send the payload to the target
-    send_payload(receiver_host, META_SERVER_PORT, args.type, payload)
 
