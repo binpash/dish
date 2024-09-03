@@ -1,4 +1,4 @@
-hadoop jar $jarpath -files nfa-regex.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input $basepath/1G.txt -output $outputs_dir/nfa-regex -mapper nfa-regex.sh # nfa-regex
+hadoop jar $jarpath -files nfa-regex.sh -D mapreduce.job.loglevel=DEBUG -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input $basepath/1G.txt -output $outputs_dir/nfa-regex -mapper nfa-regex.sh # nfa-regex
 hadoop jar $jarpath -files sort.sh -D mapred.reduce.tasks=0 -D dfs.checksum.type=NULL -input $basepath/3G.txt -output $outputs_dir/sort -mapper sort.sh # sort
 hadoop jar $jarpath -files top-n_map.sh,top-n_reduce.sh -D dfs.checksum.type=NULL -input $basepath/3G.txt -output $outputs_dir/top-n -mapper top-n_map.sh -reducer top-n_reduce.sh # top-n
 hadoop jar $jarpath -files wf_map.sh,wf_reduce.sh -D dfs.checksum.type=NULL -input $basepath/3G.txt -output $outputs_dir/wf -mapper wf_map.sh -reducer wf_reduce.sh # wf

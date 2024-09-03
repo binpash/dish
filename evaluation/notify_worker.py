@@ -139,8 +139,8 @@ if __name__ == "__main__":
     payload = {
         "type": args.type,
     }
-    for receiver_port in [DATANODE_META_SERVER_PORT, NODEMANAGER_META_SERVER_PORT]:
+    for receiver_port in [DATANODE_META_SERVER_PORT]:
         # Send the payload to the target
         send_payload(receiver_host, receiver_port, args.type, payload)
 
-
+# TODO: make use of KILL_WITNESS_PATH for dish's resurrect
