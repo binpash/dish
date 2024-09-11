@@ -17,6 +17,8 @@ pip3 install matplotlib
 pip3 install pandas
 pip3 install seaborn
 pip3 install requests --target "$PASH_TOP/python_pkgs/"
+# Fish also needs requests, see notify_worker.py
+pip3 install requests
 
 # Install Go
 GO_VERSION="1.22.2"
