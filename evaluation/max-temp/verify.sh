@@ -15,22 +15,17 @@ fi
 
 if [[ "$@" == *"--generate"* ]]; then
     # Directory to iterate over
-    directory="outputs/bash"
+    if [[ "$@" == *"--dish"* ]]; then
+        directory="outputs/dish"
+    else
+        directory="outputs/bash"
+    fi
 
     # Loop through all .out files in the directory
-    for file in "$directory"/*.out
+    for file in "$directory"/*.hash
     do
-        # Extract the filename without the directory path and extension
-        filename=$(basename "$file" .out)
-
-        # Generate SHA-256 hash
-        hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
-
-        # Save the hash to a file
-        echo "$hash" > "$hash_folder/$filename.hash"
-
-        # Print the filename and hash
-        echo "File: $hash_folder/$filename.hash | SHA-256 Hash: $hash"
+        # Copy the file to the hash folder
+        cp "$file" "$hash_folder"
     done
 fi
 
@@ -42,22 +37,14 @@ do
 
     echo "Verifying folder: $folder"
 
-    # Loop through all .out files in the current directory
-    for file in "$folder"/*.out
+    # Loop through all .hash files in the current directory
+    for file in "$folder"/*.hash
     do
         # Extract the filename without the directory path and extension
-        filename=$(basename "$file" .out)
-
-        if [ ! -f "$folder/$filename.hash" ]; then
-            # Generate SHA-256 hash
-            hash=$(shasum -a 256 "$file" | awk '{ print $1 }')
-
-            # Save the hash to a file
-            echo "$hash" > "$folder/$filename.hash"
-        fi
+        filename=$(basename $file)
 
         # Compare the hash with the hash in the hashes directory
-        if ! diff "$hash_folder/$filename.hash" "$folder/$filename.hash";
+        if ! diff "$hash_folder/$filename" "$folder/$filename";
         then
             # Print the filename and hash if they don't match
             echo "File: $folder/$filename hash diff failed!"
