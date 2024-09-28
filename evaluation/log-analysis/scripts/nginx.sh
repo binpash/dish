@@ -32,7 +32,7 @@ for log in $(hdfs dfs -ls -C $1); do
     #bash -c 'run_tests $0 $1' $f $f #> /dev/null
     #run_tests $f > /dev/null
     logname=$2/$(basename $log)
-    hdfs dfs -cat -ignoreCrc $log | pure_func > $logname
+    hdfs dfs -cat -ignoreCrc $log | pure_func >> $logname
 done
 
 echo 'done';
