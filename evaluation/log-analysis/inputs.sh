@@ -7,16 +7,20 @@ hdfs dfs -mkdir /log-analysis
 
 # download the input for the nginx logs and populate the dataset
 if [ ! -d log_data ]; then
-    wget https://atlas-group.cs.brown.edu/data/nginx.zip
+    wget https://atlas-group.cs.brown.edu/data/nginx.zip --no-check-certificate
     unzip nginx.zip 
     rm nginx.zip
     # generating full analysis logs
     mkdir -p log_data
 	LOG_DATA_FILES=84
-    for (( i = 1; i <=$LOG_DATA_FILES; i++)) do
-        for j in nginx-logs/*;do
-            n=$(basename $j)
-            cat $j > log_data/log${i}_${n}.log; 
+    # Loop over each file in nginx-logs/
+    for j in nginx-logs/*; do
+        # Get the base name of the file
+        n=$(basename "$j")
+        
+        # Loop to concatenate the file into log_data/log*.log
+        for ((i = 1; i <= LOG_DATA_FILES; i++)); do
+            cat "$j" >> log_data/${n}.log
         done
     done
     hdfs dfs -put log_data /log-analysis/log_data
@@ -37,7 +41,7 @@ fi
 
 
 if [ ! -d pcap_data ]; then
-  wget https://atlas-group.cs.brown.edu/data/pcaps.zip
+  wget https://atlas-group.cs.brown.edu/data/pcaps.zip --no-check-certificate
   unzip pcaps.zip
   rm pcaps.zip
   # generates 20G
