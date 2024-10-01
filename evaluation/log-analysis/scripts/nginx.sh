@@ -4,35 +4,30 @@
 # OUT=${OUT:-$PASH_TOP/evaluation/distr_benchmarks/dependency_untangling/input/output/nginx-logs}
 mkdir -p $2
 
-pure_func() {
-    tempfile=$(mktemp)
+# for log in $(hdfs dfs -ls -C "$1" | grep -E '5|7'); do
+for log in $(hdfs dfs -ls -C "$1"); do
+    out_basename="$2/$(basename "$log" .log)"
 
-    tee $tempfile | cut -d "\"" -f3 | cut -d ' ' -f2 | sort | uniq -c | sort -rn   
-    # awk alternative, too slow
-    awk '{print $9}' $tempfile | sort | uniq -c | sort -rn  
-    # find broken links broken links
-    awk '($9 ~ /404/)' $tempfile | awk '{print $7}' | sort | uniq -c | sort -rn  
-    # for 502 (bad-gateway) we can run following command:
-    awk '($9 ~ /502/)' $tempfile | awk '{print $7}' | sort | uniq -c | sort -r  
-    # Who are requesting broken links (or URLs resulting in 502)
-    awk -F\" '($2 ~ "/wp-admin/install.php"){print $1}' $tempfile | awk '{print $1}' | sort | uniq -c | sort -r  
-    # 404 for php files -mostly hacking attempts
-    awk '($9 ~ /404/)' $tempfile | awk -F\" '($2 ~ "^GET .*.php")' | awk '{print $7}' | sort | uniq -c | sort -r | head -n 20  
-    ##############################
+    # Get ips who use crawler bot to crawl the server
+    hdfs dfs -cat -ignoreCrc "$log" | grep -E 'Googlebot|Bingbot|Baiduspider|Yandex|ia_archiver' | cut -d " " -f1 | sort | uniq -c | sort -rn  > "${out_basename}_crawlers.out"
+    
     # Most requested URLs ########
-    awk -F\" '{print $2}' $tempfile  | awk '{print $2}' | sort | uniq -c | sort -r  
-    # Most requested URLs containing XYZ
-    awk -F\" '($2 ~ "ref"){print $2}' $tempfile | awk '{print $2}' | sort | uniq -c | sort -r
+    # hdfs dfs -cat -ignoreCrc "$log" | awk -F\" '{print $2}' | awk '{print $2}' | sort | uniq -c | sort -r  > "${out_basename}_frequent_url.out"
 
-    rm $tempfile
-}
-export -f pure_func
+    # Find successful links
+    hdfs dfs -cat -ignoreCrc "$log" | awk '$9 ~/200/' | cut -d ' ' -f7 | sort | uniq -c | sort -rn > "${out_basename}_success.out"
 
-for log in $(hdfs dfs -ls -C $1); do
-    #bash -c 'run_tests $0 $1' $f $f #> /dev/null
-    #run_tests $f > /dev/null
-    logname=$2/$(basename $log)
-    hdfs dfs -cat -ignoreCrc $log | pure_func >> $logname
+    # Find broken links
+    hdfs dfs -cat -ignoreCrc "$log" | awk '$9 ~/404/' | cut -d ' ' -f7 | sort | uniq -c | sort -rn > "${out_basename}_broken.out"
+  
+    # Find 502 (bad-gateway) we can run following command:
+    hdfs dfs -cat -ignoreCrc "$log" | awk '($9 ~ /502/)' | awk '{print $7}' | sort | uniq -c | sort -r > "${out_basename}_bad_gateway.out"
+    
+    # Who are requesting broken links (or URLs resulting in 502)
+    hdfs dfs -cat -ignoreCrc "$log" | awk -F\" '($2 ~ "/wp-admin/install.php"){print $1}' | awk '{print $1}' | sort | uniq -c | sort -r > "${out_basename}_requester.out"
+    
+    # 404 for php files -mostly hacking attempts
+    hdfs dfs -cat -ignoreCrc "$log" | awk '$9 ~ /404/' | awk -F\" '($2 ~ "^GET .*.php")' | awk '{print $7}' | sort | uniq -c | sort -r  > "${out_basename}_hacking.out"
 done
 
 echo 'done';

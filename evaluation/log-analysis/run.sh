@@ -62,12 +62,12 @@ log-analysis() {
         script="${name_script_parsed[1]}"
         script_file="./scripts/$script.sh"
         input_dir=$(parse_directories "$script" scripts_inputs[@])
-        output_dir=$(parse_directories "$script" scripts_outputs[@])
+        output_dir=./outputs/$1$(parse_directories "$script" scripts_outputs[@])
         output_file="./outputs/$1/$script.out"
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
-
+        mkdir -p $output_dir
 
         if [[ "$1" == "bash" ]]; then
             (time $script_file $input_dir $output_dir > $output_file) 2> $time_file
@@ -104,14 +104,14 @@ log-analysis "bash"
 log-analysis "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
 log-analysis "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
 
-# log-analysis "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
-# log-analysis "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
-# log-analysis "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
+log-analysis "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
+log-analysis "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
+log-analysis "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
 
-# log-analysis "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
-# log-analysis "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
-# log-analysis "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
+log-analysis "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
+log-analysis "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
+log-analysis "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
 
-# log-analysis "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
-# log-analysis "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
-# log-analysis "optimized-r" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill regular"
+log-analysis "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
+log-analysis "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
+log-analysis "optimized-r" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill regular"
