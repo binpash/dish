@@ -67,9 +67,6 @@ log-analysis() {
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
-        # delete the output directory, this is useful because otherwise the 
-        # output files will be appended to the existing files
-        rm -r $output_dir
         mkdir -p $output_dir
 
         if [[ "$1" == "bash" ]]; then
@@ -100,6 +97,10 @@ log-analysis() {
             shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
             rm "$file"
         done
+
+        # Delete the output directory, this is useful because otherwise the 
+        # output files will be appended to the existing files, f we don't dekete manually
+        rm -r $output_dir
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
