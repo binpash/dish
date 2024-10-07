@@ -105,7 +105,7 @@ log-analysis() {
 
 
 # adjust the debug flag as required
-d=0
+d=1
 
 log-analysis "bash"
 log-analysis "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
