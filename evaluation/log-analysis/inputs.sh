@@ -12,7 +12,7 @@ if [ ! -d log_data ]; then
     rm nginx.zip
     # generating full analysis logs
     mkdir -p log_data
-	LOG_DATA_FILES=1 # 84 * 3
+	LOG_DATA_FILES=252 # 84 * 3
     # Loop over each file in nginx-logs/
     for j in nginx-logs/*; do
         # Get the base name of the file
@@ -28,7 +28,7 @@ if [ ! -d log_data ]; then
 
 	# generating small analysis logs
     mkdir -p log_data_small
-	LOG_DATA_FILES=1
+	LOG_DATA_FILES=6
     for (( i = 1; i <=$LOG_DATA_FILES; i++)) do
         for j in nginx-logs/*;do
             n=$(basename $j)
@@ -40,31 +40,31 @@ if [ ! -d log_data ]; then
 fi
 
 
-# if [ ! -d pcap_data ]; then
-#   wget https://atlas-group.cs.brown.edu/data/pcaps.zip --no-check-certificate
-#   unzip pcaps.zip
-#   rm pcaps.zip
-#   # generates 20G
-#   mkdir -p pcap_data/
-#   PCAP_DATA_FILES=15
-#   for (( i = 1; i <= $PCAP_DATA_FILES; i++ )) do
-#       for j in pcaps/*;do
-#           n=$(basename $j)
-#           cat $j > pcap_data/pcap${i}_${n};
-#       done
-#   done
-#   hdfs dfs -put pcap_data/ /log-analysis/pcap_data
-#   echo "Pcaps Generated"
+if [ ! -d pcap_data ]; then
+  wget https://atlas-group.cs.brown.edu/data/pcaps.zip --no-check-certificate
+  unzip pcaps.zip
+  rm pcaps.zip
+  # generates 20G
+  mkdir -p pcap_data/
+  PCAP_DATA_FILES=15
+  for (( i = 1; i <= $PCAP_DATA_FILES; i++ )) do
+      for j in pcaps/*;do
+          n=$(basename $j)
+          cat $j > pcap_data/pcap${i}_${n};
+      done
+  done
+  hdfs dfs -put pcap_data/ /log-analysis/pcap_data
+  echo "Pcaps Generated"
 
-#   # generates small inputs
-#   mkdir -p pcap_data_small/
-#   PCAP_DATA_FILES=1
-#   for (( i = 1; i <= $PCAP_DATA_FILES; i++ )) do
-#       for j in pcaps/*;do
-#           n=$(basename $j)
-#           cat $j > pcap_data_small/pcap${i}_${n}; 
-#       done
-#   done
-#   hdfs dfs -put pcap_data_small/ /log-analysis/pcap_data_small
-#   echo "Pcaps_small Generated"
-# fi
+  # generates small inputs
+  mkdir -p pcap_data_small/
+  PCAP_DATA_FILES=1
+  for (( i = 1; i <= $PCAP_DATA_FILES; i++ )) do
+      for j in pcaps/*;do
+          n=$(basename $j)
+          cat $j > pcap_data_small/pcap${i}_${n}; 
+      done
+  done
+  hdfs dfs -put pcap_data_small/ /log-analysis/pcap_data_small
+  echo "Pcaps_small Generated"
+fi
