@@ -46,6 +46,7 @@ do
         # Extract the filename and dirname
         filename=$(basename "$file" .hash)
         dirname=$(basename "$(dirname "$file")") # is the script_name
+        dirname=$(dirname "${file#$folder/}")
 
         # Compare the hash with the hash in the hashes directory
         if ! diff "$hash_folder/$dirname/$filename.hash" "$folder/$dirname/$filename.hash";

@@ -88,7 +88,7 @@ log-analysis() {
         fi
 
         # For every file in output_dir, generate a hash and delete the file
-        for file in "$output_dir"/*
+        for file in "$output_dir"/*.out
         do
             # Extract the filename without the directory
             filename=$(basename "$file")
