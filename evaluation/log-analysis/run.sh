@@ -95,12 +95,12 @@ log-analysis() {
 
             # Generate SHA-256 hash and delete output file
             shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
-            rm "$file"
+            # rm "$file"
         done
 
-        # Delete the output directory, this is useful because otherwise the 
-        # output files will be appended to the existing files, f we don't dekete manually
-        rm -r $output_dir
+        # # Delete the output directory, this is useful because otherwise the 
+        # # output files will be appended to the existing files, f we don't dekete manually
+        # rm -r $output_dir
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
