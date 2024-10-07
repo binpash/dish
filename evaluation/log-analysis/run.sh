@@ -67,6 +67,9 @@ log-analysis() {
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
+        # delete the output directory, this is useful because otherwise the 
+        # output files will be appended to the existing files
+        rm -r $output_dir
         mkdir -p $output_dir
 
         if [[ "$1" == "bash" ]]; then
