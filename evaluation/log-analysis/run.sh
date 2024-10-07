@@ -87,9 +87,16 @@ log-analysis() {
             sleep 10
         fi
 
-        # Generate SHA-256 hash and delete output file
-        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
-        rm "$output_file"
+        # For every file in output_dir, generate a hash and delete the file
+        for file in "$output_dir"/*
+        do
+            # Extract the filename without the directory
+            filename=$(basename "$file")
+
+            # Generate SHA-256 hash and delete output file
+            shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
+            rm "$file"
+        done
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
