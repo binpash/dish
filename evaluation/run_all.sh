@@ -21,19 +21,20 @@ for dir in */; do
     # Run the evaluation scripts
     ./cleanup.sh
     ./inputs.sh
+    sleep 30
     ./run.sh
-
-    # Move the outputs to the corresponding directory in ../outputs
-    mkdir -p "../outputs/$dir"
-    mv outputs "../outputs/$dir"
 
     # Generate and verify hashes
     rm -rf hashes/
+    mkdir -p "../outputs/$dir"
     ./verify.sh --generate --dish > ../outputs/$dir/verify.out
+
+    # Move the outputs to the corresponding directory in ../outputs
+    mv outputs/* "../outputs/$dir"
 
     # Cleanup
     ./cleanup.sh
-
+    sleep 30
 
     # Go back to the parent directory
     cd ..
