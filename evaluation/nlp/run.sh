@@ -114,23 +114,27 @@ nlp() {
 # the startup overhead ended up dwarfing the execution time by
 # a factor of ten on average. (source: nsdi 2023 DiSh paper)
 # adjust the debug flag as required
-d=0
+d=1
 
-nlp "bash"
-nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
+# nlp "bash"
+# nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
+
 nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
+nlp "dynamic"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic"
+nlp "dynamic-m"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill merger"
+nlp "dynamic-r"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill regular"
 
-nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
-nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
-nlp "naive-r"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill regular"
+# nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
+# nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
+# nlp "naive-r"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill regular"
 
-nlp "base"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
-nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill merger"
-nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
+# nlp "base"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
+# nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill merger"
+# nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
 
-nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized"
-nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill merger"
-nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill regular"
+# nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized"
+# nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill merger"
+# nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill regular"
 
 # nlp "dish-no-du" "--width 8 --r_split --distributed_exec -d $d"
 # nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec -d $d"
