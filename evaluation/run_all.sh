@@ -27,7 +27,7 @@ for dir in */; do
     # Generate and verify hashes
     rm -rf hashes/
     mkdir -p "../outputs/$dir"
-    ./verify.sh --generate --dish > ../outputs/$dir/verify.out
+    ./verify.sh --generate --dish | tee ../outputs/$dir/verify.out
 
     # Move the outputs to the corresponding directory in ../outputs
     mv outputs/* "../outputs/$dir"
