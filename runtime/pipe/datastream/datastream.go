@@ -28,7 +28,7 @@ var (
 	streamId   = flag.String("id", "", "The id of the stream")
 	ft         = flag.String("ft", "disabled", "Fault tolerance mode. naive, base, optimized or dynamic. Default is disabled")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
-	singular   = flag.Bool("sg", false, "Indicates the graph is singular")
+	singular   = flag.Bool("s", false, "Indicates the graph is singular")
 	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
 )
 
