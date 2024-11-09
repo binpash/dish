@@ -267,7 +267,7 @@ func main() {
 	// })
 
 	var err error
-	if *ft == "optimized" {
+	if *ft == "optimized" || *ft == "dynamic" {
 		err = readLogicalSplitOptimized(*splitNum, *path, *subblockNum, *subblockCnt, *nextBlockPath, *nextBlockHosts)
 	} else {
 		conf := serialize_conf(*config)
