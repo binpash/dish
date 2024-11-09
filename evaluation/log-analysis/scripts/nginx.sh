@@ -23,10 +23,10 @@ for log in $(hdfs dfs -ls -C "$1"); do
     hdfs dfs -cat -ignoreCrc "$log" | awk "(\$9 ~ /502/)" | awk "{print \$7}" | sort | uniq -c | sort -r >> "${out_basename}_bad_gateway.out"
     
     # Who are requesting broken links (or URLs resulting in 502)
-    hdfs dfs -cat -ignoreCrc "$log" | awk -F\" "(\$2 ~ "/wp-admin/install.php"){print \$1}" | awk "{print \$1}" | sort | uniq -c | sort -r >> "${out_basename}_requester.out"
+    hdfs dfs -cat -ignoreCrc "$log" | awk -F\" "(\$2 ~ \"/wp-admin/install.php\"){print \$1}" | awk "{print \$1}" | sort | uniq -c | sort -r >> "${out_basename}_requester.out"
     
     # 404 for php files -mostly hacking attempts
-    hdfs dfs -cat -ignoreCrc "$log" | awk "\$9 ~ /404/" | awk -F\" "(\$2 ~ "^GET .*.php")" | awk "{print \$7}" | sort | uniq -c | sort -r  >> "${out_basename}_hacking.out"
+    hdfs dfs -cat -ignoreCrc "$log" | awk "\$9 ~ /404/" | awk -F\" "(\$2 ~ \"^GET .*\.php\")" | awk "{print \$7}" | sort | uniq -c | sort -r  >> "${out_basename}_hacking.out"
 done
 
 echo "done";
