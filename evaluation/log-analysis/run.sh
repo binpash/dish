@@ -99,7 +99,7 @@ log-analysis() {
         done
 
         # Delete the output directory, this is useful because otherwise the 
-        # output files will be appended to the existing files, f we don't dekete manually
+        # output files will be appended to the existing files, if we don't delete manually
         rm -r $output_dir
 
         cat "${time_file}" >> $all_res_file
