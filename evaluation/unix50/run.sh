@@ -174,11 +174,15 @@ unix50_hadoopstreaming() {
 }
 
 # adjust the debug flag as required
-d=0
+d=1
 
-unix50 "bash"
+# unix50 "bash"
 # unix50 "pash"        "--width 8 --r_split -d $d"
-# unix50 "dish"        "--width 8 --r_split -d $d --distributed_exec"
+unix50 "dish"        "--width 8 --r_split -d $d --distributed_exec"
+
+unix50 "dynamic"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+unix50 "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+unix50 "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
 # unix50 "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
 # unix50 "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"

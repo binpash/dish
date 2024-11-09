@@ -118,8 +118,8 @@ d=1
 
 # nlp "bash"
 # nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
-
 nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
+
 nlp "dynamic"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic"
 nlp "dynamic-m"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill merger"
 nlp "dynamic-r"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill regular"

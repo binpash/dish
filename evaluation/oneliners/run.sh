@@ -155,21 +155,25 @@ oneliners_hadoopstreaming() {
 # adjust the debug flag as required
 d=1
 
-oneliners "bash"
-oneliners "pash"        "--width 8 --r_split -d $d"
+# oneliners "bash"
+# oneliners "pash"        "--width 8 --r_split -d $d"
 oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-oneliners "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-oneliners "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-oneliners "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
+oneliners "dynamic"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
-oneliners "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-oneliners "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-oneliners "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+# oneliners "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
+# oneliners "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
+# oneliners "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-oneliners "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-oneliners "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-oneliners "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
+# oneliners "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+# oneliners "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+# oneliners "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
-oneliners_hadoopstreaming "normal"
+# oneliners "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
+# oneliners "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
+# oneliners "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
+
+# oneliners_hadoopstreaming "normal"
 # oneliners_hadoopstreaming "fail" "--kill"

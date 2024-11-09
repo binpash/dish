@@ -111,9 +111,13 @@ log-analysis() {
 # adjust the debug flag as required
 d=1
 
-log-analysis "bash"
-log-analysis "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
+# log-analysis "bash"
+# log-analysis "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
 log-analysis "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
+
+log-analysis "dynamic"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
+log-analysis "dynamic-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
+log-analysis "dynamic-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
 
 # log-analysis "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
 # log-analysis "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"

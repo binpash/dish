@@ -122,11 +122,15 @@ media-conv() {
 
 
 # adjust the debug flag as required
-d=0
+d=1
 
-media-conv "bash"
-media-conv "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
+# media-conv "bash"
+# media-conv "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
 media-conv "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
+
+media-conv "dynamic"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
+media-conv "dynamic-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
+media-conv "dynamic-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
 
 # media-conv "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
 # media-conv "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"

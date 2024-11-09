@@ -65,11 +65,15 @@ file-enc() {
     done
 }
 
-d=0
+d=1
 
-file-enc "bash"
-file-enc "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
+# file-enc "bash"
+# file-enc "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
 file-enc "dish"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+
+file-enc "dynamic"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic"
+file-enc "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill merger"
+file-enc "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill regular"
 
 # file-enc "naive"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive"
 # file-enc "naive-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill merger"
