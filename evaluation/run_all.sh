@@ -34,7 +34,7 @@ for dir in */; do
 
     # Cleanup
     ./cleanup.sh
-    sleep 30
+    sleep 120
 
     # Go back to the parent directory
     cd ..
