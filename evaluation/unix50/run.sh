@@ -124,7 +124,7 @@ unix50() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 120
+            sleep 30
         fi
 
         # Generate SHA-256 hash and delete output file
