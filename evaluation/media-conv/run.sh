@@ -58,7 +58,7 @@ gen-hash-dir() {
         
         # Create the .hash filename
         hash_file="${1}/${base_name}.hash"
-        ls 
+        # ls 
         # Write the hash to the .hash file
         echo "$hash_value" > "$hash_file"
         
