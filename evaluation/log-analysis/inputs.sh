@@ -8,7 +8,7 @@ hdfs dfs -mkdir /log-analysis
 # download the input for the nginx logs and populate the dataset
 if [ ! -d log_data ]; then
     wget https://atlas-group.cs.brown.edu/data/nginx.zip --no-check-certificate
-    unzip nginx.zip 
+    unzip -q nginx.zip
     rm nginx.zip
     # generating full analysis logs
     mkdir -p log_data
@@ -42,7 +42,7 @@ fi
 
 if [ ! -d pcap_data ]; then
   wget https://atlas-group.cs.brown.edu/data/pcaps.zip --no-check-certificate
-  unzip pcaps.zip
+  unzip -q pcaps.zip
   rm pcaps.zip
   # generates 20G
   mkdir -p pcap_data/
