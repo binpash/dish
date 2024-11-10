@@ -20,8 +20,9 @@ for dir in */; do
 
     # Run the evaluation scripts
     ./cleanup.sh
+    sleep 10
     ./inputs.sh
-    sleep 30
+    sleep 600
     ./run.sh
 
     # Generate and verify hashes
@@ -34,7 +35,7 @@ for dir in */; do
 
     # Cleanup
     ./cleanup.sh
-    sleep 120
+    sleep 600
 
     # Go back to the parent directory
     cd ..
