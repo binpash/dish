@@ -83,7 +83,7 @@ nlp() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 120
+            sleep 60
         fi
 
         # For every file in output_dir, generate a hash and delete the file
