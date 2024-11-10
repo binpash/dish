@@ -1,20 +1,35 @@
 #!/bin/bash
 
-# Loop through each directory in the current folder
-for dir in */; do
-    # Remove trailing slash from the directory name
-    dir=${dir%/}
-    
-    # Skip the 'distr_benchmarks' directory
-    if [ "$dir" == "distr_benchmarks" ]; then
-        continue
-    fi
+# Absolute path to the outputs directory
+output_dir="$(pwd)/outputs"
 
-    # # Skip the 'log-analysis' for now
-    # if [ "$dir" == "log-analysis" ]; then
-    #     continue
-    # fi
-    
+# Remove and recreate the outputs directory
+if [ -d "$output_dir" ]; then
+    rm -rf "$output_dir"
+fi
+mkdir -p "$output_dir"
+
+# List of directories to process, you can comment out any directory as needed
+dirs=(
+    "oneliners"
+    "unix50"
+    "covid-mts" 
+    "nlp"
+    "max-temp"
+    "media-conv"
+    "log-analysis"
+    "file-enc"
+)
+
+# Initialize output files
+exec > >(tee -a "$output_dir/run_all.out")  # Redirect stdout to file and stdout
+exec 2> >(tee -a "$output_dir/run_all.err" >&2)  # Redirect stderr to file and stderr
+
+# Start timing the script
+start_time=$(date +%s)
+
+# Loop through each directory in the list
+for dir in "${dirs[@]}"; do
     # Change to the directory
     cd "./$dir" || continue
 
@@ -27,11 +42,11 @@ for dir in */; do
 
     # Generate and verify hashes
     rm -rf hashes/
-    mkdir -p "../outputs/$dir"
-    ./verify.sh --generate --dish | tee ../outputs/$dir/verify.out
+    mkdir -p "$output_dir/$dir"
+    ./verify.sh --generate --dish | tee "$output_dir/$dir/verify.out"
 
-    # Move the outputs to the corresponding directory in ../outputs
-    mv outputs/* "../outputs/$dir"
+    # Move the outputs to the corresponding directory in $output_dir
+    mv outputs/* "$output_dir/$dir"
 
     # Cleanup
     ./cleanup.sh
@@ -40,3 +55,10 @@ for dir in */; do
     # Go back to the parent directory
     cd ..
 done
+
+# End timing the script
+end_time=$(date +%s)
+duration=$((end_time - start_time))
+
+# Save the duration to run_all.time
+echo "Total execution time: $duration seconds" | tee -a "$output_dir/run_all.time"
