@@ -22,8 +22,8 @@ dirs=(
 )
 
 # Initialize output files
-exec > >(tee -a "$output_dir/run_all.out")  # Redirect stdout to .out file
-exec 2> >(tee -a "$output_dir/run_all.out" "$output_dir/run_all.err" >&2)  # Redirect stderr to both .out and .err
+exec > >(tee -a "$output_dir/run_all.all" "$output_dir/run_all.out")
+exec 2> >(tee -a "$output_dir/run_all.all" "$output_dir/run_all.err" >&2)
 
 # Start timing the script
 start_time=$(date +%s)
