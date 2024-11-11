@@ -121,8 +121,8 @@ d=1
 nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
 
 nlp "dynamic"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic"
-nlp "dynamic-m"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill merger"
-nlp "dynamic-r"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill regular"
+# nlp "dynamic-m"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill merger"
+# nlp "dynamic-r"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft dynamic --kill regular"
 
 # nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
 # nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
