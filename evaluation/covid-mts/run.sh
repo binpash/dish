@@ -110,9 +110,9 @@ covid-mts "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --ft dyn
 # covid-mts "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
 # covid-mts "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-# covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-# covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-# covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
 # covid-mts "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
 # covid-mts "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
