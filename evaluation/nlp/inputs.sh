@@ -28,11 +28,12 @@ if [ ! -e ./pg ]; then
     mkdir pg
     cd pg
     book_count=100
+    echo "Downloading $book_count books"
 
     head -n $book_count ../book_links.txt | while IFS= read -r line
     do
         full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
-        echo "Downloading $full_url"
+        # echo "Downloading $full_url"
         wget -q "$full_url"
     done
     # Add newline to the original file
@@ -40,6 +41,7 @@ if [ ! -e ./pg ]; then
         echo >> $f
     done
 
+    echo "Downloaded $book_count books"
     cd ..
 fi
 
