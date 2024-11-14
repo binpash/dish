@@ -11,7 +11,7 @@ mkdir -p "$output_dir"
 
 # List of directories to process, you can comment out any directory as needed
 dirs=(
-    # "oneliners"
+    "oneliners"
     # "unix50"
     "covid-mts" 
     "nlp"
