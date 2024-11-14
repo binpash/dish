@@ -17,7 +17,7 @@ hdfs dfs -mkdir /file-enc
 
 # download the initial pcaps to populate the whole dataset
 if [ ! -d ${IN}/pcap_data ]; then
-  wget https://atlas-group.cs.brown.edu/data/pcaps.zip
+  wget -q https://atlas-group.cs.brown.edu/data/pcaps.zip
   unzip -q pcaps.zip
   rm pcaps.zip
   # generates 20G

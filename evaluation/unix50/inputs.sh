@@ -9,7 +9,7 @@ inputs=(1 10 11 12 2 3 4 5 6 7 8 9.1 9.2 9.3 9.4 9.5 9.6 9.7 9.8 9.9)
 for input in ${inputs[@]}
 do
     if [ ! -f "${input}.txt" ]; then
-        wget "http://atlas-group.cs.brown.edu/data/unix50/${input}.txt" -q
+        wget -q "http://atlas-group.cs.brown.edu/data/unix50/${input}.txt" -q
     fi
 
     if [ ! -f "${input}_1M.txt" ]; then

@@ -5,7 +5,7 @@ mkdir -p inputs
 cd inputs
 
 if [ ! -f ./book_links.txt ]; then
-    wget -O book_links.txt "https://atlas-group.cs.brown.edu/data/gutenberg/books.txt"
+    wget -q -O book_links.txt "https://atlas-group.cs.brown.edu/data/gutenberg/books.txt"
     if [ ! -f book_links.txt ]; then
         echo "Failed to download book_links.txt"
         exit 1

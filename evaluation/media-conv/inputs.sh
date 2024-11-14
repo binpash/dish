@@ -10,7 +10,7 @@ hdfs dfs -mkdir /media-conv
 if [ ! -d "wav" ]; then
     WAV_DATA_FILES=120
     mkdir wav_full
-    wget https://atlas-group.cs.brown.edu/data/wav.zip -O wav.zip
+    wget -q https://atlas-group.cs.brown.edu/data/wav.zip -O wav.zip
     unzip -q wav.zip -d wav_full
     cd wav_full/wav
     for f in *.wav; do
@@ -27,7 +27,7 @@ fi
 # Check if the wav_small directory does not exist
 if [ ! -d "wav_small" ]; then
     WAV_DATA_FILES=20
-    wget https://atlas-group.cs.brown.edu/data/wav.zip -O wav_small.zip
+    wget -q https://atlas-group.cs.brown.edu/data/wav.zip -O wav_small.zip
     mkdir wav_small
     unzip -q wav_small.zip -d wav_small
     cd wav_small/wav
@@ -47,7 +47,7 @@ fi
 # Check if the directories don't exist and handle full/jpg.zip
 if [ ! -d "jpg" ]; then
     JPG_DATA_LINK=https://atlas-group.cs.brown.edu/data/full/jpg.zip
-    wget $JPG_DATA_LINK -O jpg_full.zip
+    wget -q $JPG_DATA_LINK -O jpg_full.zip
     unzip -q jpg_full.zip -d jpg_full
     hdfs dfs -put jpg_full/jpg /media-conv/jpg
     echo "JPG Generated"
@@ -57,7 +57,7 @@ fi
 # Check if the small/jpg directory doesn't exist and handle small/jpg.zip
 if [ ! -d "jpg_small" ]; then
     JPG_DATA_LINK=https://atlas-group.cs.brown.edu/data/small/jpg.zip
-    wget $JPG_DATA_LINK -O jpg_small.zip
+    wget -q $JPG_DATA_LINK -O jpg_small.zip
     unzip -q jpg_small.zip -d jpg_small
     hdfs dfs -put jpg_small/jpg /media-conv/jpg_small
     echo "JPG_small Generated"
