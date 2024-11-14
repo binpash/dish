@@ -106,13 +106,22 @@ covid-mts "dynamic"       "--width 8 --r_split -d $d --distributed_exec --ft dyn
 covid-mts "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
 covid-mts "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
+# For microbenchmarks
+covid-mts "dynamic-on"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on"
+covid-mts "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+covid-mts "dynamic-on-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
+
+covid-mts "dynamic-off"      "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off"
+covid-mts "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+covid-mts "dynamic-off-r"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
+
 # covid-mts "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
 # covid-mts "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
 # covid-mts "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
 
-covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+# covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
+# covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
+# covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
 
 # covid-mts "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
 # covid-mts "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"

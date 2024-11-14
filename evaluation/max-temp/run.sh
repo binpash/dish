@@ -107,13 +107,22 @@ max-temp "dynamic"       "--width 8 --r_split -d $d --parallel_pipelines --paral
 max-temp "dynamic-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
 max-temp "dynamic-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
 
+# For microbenchmarks
+max-temp "dynamic-on"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on"
+max-temp "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+max-temp "dynamic-on-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
+
+max-temp "dynamic-off"      "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off"
+max-temp "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+max-temp "dynamic-off-r"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
+
 # max-temp "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
 # max-temp "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
 # max-temp "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
 
-max-temp "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
-max-temp "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
-max-temp "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
+# max-temp "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
+# max-temp "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
+# max-temp "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
 
 # max-temp "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
 # max-temp "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
