@@ -68,21 +68,8 @@ file-enc() {
 d=1
 
 # file-enc "bash"
-# file-enc "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
-file-enc "dish"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+file-enc "dish"          "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
 file-enc "dynamic"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic"
 file-enc "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill merger"
 file-enc "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill regular"
-
-# file-enc "naive"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive"
-# file-enc "naive-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill merger"
-# file-enc "naive-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft naive --kill regular"
-
-# file-enc "base"        "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base"
-# file-enc "base-m"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill merger"
-# file-enc "base-r"      "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft base --kill regular"
-
-# file-enc "optimized"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized"
-# file-enc "optimized-m" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill merger"
-# file-enc "optimized-r" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft optimized --kill regular"

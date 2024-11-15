@@ -177,23 +177,10 @@ unix50_hadoopstreaming() {
 d=1
 
 # unix50 "bash"
-# unix50 "pash"        "--width 8 --r_split -d $d"
-unix50 "dish"        "--width 8 --r_split -d $d --distributed_exec"
+unix50 "dish"          "--width 8 --r_split -d $d --distributed_exec"
 
 unix50 "dynamic"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
 # unix50 "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
 # unix50 "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
-
-# unix50 "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-# unix50 "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-# unix50 "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
-
-# unix50 "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-# unix50 "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-# unix50 "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
-
-# unix50 "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-# unix50 "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-# unix50 "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
 
 # unix50_hadoopstreaming
