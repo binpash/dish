@@ -57,6 +57,9 @@ oneliners() {
         log_file="./outputs/$1/${parsed[0]}.log"
         hash_file="./outputs/$1/${parsed[0]}.hash"
 
+        # Print input size
+        hdfs dfs -du -h -s "$input_file"
+
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $input_file > $output_file) 2> $time_file
         else

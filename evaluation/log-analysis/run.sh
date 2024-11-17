@@ -69,6 +69,9 @@ log-analysis() {
         hash_file="./outputs/$1/$script.hash"
         mkdir -p $output_dir
 
+        # Print input size
+        hdfs dfs -du -h -s "$input_dir"
+
         if [[ "$1" == "bash" ]]; then
             (time $script_file $input_dir $output_dir > $output_file) 2> $time_file
         else
