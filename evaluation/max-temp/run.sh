@@ -99,20 +99,20 @@ max-temp_hadoopstreaming() {
 # adjust the debug flag as required
 d=1
 
-# max-temp "bash"
-max-temp "dish"             "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
+max-temp "bash"
+# max-temp "dish"             "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
 
-max-temp "dynamic"          "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
-max-temp "dynamic-m"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
-max-temp "dynamic-r"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
+# max-temp "dynamic"          "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
+# max-temp "dynamic-m"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
+# max-temp "dynamic-r"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
 
 # For microbenchmarks
-max-temp "dynamic-on"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on"
-max-temp "dynamic-on-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
-max-temp "dynamic-on-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
+# max-temp "dynamic-on"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on"
+# max-temp "dynamic-on-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+# max-temp "dynamic-on-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
 
-max-temp "dynamic-off"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off"
-max-temp "dynamic-off-m"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
-max-temp "dynamic-off-r"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
+# max-temp "dynamic-off"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off"
+# max-temp "dynamic-off-m"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+# max-temp "dynamic-off-r"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
 
-# max-temp_hadoopstreaming
+max-temp_hadoopstreaming

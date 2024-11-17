@@ -85,68 +85,33 @@ oneliners() {
 }
 
 oneliners_hadoopstreaming() {
-    hadoop_normal_dir="outputs/hadoop-streaming-normal"
-    mode_name="hadoop-streaming-$1"
-    # Make sure hadoop normal was run before hadoop fail runs
-    # So that we can run the normal exec time and inject failure at ~50% exec time
-    # if [ "$1" == "fail" ]; then
-    #     if [ ! -d "$hadoop_normal_dir" ]; then
-    #         echo "Directory $hadoop_normal_dir does not exist."
-    #         exit 1
-    #     fi
-    # fi
-
-    mkdir -p "outputs/$mode_name"
-
-    # Set hdfs paths
+    # used by run_all.sh, adjust as required
     jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
     basepath="/oneliners"
-    outputs_dir="/outputs/$mode_name/oneliners"
-    if hdfs dfs -test -d "$outputs_dir"; then
-        hdfs dfs -rm -r "$outputs_dir"
-    fi
-    
-    hdfs dfs -mkdir -p "$outputs_dir"
+    outputs_dir="/outputs/hadoop-streaming/oneliners"
 
-    # Set local paths
+    hdfs dfs -rm -r "$outputs_dir"
+    hdfs dfs -mkdir -p "$outputs_dir"
     mkdir -p "outputs/hadoop"
     source ./scripts/bi-gram.aux.sh
     cd scripts/hadoop-streaming
-    mode_res_file="../../outputs/$mode_name/oneliners.res"
+    mode_res_file="../../outputs/hadoop/oneliners.res"
     > $mode_res_file
     all_res_file="../../outputs/oneliners.res"
 
-    echo executing oneliners $mode_name $(date) | tee -a $mode_res_file $all_res_file
+    echo executing oneliners hadoop $(date) | tee -a $mode_res_file $all_res_file
     while IFS= read -r line; do
-        if [[ $line == \#* ]]; then
-            continue
-        fi
-        echo $line
         name=$(cut -d "#" -f2- <<< "$line")
         name=$(sed "s/ //g" <<< $name)
-        # echo $name
-        output_file="../../outputs/$mode_name/$name.out"
-        time_file="../../outputs/$mode_name/$name.time"
-        log_file="../../outputs/$mode_name/$name.log"
-        hash_file="../../outputs/$mode_name/$name.hash"
-        
+
+        # output_file="../../outputs/hadoop/$name.out"
+        time_file="../../outputs/hadoop/$name.time"
+        log_file="../../outputs/hadoop/$name.log"
 
         (time eval $line &> $log_file) 2> $time_file
 
         cat "${time_file}" >> $all_res_file
         echo "./scripts/hadoop-streaming/$name.sh $(cat "$time_file")" | tee -a $mode_res_file
-
-
-        # Combine outputs from partitions on hdfs
-        hadoop fs -cat $outputs_dir/$name/part-* > $output_file
-        # Remove tabs 
-        # tr -d '\t' < $output_file.tmp > $output_file
-        # rm $output_file.tmp
-
-        # Generate SHA-256 hash and delete output file
-        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
-        rm "$output_file"
-        
     done <"run_all.sh"
 
     cd "../.."
@@ -155,12 +120,12 @@ oneliners_hadoopstreaming() {
 # adjust the debug flag as required
 d=1
 
-# oneliners "bash"
-oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
+oneliners "bash"
+# oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-oneliners "dynamic"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
-oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
-oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
+# oneliners "dynamic"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+# oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+# oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
-# oneliners_hadoopstreaming "normal"
-# oneliners_hadoopstreaming "fail" "--kill"
+oneliners_hadoopstreaming
+

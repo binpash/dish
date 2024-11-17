@@ -98,20 +98,20 @@ covid-mts_hadoopstreaming() {
 # adjust the debug flag as required
 d=1
 
-# covid-mts "bash"
-covid-mts "dish"             "--width 8 --r_split -d $d --distributed_exec"
+covid-mts "bash"
+# covid-mts "dish"             "--width 8 --r_split -d $d --distributed_exec"
 
-covid-mts "dynamic"          "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
-covid-mts "dynamic-m"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
-covid-mts "dynamic-r"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
+# covid-mts "dynamic"          "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+# covid-mts "dynamic-m"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+# covid-mts "dynamic-r"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
-# For microbenchmarks
-covid-mts "dynamic-on"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on"
-covid-mts "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
-covid-mts "dynamic-on-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
+# # For microbenchmarks
+# covid-mts "dynamic-on"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on"
+# covid-mts "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+# covid-mts "dynamic-on-r"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill regular"
 
-covid-mts "dynamic-off"      "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off"
-covid-mts "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
-covid-mts "dynamic-off-r"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
+# covid-mts "dynamic-off"      "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off"
+# covid-mts "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+# covid-mts "dynamic-off-r"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill regular"
 
-# covid-mts_hadoopstreaming
+covid-mts_hadoopstreaming
