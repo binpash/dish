@@ -18,8 +18,8 @@ for dir in */; do
     # Change to the directory
     cd "./$dir" || continue
 
-    # Count evaluation scripts LOC
-    find scripts -name "*.sh" -exec grep -v '^\s*#' {} + | grep -v '^\s*$' | wc -l
+    # Echo dir and Count evaluation scripts LoC excluding hadoop-streming directory
+    echo "$dir: $(find scripts -type d -name hadoop-streaming -prune -o -name "*.sh" -exec grep -hv '^\s*#' {} + | grep -v '^\s*$' | wc -l)"
 
     cd ..
 done
