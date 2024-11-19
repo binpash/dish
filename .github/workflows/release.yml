@@ -116,3 +116,45 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image.name }}:${{ env.RELEASE }}
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image.name }}:latest
+
+  canary-test:
+    runs-on: ubuntu-latest
+    needs: build-dependant-images
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Run Containers
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          RELEASE: ${{ github.event.release.tag_name || 'latest' }}
+        run: |
+          cd docker-hadoop
+          chmod +x ./setup-compose.sh
+          ./setup-compose.sh
+
+          # Wait for namenode to be ready
+          echo "Waiting for namenode to be ready..."
+          max_attempts=10
+          attempt_num=1
+          until docker exec namenode curl -sf http://localhost:9870 || [ "$attempt_num" -gt "$max_attempts" ]; do
+              echo "namenode is not ready yet. Retrying in 5 seconds..."
+              sleep 5
+              attempt_num=$((attempt_num + 1))
+          done
+
+          if [ "$attempt_num" -le "$max_attempts" ]; then
+              echo "namenode is ready. Proceeding with test commands."
+          else
+              echo "namenode did not become ready in time."
+              exit 1
+          fi
+
+      - name: Run tests
+        run: |
+          # Run the commands now that namenode is ready
+          docker exec nodemanager1 /bin/sh -c "cd \$DISH_TOP && hdfs dfs -put README.md /README.md"
+          docker exec nodemanager1 /bin/sh -c "cd \$DISH_TOP && ./di.sh ./scripts/sample.sh"
