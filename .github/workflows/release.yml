@@ -29,33 +29,33 @@ jobs:
         run: |
           cd docker-hadoop
 
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base:${{ env.RELEASE }} ./pash-base \
+          docker build -t binpash/dish-pash-base:${{ env.RELEASE }} ./pash-base \
           --build-arg RELEASE=${{ env.RELEASE }}
 
           # Tag the image with 'latest'
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base:${{ env.RELEASE }} \
-          ${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base:latest
+          docker tag binpash/dish-pash-base:${{ env.RELEASE }} \
+          binpash/dish-pash-base:latest
 
       - name: Push dish pash base image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base:${{ env.RELEASE }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base:latest
+          docker push binpash/dish-pash-base:${{ env.RELEASE }}
+          docker push binpash/dish-pash-base:latest
 
       - name: Build and tag hadoop pash base image
         run: |
           cd docker-hadoop
 
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/hadoop-pash-base:${{ env.RELEASE }} ./base \
-          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=${{ secrets.DOCKERHUB_USERNAME }}/dish-pash-base
+          docker build -t binpash/hadoop-pash-base:${{ env.RELEASE }} ./base \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/dish-pash-base
 
           # Tag the image with 'latest'
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/hadoop-pash-base:${{ env.RELEASE }} \
-          ${{ secrets.DOCKERHUB_USERNAME }}/hadoop-pash-base:latest
+          docker tag binpash/hadoop-pash-base:${{ env.RELEASE }} \
+          binpash/hadoop-pash-base:latest
 
       - name: Push hadoop pash base image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hadoop-pash-base:${{ env.RELEASE }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/hadoop-pash-base:latest
+          docker push binpash/hadoop-pash-base:${{ env.RELEASE }}
+          docker push binpash/hadoop-pash-base:latest
 
   build-dependant-images:
     runs-on: ubuntu-latest
@@ -108,11 +108,11 @@ jobs:
           cd docker-hadoop
 
           # Build Image
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.name }}:${{ env.RELEASE }} ${{ matrix.image.path }} \
-          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.base_image }}
+          docker build -t binpash/${{ matrix.image.name }}:${{ env.RELEASE }} ${{ matrix.image.path }} \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/${{ matrix.image.base_image }}
           # Tag the image with 'latest'
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.name }}:${{ env.RELEASE }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.name }}:latest
+          docker tag binpash/${{ matrix.image.name }}:${{ env.RELEASE }} binpash/${{ matrix.image.name }}:latest
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.name }}:${{ env.RELEASE }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.image.name }}:latest
+          docker push binpash/${{ matrix.image.name }}:${{ env.RELEASE }}
+          docker push binpash/${{ matrix.image.name }}:latest
