@@ -7,7 +7,7 @@ env:
   RELEASE: ${{ github.event.release.tag_name || 'latest' }}
 
 jobs:
-  build-base-images:
+  build-dish-pash-base:
     runs-on: ubuntu-latest
 
     steps:
@@ -41,52 +41,9 @@ jobs:
           docker push binpash/dish-pash-base:${{ env.RELEASE }}
           docker push binpash/dish-pash-base:latest
 
-      - name: Build and tag hadoop pash base image
-        run: |
-          cd docker-hadoop
-
-          docker build -t binpash/hadoop-pash-base:${{ env.RELEASE }} ./base \
-          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/dish-pash-base
-
-          # Tag the image with 'latest'
-          docker tag binpash/hadoop-pash-base:${{ env.RELEASE }} \
-          binpash/hadoop-pash-base:latest
-
-      - name: Push hadoop pash base image
-        run: |
-          docker push binpash/hadoop-pash-base:${{ env.RELEASE }}
-          docker push binpash/hadoop-pash-base:latest
-
-  build-dependant-images:
+  build-hadoop-pash-base:
     runs-on: ubuntu-latest
-    needs: build-base-images
-
-    strategy:
-      matrix:
-        image:
-          - name: hadoop-namenode
-            path: ./namenode
-            base_image: hadoop-pash-base
-
-          - name: hadoop-datanode
-            path: ./datanode
-            base_image: hadoop-pash-base
-
-          - name: hadoop-resourcemanager
-            path: ./resourcemanager
-            base_image: hadoop-pash-base
-
-          - name: hadoop-nodemanager
-            path: ./nodemanager
-            base_image: hadoop-pash-base
-
-          - name: hadoop-historyserver
-            path: ./historyserver
-            base_image: hadoop-pash-base
-
-          - name: hadoop-submit
-            path: ./submit
-            base_image: hadoop-pash-base
+    needs: build-dish-pash-base
 
     steps:
       - name: Checkout code
@@ -103,16 +60,227 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and tag Docker image
+      - name: Build and tag hadoop pash base image
         run: |
           cd docker-hadoop
 
-          # Build Image
-          docker build -t binpash/${{ matrix.image.name }}:${{ env.RELEASE }} ${{ matrix.image.path }} \
-          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/${{ matrix.image.base_image }}
+          docker build -t binpash/hadoop-pash-base:${{ env.RELEASE }} ./base \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/dish-pash-base
+
           # Tag the image with 'latest'
-          docker tag binpash/${{ matrix.image.name }}:${{ env.RELEASE }} binpash/${{ matrix.image.name }}:latest
-      - name: Push Docker image
+          docker tag binpash/hadoop-pash-base:${{ env.RELEASE }} \
+          binpash/hadoop-pash-base:latest
+
+      - name: Push hadoop pash base image
         run: |
-          docker push binpash/${{ matrix.image.name }}:${{ env.RELEASE }}
-          docker push binpash/${{ matrix.image.name }}:latest
+          docker push binpash/hadoop-pash-base:${{ env.RELEASE }}
+          docker push binpash/hadoop-pash-base:latest
+
+  build-hadoop-namenode:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop namenode image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-namenode:${{ env.RELEASE }} ./namenode \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          # Tag the image with 'latest'
+          docker tag binpash/hadoop-namenode:${{ env.RELEASE }} \
+          binpash/hadoop-namenode:latest
+
+      - name: Push hadoop namenode image
+        run: |
+          docker push binpash/hadoop-namenode:${{ env.RELEASE }}
+          docker push binpash/hadoop-namenode:latest
+
+  build-hadoop-datanode:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop datanode image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-datanode:${{ env.RELEASE }} ./datanode \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          # Tag the image with 'latest'
+          docker tag binpash/hadoop-datanode:${{ env.RELEASE }} \
+          binpash/hadoop-datanode:latest
+
+      - name: Push hadoop datanode image
+        run: |
+          docker push binpash/hadoop-datanode:${{ env.RELEASE }}
+          docker push binpash/hadoop-datanode:latest
+
+  build-hadoop-resourcemanager:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop resourcemanager image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-resourcemanager:${{ env.RELEASE }} ./resourcemanager \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          # Tag the image with 'latest'
+          docker tag binpash/hadoop-resourcemanager:${{ env.RELEASE }} \
+          binpash/hadoop-resourcemanager:latest
+
+      - name: Push hadoop resourcemanager image
+        run: |
+          docker push binpash/hadoop-resourcemanager:${{ env.RELEASE }}
+          docker push binpash/hadoop-resourcemanager:latest
+
+  build-hadoop-nodemanager:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop nodemanager image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-nodemanager:${{ env.RELEASE }} ./nodemanager \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          docker tag binpash/hadoop-nodemanager:${{ env.RELEASE }} /
+          binpash/hadoop-nodemanager:latest
+
+      - name: Push hadoop nodemanager image
+        run: |
+          docker push binpash/hadoop-nodemanager:${{ env.RELEASE }}
+          docker push binpash/hadoop-nodemanager:latest
+
+  build-hadoop-historyserver:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop historyserver image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-historyserver:${{ env.RELEASE }} ./historyserver \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          # Tag the image with 'latest'
+          docker tag binpash/hadoop-historyserver:${{ env.RELEASE }} \
+          binpash/hadoop-historyserver:latest
+
+      - name: Push hadoop historyserver image
+        run: |
+          docker push binpash/hadoop-historyserver:${{ env.RELEASE }}
+          docker push binpash/hadoop-historyserver:latest
+
+  build-hadoop-submit:
+    runs-on: ubuntu-latest
+    needs: build-hadoop-pash-base
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and tag hadoop submit image
+        run: |
+          cd docker-hadoop
+
+          docker build -t binpash/hadoop-submit:${{ env.RELEASE }} ./submit \
+          --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
+
+          # Tag the image with 'latest'
+          docker tag binpash/hadoop-submit:${{ env.RELEASE }} \
+          binpash/hadoop-submit:latest
+
+      - name: Push hadoop submit image
+        run: |
+          docker push binpash/hadoop-submit:${{ env.RELEASE }}
+          docker push binpash/hadoop-submit:latest
