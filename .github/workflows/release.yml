@@ -207,7 +207,7 @@ jobs:
           docker build -t binpash/hadoop-nodemanager:${{ env.RELEASE }} ./nodemanager \
           --build-arg RELEASE=${{ env.RELEASE }} --build-arg BASE=binpash/hadoop-pash-base
 
-          docker tag binpash/hadoop-nodemanager:${{ env.RELEASE }} /
+          docker tag binpash/hadoop-nodemanager:${{ env.RELEASE }} \
           binpash/hadoop-nodemanager:latest
 
       - name: Push hadoop nodemanager image
