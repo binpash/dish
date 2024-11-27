@@ -1,0 +1,43 @@
+name: Canary Test
+
+on:
+  schedule:
+    - cron: "0 0 * * 0" # Run every Sunday at midnight
+
+jobs:
+  run-containers-and-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Run Containers
+        run: |
+          cd docker-hadoop
+          chmod +x ./setup-compose.sh
+          ./setup-compose.sh 
+
+          echo "Waiting for namenode to be ready..."
+          max_attempts=10
+          attempt_num=1
+          until docker exec namenode curl -sf http://localhost:9870 || [ "$attempt_num" -gt "$max_attempts" ]; do
+              echo "namenode is not ready yet. Retrying in 5 seconds..."
+              sleep 5
+              attempt_num=$((attempt_num + 1))
+          done
+
+          if [ "$attempt_num" -le "$max_attempts" ]; then
+              echo "namenode is ready."
+          else
+              echo "namenode did not become ready in time."
+              exit 1
+          fi
+
+      - name: Run tests
+        run: |
+          # Run the commands now that namenode is ready
+          docker exec nodemanager1 /bin/sh -c "cd \$DISH_TOP && hdfs dfs -put README.md /README.md"
+          docker exec nodemanager1 /bin/sh -c "cd \$DISH_TOP && ./di.sh ./scripts/sample.sh"
