@@ -124,11 +124,11 @@ oneliners_hadoopstreaming() {
 d=1
 
 oneliners "bash"
-# oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
+oneliners "dish"        "--width 8 --r_split -d $d --distributed_exec"
 
-# oneliners "dynamic"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
-# oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
-# oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
+oneliners "dynamic"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
 oneliners_hadoopstreaming
 

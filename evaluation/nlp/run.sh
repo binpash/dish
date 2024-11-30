@@ -121,17 +121,10 @@ nlp() {
 d=1
 
 nlp "bash"
-# nlp "dish"          "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
+nlp "dish"          "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-# nlp "dynamic"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic"
-# nlp "dynamic-m"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill merger"
-# nlp "dynamic-r"     "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --kill regular"
+nlp "dynamic"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic"
 
 # For microbenchmarks
-# nlp "dynamic-on"    "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force on"
-# nlp "dynamic-on-m"  "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force on --kill merger"
-# nlp "dynamic-on-r"  "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force on --kill regular"
-
-# nlp "dynamic-off"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force off"
-# nlp "dynamic-off-m" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force off --kill merger"
-# nlp "dynamic-off-r" "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force off --kill regular"
+nlp "dynamic-on"    "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force on"
+nlp "dynamic-off"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force off"
