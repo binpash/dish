@@ -25,7 +25,7 @@ else
         "top-n;3G"
         "wf;3G"
         "spell;3G"
-        "diff;3G"
+        "diff;1G"
         "bi-grams;3G"
         "set-diff;3G"
         "sort-sort;3G"
