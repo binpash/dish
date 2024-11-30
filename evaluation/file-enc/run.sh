@@ -59,7 +59,7 @@ file-enc() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 60
+            sleep 10
         fi
 
         rm -rf "$output_dir"

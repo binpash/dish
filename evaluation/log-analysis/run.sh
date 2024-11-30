@@ -87,7 +87,7 @@ log-analysis() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 60
+            sleep 10
         fi
 
         # For every file in output_dir, generate a hash and delete the file

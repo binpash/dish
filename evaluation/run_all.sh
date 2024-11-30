@@ -37,7 +37,7 @@ for dir in "${dirs[@]}"; do
     ./cleanup.sh
     sleep 10
     ./inputs.sh
-    sleep 600
+    sleep 60
     ./run.sh
 
     # Generate and verify hashes
@@ -50,7 +50,7 @@ for dir in "${dirs[@]}"; do
 
     # Cleanup
     ./cleanup.sh
-    sleep 600
+    sleep 60
 
     # Go back to the parent directory
     cd ..

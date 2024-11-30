@@ -55,7 +55,7 @@ covid-mts() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 60
+            sleep 10
         fi
 
         # Generate SHA-256 hash and delete output file

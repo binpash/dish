@@ -108,7 +108,7 @@ media-conv() {
                 python3 "$DISH_TOP/evaluation/notify_worker.py" resurrect
             fi
 
-            sleep 60
+            sleep 10
         fi
 
         # Generate hash files for each converted file in output_dir
