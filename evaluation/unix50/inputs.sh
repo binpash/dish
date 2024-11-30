@@ -20,9 +20,9 @@ do
         done
     fi
 
-    if [ ! -f "${input}_20G.txt" ]; then
-        for (( i = 0; i < 20000; i++ )); do
-            cat "${input}_1M.txt" >> "${input}_20G.txt"
+    if [ ! -f "${input}_10G.txt" ]; then
+        for (( i = 0; i < 10000; i++ )); do
+            cat "${input}_1M.txt" >> "${input}_10G.txt"
         done
     fi
 
@@ -30,7 +30,7 @@ do
 
     hdfs dfs -mkdir -p /unix50
     hdfs dfs -put "${input}_1M.txt" "/unix50/${input}_1M.txt"
-    hdfs dfs -put "${input}_20G.txt" "/unix50/${input}_20G.txt"
+    hdfs dfs -put "${input}_10G.txt" "/unix50/${input}_10G.txt"
     echo "Put $file to hdfs"
 
     rm *.txt
@@ -41,6 +41,6 @@ done
 # hdfs dfs -mkdir -p /unix50
 # for file in "${inputs[@]}"; do
 #     hdfs dfs -put "${file}_1M.txt" "/unix50/${file}_1M.txt"
-#     hdfs dfs -put "${file}_20G.txt" "/unix50/${file}_20G.txt"
+#     hdfs dfs -put "${file}_10G.txt" "/unix50/${file}_10G.txt"
 #     echo "Put $file to hdfs"
 # done
