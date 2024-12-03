@@ -24,7 +24,7 @@ if [[ "$@" == *"--generate"* ]]; then
     # Loop through all .out files in the directory and subdirectories
     find "$directory" -type f -name "*.hash" | while read -r file;
     do
-        echo $file
+        # echo $file
         # Copy the file to the hash folder
         cp "$file" "$hash_folder"
     done

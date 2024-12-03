@@ -69,6 +69,9 @@ log-analysis() {
         hash_file="./outputs/$1/$script.hash"
         mkdir -p $output_dir
 
+        # Print input size
+        hdfs dfs -du -h -s "$input_dir"
+
         if [[ "$1" == "bash" ]]; then
             (time $script_file $input_dir $output_dir > $output_file) 2> $time_file
         else
@@ -87,9 +90,20 @@ log-analysis() {
             sleep 10
         fi
 
-        # Generate SHA-256 hash and delete output file
-        shasum -a 256 "$output_file" | awk '{ print $1 }' > "$hash_file"
-        rm "$output_file"
+        # For every file in output_dir, generate a hash and delete the file
+        for file in "$output_dir"/*.out
+        do
+            # Extract the filename without the directory
+            filename=$(basename "$file")
+
+            # Generate SHA-256 hash and delete output file
+            shasum -a 256 "$file" | awk '{ print $1 }' > "$output_dir/$filename.hash"
+            rm "$file"
+        done
+
+        # Delete the output directory, this is useful because otherwise the 
+        # output files will be appended to the existing files, if we don't delete manually
+        rm -r $output_dir
 
         cat "${time_file}" >> $all_res_file
         echo "$script_file $(cat "$time_file")" | tee -a $mode_res_file
@@ -98,20 +112,11 @@ log-analysis() {
 
 
 # adjust the debug flag as required
-d=0
+d=1
 
 log-analysis "bash"
-log-analysis "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
-log-analysis "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
+log-analysis "dish"          "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
 
-log-analysis "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
-log-analysis "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
-log-analysis "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
-
-log-analysis "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
-log-analysis "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
-log-analysis "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
-
-log-analysis "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
-log-analysis "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
-log-analysis "optimized-r" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill regular"
+log-analysis "dynamic"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
+log-analysis "dynamic-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
+log-analysis "dynamic-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"

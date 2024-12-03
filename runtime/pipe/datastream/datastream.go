@@ -26,10 +26,10 @@ var (
 	streamType = flag.String("type", "", "Either read/write")
 	serverAddr = flag.String("addr", "localhost:50052", "The server address in the format of host:port")
 	streamId   = flag.String("id", "", "The id of the stream")
+	ft         = flag.String("ft", "disabled", "Fault tolerance mode. naive, base, optimized or dynamic. Default is disabled")
 	debug      = flag.Bool("d", false, "Turn on debugging messages")
+	singular   = flag.Bool("s", false, "Indicates the graph is singular")
 	chunkSize  = flag.Int("chunk_size", 4096, "The chunk size for the rpc stream")
-	_          = flag.String("kill", "", "Kill the node at the given address")
-	ft         = flag.String("ft", "disabled", "Fault tolerance mode. naive, base or optimized. Default is disabled")
 )
 
 const eof uint64 = 0xd1d2d3d4d5d6d7d8
@@ -60,10 +60,10 @@ func removeAddr(client pb.DiscoveryClient) {
 	log.Printf("Remove id %v returned %v", *streamId, err)
 }
 
-func readWrapper(client pb.DiscoveryClient, numRetry int, ft string) (n int, err error) {
+func readWrapper(client pb.DiscoveryClient, numRetry int, ft string, useOptimizedRW bool) (n int, err error) {
 	for i := 0; i < numRetry; i++ {
 		var nn int
-		if ft == "optimized" {
+		if useOptimizedRW {
 			nn, err = readOptimized(client, n)
 		} else {
 			nn, err = read(client, n, ft == "disabled")
@@ -362,15 +362,16 @@ func main() {
 	}
 	defer conn.Close()
 	client := pb.NewDiscoveryClient(conn)
+	useOptimizedRW := *ft == "optimized" || (*ft == "dynamic" && !*singular)
 
 	var reqerr error
 	var n int
 	if *streamType == "read" {
 		b[0] = 0
-		n, reqerr = readWrapper(client, 1000, *ft)
+		n, reqerr = readWrapper(client, 1000, *ft, useOptimizedRW)
 	} else if *streamType == "write" {
 		b[0] = 1
-		if *ft == "optimized" {
+		if useOptimizedRW {
 			n, reqerr = writeOpimized(client)
 		} else {
 			n, reqerr = write(client, *ft == "disabled")

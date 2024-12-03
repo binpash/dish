@@ -4,7 +4,7 @@ cd "$(realpath $(dirname "$0"))"
 mkdir -p inputs
 cd inputs
 
-FROM=${FROM:-2000}
+FROM=${FROM:-2015}
 TO=${TO:-2015}
 IN=${IN:-'http://atlas-group.cs.brown.edu/data/noaa/'}
 fetch=${fetch:-"curl -sL"}

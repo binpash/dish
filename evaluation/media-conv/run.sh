@@ -58,7 +58,7 @@ gen-hash-dir() {
         
         # Create the .hash filename
         hash_file="${1}/${base_name}.hash"
-        ls 
+        # ls 
         # Write the hash to the .hash file
         echo "$hash_value" > "$hash_file"
         
@@ -90,6 +90,8 @@ media-conv() {
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
 
+        # Print input size
+        hdfs dfs -du -h -s "$input_dir"
 
         if [[ "$1" == "bash" ]]; then
             (time $script_file $input_dir $output_dir > $output_file) 2> $time_file
@@ -122,20 +124,11 @@ media-conv() {
 
 
 # adjust the debug flag as required
-d=0
+d=1
 
 media-conv "bash"
-media-conv "pash"        "--width 8 --r_split -d $d --parallel_pipelines --profile_driven"
-media-conv "dish"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
+media-conv "dish"          "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec"
 
-# media-conv "naive"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive"
-# media-conv "naive-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill merger"
-# media-conv "naive-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft naive --kill regular"
-
-# media-conv "base"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base"
-# media-conv "base-m"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill merger"
-# media-conv "base-r"      "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft base --kill regular"
-
-# media-conv "optimized"   "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized"
-# media-conv "optimized-m" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill merger"
-# media-conv "optimized-r" "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft optimized --kill regular"
+media-conv "dynamic"       "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic"
+media-conv "dynamic-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill merger"
+media-conv "dynamic-r"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"

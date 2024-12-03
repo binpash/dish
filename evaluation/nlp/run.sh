@@ -68,6 +68,10 @@ nlp() {
         time_file="./outputs/$1/$script.time"
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
+
+        # Print input size
+        hdfs dfs -du -h -s "/nlp/pg"
+
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $output_dir > $output_file ) 2> $time_file
         else
@@ -114,25 +118,13 @@ nlp() {
 # the startup overhead ended up dwarfing the execution time by
 # a factor of ten on average. (source: nsdi 2023 DiSh paper)
 # adjust the debug flag as required
-d=0
+d=1
 
 nlp "bash"
-nlp "pash"        "--width 8 --r_split --parallel_pipelines --profile_driven -d $d"
-nlp "dish"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d"
+nlp "dish"          "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24"
 
-nlp "naive"       "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive"
-nlp "naive-m"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill merger"
-nlp "naive-r"     "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft naive --kill regular"
+nlp "dynamic"       "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic"
 
-nlp "base"        "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base"
-nlp "base-m"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill merger"
-nlp "base-r"      "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft base --kill regular"
-
-nlp "optimized"   "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized"
-nlp "optimized-m" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill merger"
-nlp "optimized-r" "--width 8 --r_split --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 -d $d --ft optimized --kill regular"
-
-# nlp "dish-no-du" "--width 8 --r_split --distributed_exec -d $d"
-# nlp "fish-no-du" "--width 8 --r_split --ft optimized --distributed_exec -d $d"
-
-# tmux new-session -s nlp_run "./run.sh | tee nlp_log"
+# For microbenchmarks
+nlp "dynamic-on"    "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force on"
+nlp "dynamic-off"   "--width 8 --r_split -d $d --distributed_exec --parallel_pipelines --parallel_pipelines_limit 24 --ft dynamic --dynamic_switch_force off"

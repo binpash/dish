@@ -46,42 +46,42 @@ if [[ "$@" == *"--small"* ]]; then
     )
 else
         scripts_inputs=(
-        "1;1_20G"
-        "2;1_20G"
-        "3;1_20G"
-        "4;1_20G"
-        "5;2_20G"
-        "6;3_20G"
-        "7;4_20G"
-        "8;4_20G"
-        "9;4_20G"
-        "10;4_20G"
-        "11;4_20G"
-        "12;4_20G"
-        "13;5_20G"
-        "14;6_20G"
-        "15;7_20G"
-        "16;7_20G"
-        "17;7_20G"
-        "18;8_20G"
-        "19;8_20G"
-        "20;8_20G"
-        "21;8_20G"
-        # "22;8_20G"
-        "23;9.1_20G"
-        "24;9.2_20G"
-        "25;9.3_20G"
-        "26;9.4_20G"
-        # "27;9.5_20G"
-        "28;9.6_20G"
-        "29;9.7_20G"
-        "30;9.8_20G"
-        "31;9.9_20G"
-        "32;10_20G"
-        "33;10_20G"
-        "34;10_20G"
-        "35;11_20G"
-        "36;11_20G"
+        "1;1_10G"
+        "2;1_10G"
+        "3;1_10G"
+        "4;1_10G"
+        "5;2_10G"
+        "6;3_10G"
+        "7;4_10G"
+        "8;4_10G"
+        "9;4_10G"
+        "10;4_10G"
+        "11;4_10G"
+        "12;4_10G"
+        "13;5_10G"
+        "14;6_10G"
+        "15;7_10G"
+        "16;7_10G"
+        "17;7_10G"
+        "18;8_10G"
+        "19;8_10G"
+        "20;8_10G"
+        "21;8_10G"
+        # "22;8_10G"
+        "23;9.1_10G"
+        "24;9.2_10G"
+        "25;9.3_10G"
+        "26;9.4_10G"
+        # "27;9.5_10G"
+        "28;9.6_10G"
+        "29;9.7_10G"
+        "30;9.8_10G"
+        "31;9.9_10G"
+        "32;10_10G"
+        "33;10_10G"
+        "34;10_10G"
+        "35;11_10G"
+        "36;11_10G"
     )
 fi
 
@@ -108,6 +108,9 @@ unix50() {
         time_file="./outputs/$1/${parsed[0]}.time"
         log_file="./outputs/$1/${parsed[0]}.log"
         hash_file="./outputs/$1/${parsed[0]}.hash"
+
+        # Print input size
+        hdfs dfs -du -h -s "$input_file"
 
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $input_file > $output_file) 2> $time_file
@@ -141,7 +144,7 @@ unix50_hadoopstreaming() {
     jarpath="/opt/hadoop-3.4.0/share/hadoop/tools/lib/hadoop-streaming-3.4.0.jar"
     basepath="/unix50"
     outputs_dir="/outputs/hadoop-streaming/unix50"
-    size="20G"
+    size="10G"
 
     hdfs dfs -rm -r "$outputs_dir"
     hdfs dfs -mkdir -p "$outputs_dir"
@@ -174,22 +177,11 @@ unix50_hadoopstreaming() {
 }
 
 # adjust the debug flag as required
-d=0
+d=1
 
 unix50 "bash"
-# unix50 "pash"        "--width 8 --r_split -d $d"
-# unix50 "dish"        "--width 8 --r_split -d $d --distributed_exec"
+unix50 "dish"          "--width 8 --r_split -d $d --distributed_exec"
 
-# unix50 "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-# unix50 "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-# unix50 "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
+unix50 "dynamic"       "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
 
-# unix50 "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-# unix50 "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-# unix50 "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
-
-# unix50 "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-# unix50 "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-# unix50 "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
-
-# unix50_hadoopstreaming
+unix50_hadoopstreaming

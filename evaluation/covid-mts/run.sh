@@ -37,6 +37,9 @@ covid-mts() {
         log_file="./outputs/$1/$script.log"
         hash_file="./outputs/$1/$script.hash"
 
+        # Print input size
+        hdfs dfs -du -h -s "$input_file"
+
         if [[ "$1" == "bash" ]]; then
             (time bash $script_file $input_file > $output_file) 2> $time_file
         else
@@ -96,24 +99,17 @@ covid-mts_hadoopstreaming() {
 }
 
 # adjust the debug flag as required
-d=0
+d=1
 
 covid-mts "bash"
-covid-mts "pash"        "--width 8 --r_split -d $d"
-covid-mts "dish"        "--width 8 --r_split -d $d --distributed_exec"
+covid-mts "dish"             "--width 8 --r_split -d $d --distributed_exec"
 
-covid-mts "naive"       "--width 8 --r_split -d $d --distributed_exec --ft naive"
-covid-mts "naive-m"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill merger"
-covid-mts "naive-r"     "--width 8 --r_split -d $d --distributed_exec --ft naive --kill regular"
+covid-mts "dynamic"          "--width 8 --r_split -d $d --distributed_exec --ft dynamic"
+covid-mts "dynamic-m"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill merger"
+covid-mts "dynamic-r"        "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
-covid-mts "base"        "--width 8 --r_split -d $d --distributed_exec --ft base"
-covid-mts "base-m"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill merger"
-covid-mts "base-r"      "--width 8 --r_split -d $d --distributed_exec --ft base --kill regular"
+# # For microbenchmarks
+covid-mts "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+covid-mts "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
 
-covid-mts "optimized"   "--width 8 --r_split -d $d --distributed_exec --ft optimized"
-covid-mts "optimized-m" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill merger"
-covid-mts "optimized-r" "--width 8 --r_split -d $d --distributed_exec --ft optimized --kill regular"
-
-# covid-mts_hadoopstreaming
-
-# tmux new-session -s covid_mts "./run.sh | tee covid_mts_log"
+covid-mts_hadoopstreaming

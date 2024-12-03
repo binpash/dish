@@ -5,7 +5,7 @@ mkdir -p inputs
 cd inputs
 
 if [ ! -f ./in.csv ]; then
-    curl -f 'https://atlas-group.cs.brown.edu/data/covid-mts/in.csv.gz'> in.csv.gz
+    curl -s -f 'https://atlas-group.cs.brown.edu/data/covid-mts/in.csv.gz' > in.csv.gz
     gzip -d in.csv.gz
     # Add newline to the original file
     echo >> in.csv
@@ -20,7 +20,7 @@ if [ ! -f ./in.csv ]; then
 fi
 
 if [ ! -f ./in_small.csv ]; then
-    curl -f 'https://atlas-group.cs.brown.edu/data/covid-mts/in_small.csv.gz' > in_small.csv.gz
+    curl -s -f 'https://atlas-group.cs.brown.edu/data/covid-mts/in_small.csv.gz' > in_small.csv.gz
     gzip -d in_small.csv.gz
     # Add newline to the original file
     echo >> in_small.csv

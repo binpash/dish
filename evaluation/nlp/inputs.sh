@@ -5,7 +5,7 @@ mkdir -p inputs
 cd inputs
 
 if [ ! -f ./book_links.txt ]; then
-    wget -O book_links.txt "https://atlas-group.cs.brown.edu/data/gutenberg/books.txt"
+    wget -q -O book_links.txt "https://atlas-group.cs.brown.edu/data/gutenberg/books.txt"
     if [ ! -f book_links.txt ]; then
         echo "Failed to download book_links.txt"
         exit 1
@@ -28,11 +28,12 @@ if [ ! -e ./pg ]; then
     mkdir pg
     cd pg
     book_count=100
+    echo "Downloading $book_count books"
 
     head -n $book_count ../book_links.txt | while IFS= read -r line
     do
         full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
-        echo "Downloading $full_url"
+        # echo "Downloading $full_url"
         wget -q "$full_url"
     done
     # Add newline to the original file
@@ -40,6 +41,7 @@ if [ ! -e ./pg ]; then
         echo >> $f
     done
 
+    echo "Downloaded $book_count books"
     cd ..
 fi
 
@@ -47,11 +49,12 @@ if [ ! -e ./pg-small ]; then
     mkdir pg-small
     cd pg-small
     book_count=10
+    echo "Downloading $book_count books"
 
     head -n $book_count ../book_links.txt | while IFS= read -r line
     do
         full_url="https://atlas-group.cs.brown.edu/data/gutenberg/${line}"
-        echo "Downloading $full_url"
+        # echo "Downloading $full_url"
         wget -q "$full_url"
     done
     # Add newline to the original file
@@ -59,6 +62,7 @@ if [ ! -e ./pg-small ]; then
         echo >> $f
     done
 
+    echo "Downloaded $book_count books"
     cd ..
 fi
 

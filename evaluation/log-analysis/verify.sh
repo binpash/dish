@@ -21,33 +21,38 @@ if [[ "$@" == *"--generate"* ]]; then
         directory="outputs/bash"
     fi
 
-    # Loop through all .out files in the directory
-    for file in "$directory"/*.hash
+    # Loop through all .hash files in the directory
+    find "$directory" -mindepth 2 -type f -name '*.hash' | while read -r file;
     do
-        # Copy the file to the hash folder
-        cp "$file" "$hash_folder"
+        # Extract the dirname
+        dirname=$(dirname "${file#$directory/}")
+
+        # Create the directory in the hash folder
+        mkdir -p "$hash_folder/$dirname"
+
+        # Copy hash to the hash folder
+        cp "$file" "$hash_folder/$dirname"
     done
 fi
 
 # Loop through all directories in the parent directory
-for folder in "outputs"/*/
+for folder in "outputs"/*
 do
-    # Remove trailing slash
-    folder=${folder%/}
-
     echo "Verifying folder: $folder"
 
     # Loop through all .hash files in the current directory
-    for file in "$folder"/*.hash
+    find "$folder" -mindepth 2 -type f -name '*.hash' | while read -r file;
     do
-        # Extract the filename without the directory path and extension
-        filename=$(basename $file)
+        # Extract the filename and dirname
+        filename=$(basename "$file" .hash)
+        dirname=$(basename "$(dirname "$file")") # is the script_name
+        dirname=$(dirname "${file#$folder/}")
 
         # Compare the hash with the hash in the hashes directory
-        if ! diff "$hash_folder/$filename" "$folder/$filename";
+        if ! diff "$hash_folder/$dirname/$filename.hash" "$folder/$dirname/$filename.hash";
         then
             # Print the filename and hash if they don't match
-            echo "File: $folder/$filename hash diff failed!"
+            echo "File: $dirname/$filename hash diff failed!"
         fi
     done
 done
