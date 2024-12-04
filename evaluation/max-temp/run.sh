@@ -110,7 +110,7 @@ max-temp "dynamic-m"        "--width 8 --r_split -d $d --parallel_pipelines --pa
 max-temp "dynamic-r"        "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --kill regular"
 
 # For microbenchmarks
-# max-temp "dynamic-on-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
-# max-temp "dynamic-off-m"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+max-temp "dynamic-on-m"     "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+max-temp "dynamic-off-m"    "--width 8 --r_split -d $d --parallel_pipelines --parallel_pipelines_limit 24 --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
 
 max-temp_hadoopstreaming
