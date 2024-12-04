@@ -12,7 +12,7 @@ if [ ! -d log_data ]; then
     rm nginx.zip
     # generating full analysis logs
     mkdir -p log_data
-	LOG_DATA_FILES=252 # 84 * 3
+	LOG_DATA_FILES=1008 # 84 * 12
     # Loop over each file in nginx-logs/
     for j in nginx-logs/*; do
         # Get the base name of the file
@@ -24,6 +24,7 @@ if [ ! -d log_data ]; then
         done
     done
     hdfs dfs -put log_data /log-analysis/log_data
+    rm -rf log_data
     echo "Nginx logs Generated"
 
 	# generating small analysis logs
@@ -36,6 +37,7 @@ if [ ! -d log_data ]; then
         done
     done
     hdfs dfs -put log_data_small /log-analysis/log_data_small
+    rm -rf log_data_small
     echo "Nginx logs (small) Generated"
 fi
 
@@ -54,6 +56,7 @@ if [ ! -d pcap_data ]; then
       done
   done
   hdfs dfs -put pcap_data/ /log-analysis/pcap_data
+  rm -rf pcap_data
   echo "Pcaps Generated"
 
   # generates small inputs
@@ -66,5 +69,6 @@ if [ ! -d pcap_data ]; then
       done
   done
   hdfs dfs -put pcap_data_small/ /log-analysis/pcap_data_small
+  rm -rf pcap_data_small
   echo "Pcaps_small Generated"
 fi
