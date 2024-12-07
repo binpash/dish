@@ -12,7 +12,7 @@ if [ ! -d log_data ]; then
     rm nginx.zip
     # generating full analysis logs
     mkdir -p log_data
-	LOG_DATA_FILES=1008 # 84 * 12
+	LOG_DATA_FILES=252 # 84 * 3
     # Loop over each file in nginx-logs/
     for j in nginx-logs/*; do
         # Get the base name of the file
