@@ -131,8 +131,8 @@ oneliners "dynamic-m"   "--width 8 --r_split -d $d --distributed_exec --ft dynam
 oneliners "dynamic-r"   "--width 8 --r_split -d $d --distributed_exec --ft dynamic --kill regular"
 
 # For microbenchmarks
-covid-mts "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
-covid-mts "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
+oneliners "dynamic-on-m"     "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force on --kill merger"
+oneliners "dynamic-off-m"    "--width 8 --r_split -d $d --distributed_exec --ft dynamic --dynamic_switch_force off --kill merger"
 
 oneliners_hadoopstreaming
 
