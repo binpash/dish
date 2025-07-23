@@ -185,7 +185,7 @@ After parsing results from both clusters, run the following command on any contr
 ./plotting/scripts/plot.sh ms0813.utah.cloudlab.us ms0809.utah.cloudlab.us
 ```
 
-Once the script completes, follow its prompt open the following URLs in a browser to view the generated figures, for example:
+Once the script completes, follow its prompt to open the following URLs in a browser to view the generated figures, for example:
 ```
 Fig. 4: http://ms0813.utah.cloudlab.us/fig4.pdf  
 Fig. 5: http://ms0813.utah.cloudlab.us/fig5.pdf  
